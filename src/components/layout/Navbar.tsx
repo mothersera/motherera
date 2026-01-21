@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, User as UserIcon } from "lucide-react";
 import { useState } from "react";
 
+import Image from "next/image";
+
 export default function Navbar() {
   const { data: session } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,6 +18,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 w-full border-b border-stone-200 bg-white/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center space-x-2">
+          <Image src="/logo.svg?v=2" alt="Mother Era Logo" width={32} height={32} className="w-8 h-8" />
           <span className="text-xl font-bold tracking-tight text-rose-500">
             Mother Era
           </span>
