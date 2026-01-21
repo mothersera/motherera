@@ -46,7 +46,17 @@ function RegisterForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Registration failed");
+        let errorMessage = data.error || "Registration failed";
+        if (data.details) {
+           if (Array.isArray(data.details)) {
+             // Handle Zod issue array or string array
+             const detailsStr = data.details.map((d: any) => typeof d === 'string' ? d : d.message).join(", ");
+             errorMessage += `: ${detailsStr}`;
+           } else {
+             errorMessage += `: ${data.details}`;
+           }
+        }
+        throw new Error(errorMessage);
       }
 
       // Automatically sign in after registration
