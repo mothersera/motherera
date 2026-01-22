@@ -33,7 +33,7 @@ export default function SubscriptionPage() {
         "Vaccination reminders"
       ],
       buttonText: "Current Plan",
-      buttonVariant: "outline" as const,
+      buttonVariant: "default" as const,
       disabled: true
     },
     {
@@ -70,7 +70,7 @@ export default function SubscriptionPage() {
         "Postpartum recovery program"
       ],
       buttonText: "Upgrade to Specialized",
-      buttonVariant: "outline" as const,
+      buttonVariant: "default" as const,
       disabled: false
     }
   ];

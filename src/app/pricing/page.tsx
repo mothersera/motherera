@@ -16,7 +16,7 @@ export default function PricingPage() {
         "Vaccination reminders"
       ],
       buttonText: "Get Started Free",
-      buttonVariant: "outline" as const,
+      buttonVariant: "default" as const,
       href: "/register"
     },
     {
@@ -49,7 +49,7 @@ export default function PricingPage() {
         "Postpartum recovery program"
       ],
       buttonText: "Subscribe Now",
-      buttonVariant: "outline" as const,
+      buttonVariant: "default" as const,
       href: "/checkout?plan=specialized", // Updated to checkout
     }
   ];
