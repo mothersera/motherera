@@ -69,7 +69,7 @@ export default function SubscriptionPage() {
         "24/7 dedicated care manager",
         "Postpartum recovery program"
       ],
-      buttonText: "Contact Sales",
+      buttonText: "Upgrade to Specialized",
       buttonVariant: "outline" as const,
       disabled: false
     }
@@ -87,10 +87,6 @@ export default function SubscriptionPage() {
 
   const handleUpgrade = async (planId: string, price: number) => {
     if (price === 0) return; // Basic plan logic
-    if (planId === 'specialized') {
-      router.push('/contact');
-      return;
-    }
 
     setLoading(true);
     try {

@@ -48,7 +48,7 @@ export default function PricingPage() {
         "24/7 dedicated care manager",
         "Postpartum recovery program"
       ],
-      buttonText: "Contact Us",
+      buttonText: "Subscribe Now",
       buttonVariant: "outline" as const,
       href: "/checkout?plan=specialized", // Updated to checkout
     }
