@@ -6,6 +6,8 @@ export interface ISubscription extends mongoose.Document {
   status: 'active' | 'past_due' | 'canceled' | 'incomplete';
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
+  razorpaySubscriptionId?: string;
+  razorpayPaymentId?: string;
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   createdAt: Date;
@@ -19,6 +21,8 @@ const SubscriptionSchema: Schema<ISubscription> = new Schema(
     status: { type: String, enum: ['active', 'past_due', 'canceled', 'incomplete'], default: 'active' },
     stripeCustomerId: { type: String },
     stripeSubscriptionId: { type: String },
+    razorpaySubscriptionId: { type: String },
+    razorpayPaymentId: { type: String },
     currentPeriodStart: { type: Date, required: true },
     currentPeriodEnd: { type: Date, required: true },
   },

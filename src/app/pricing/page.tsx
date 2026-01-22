@@ -33,7 +33,7 @@ export default function PricingPage() {
       ],
       buttonText: "Subscribe Now",
       buttonVariant: "default" as const,
-      href: "/register?plan=premium",
+      href: "/checkout?plan=premium", // Updated to checkout
       highlight: true
     },
     {
@@ -50,7 +50,7 @@ export default function PricingPage() {
       ],
       buttonText: "Contact Us",
       buttonVariant: "outline" as const,
-      href: "/contact"
+      href: "/checkout?plan=specialized", // Updated to checkout
     }
   ];
 
