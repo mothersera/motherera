@@ -86,14 +86,7 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-stone-900 mb-6">My Profile</h1>
-      {session?.user?.id && (
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-3 rounded-md border border-stone-200 bg-white px-4 py-3">
-            <span className="text-sm font-medium text-stone-700">Your MongoDB ID</span>
-            <span className="text-xs text-stone-500 bg-stone-100 rounded px-2 py-1">{session.user.id}</span>
-          </div>
-        </div>
-      )}
+      {/* Database IDs are intentionally hidden from the UI for security and abstraction purposes. */}
       <Card>
         <CardHeader>
           <CardTitle>Personal Details</CardTitle>

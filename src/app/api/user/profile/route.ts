@@ -14,7 +14,7 @@ export async function GET() {
   await dbConnect();
 
   try {
-    const user = await UserModel.findById(session.user.id).select('-password');
+    const user = await UserModel.findById(session.user.id).select('-password -_id -__v');
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -47,7 +47,7 @@ export async function PUT(req: Request) {
         dietaryPreference
       },
       { new: true }
-    ).select('-password');
+    ).select('-password -_id -__v');
 
     return NextResponse.json(updatedUser);
   } catch (error: unknown) {
