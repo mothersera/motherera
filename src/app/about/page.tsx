@@ -17,7 +17,7 @@ export default function AboutPage() {
         {/* Desktop Hero Image */}
         <div className="hidden md:block relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-xl">
           <Image
-            src="/mother-era-about.webp"
+            src="/motherera-hero.webp"
             alt="A calm, nurturing moment between a mother and her baby"
             fill
             priority
@@ -29,7 +29,7 @@ export default function AboutPage() {
         {/* Mobile Hero Image */}
         <div className="block md:hidden relative w-full aspect-square rounded-2xl overflow-hidden shadow-xl">
           <Image
-            src="/mother-era-mobile.webp"
+            src="/motherera-hero.webp"
             alt="Close, centered portrait of a mother with her baby"
             fill
             priority
