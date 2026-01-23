@@ -8,7 +8,7 @@ export default function AboutPage() {
       {/* Mission Section */}
       <section className="mb-20 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-stone-900 mb-6">
-          Empowering Indian Mothers
+          Empowering Mothers Globally
         </h1>
         <p className="text-lg text-stone-600 max-w-3xl mx-auto leading-relaxed mb-10">
           Mother Era was born from a simple belief: every mother deserves access to expert, culturally relevant, and compassionate healthcare guidance. We bridge the gap between traditional wisdom and modern medical science to support you through the most transformative journey of your life.
@@ -43,7 +43,7 @@ export default function AboutPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-20">
         <div className="relative h-96 w-full rounded-2xl overflow-hidden shadow-lg">
            <Image
-             src="/mother-era-section.webp"
+             src="/motherera-about.webp"
              alt="Mother gently holding her baby in natural light"
              fill
              className="object-cover"
