@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, Utensils, Calendar, User } from "lucide-react";
+import { Activity, Utensils, Calendar, User, MessageSquare, HeartHandshake } from "lucide-react";
 import Link from "next/link";
 
 export default async function DashboardPage() {
