@@ -13,6 +13,11 @@ interface Message {
   status: 'open' | 'replied' | 'closed';
   createdAt: string;
   userName: string;
+  adminReply?: {
+    text: string;
+    repliedAt: string;
+    repliedBy: string;
+  };
 }
 
 export default function SupportPage() {

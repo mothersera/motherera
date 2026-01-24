@@ -6,7 +6,11 @@ export interface ISupportMessage extends Document {
   userEmail: string;
   message: string;
   status: 'open' | 'replied' | 'closed';
-  adminReply?: string;
+  adminReply?: {
+    text: string;
+    repliedAt: Date;
+    repliedBy: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -18,7 +22,11 @@ const SupportMessageSchema: Schema<ISupportMessage> = new Schema(
     userEmail: { type: String, required: true },
     message: { type: String, required: true },
     status: { type: String, enum: ['open', 'replied', 'closed'], default: 'open' },
-    adminReply: { type: String },
+    adminReply: {
+      text: { type: String },
+      repliedAt: { type: Date },
+      repliedBy: { type: String }
+    },
   },
   { timestamps: true }
 );
