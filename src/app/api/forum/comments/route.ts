@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     const newComment = await ForumComment.create({
       postId,
       authorId: session.user.id,
-      authorName: session.user.name,
+      authorName: session.user.name || 'Anonymous',
       content,
     });
 

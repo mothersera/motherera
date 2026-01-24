@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Send } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area"; // Assume this exists or use div with overflow
 
 interface Message {
   _id: string;

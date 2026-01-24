@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     const newPost = await ForumPost.create({
       authorId: session.user.id,
-      authorName: session.user.name,
+      authorName: session.user.name || 'Anonymous',
       title,
       content,
       category: category || 'General',

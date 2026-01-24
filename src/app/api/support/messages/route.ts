@@ -43,8 +43,8 @@ export async function POST(req: Request) {
 
     const newMessage = await SupportMessage.create({
       userId: session.user.id,
-      userName: session.user.name,
-      userEmail: session.user.email,
+      userName: session.user.name || 'Anonymous',
+      userEmail: session.user.email || 'No Email',
       message,
       status: 'open',
     });
