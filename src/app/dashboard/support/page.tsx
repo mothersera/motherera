@@ -105,20 +105,39 @@ export default function SupportPage() {
               </div>
             ) : (
               messages.map((msg) => (
-                <div key={msg._id} className={`flex flex-col ${msg.userName === session?.user?.name ? 'items-end' : 'items-start'}`}>
-                  <div 
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      msg.userName === session?.user?.name 
-                        ? 'bg-rose-600 text-white rounded-tr-none' 
-                        : 'bg-stone-100 text-stone-800 rounded-tl-none'
-                    }`}
-                  >
-                    <p>{msg.message}</p>
+                <div key={msg._id} className="space-y-4">
+                  {/* User Message */}
+                  <div className="flex flex-col items-end">
+                    <div className="max-w-[80%] rounded-2xl rounded-tr-none px-4 py-3 bg-rose-600 text-white">
+                      <p>{msg.message}</p>
+                    </div>
+                    <span className="text-xs text-stone-400 mt-1 flex items-center gap-2">
+                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {msg.status === 'open' && (
+                        <span className="text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded text-[10px] font-medium border border-orange-100">
+                          Waiting for reply
+                        </span>
+                      )}
+                      {msg.status === 'replied' && (
+                        <span className="text-green-600 bg-green-50 px-1.5 py-0.5 rounded text-[10px] font-medium border border-green-100">
+                          Replied
+                        </span>
+                      )}
+                    </span>
                   </div>
-                  <span className="text-xs text-stone-400 mt-1">
-                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    {msg.status !== 'open' && <span className="ml-2 capitalize">({msg.status})</span>}
-                  </span>
+
+                  {/* Admin Reply */}
+                  {msg.adminReply && (
+                    <div className="flex flex-col items-start pl-4 border-l-2 border-stone-200 ml-2">
+                       <div className="max-w-[85%] rounded-2xl rounded-tl-none px-4 py-3 bg-emerald-50 text-stone-800 border border-emerald-100 shadow-sm">
+                        <p className="text-xs font-bold text-emerald-700 mb-1 flex items-center gap-1">
+                          {msg.adminReply.repliedBy || 'MotherEra Support'}
+                          <span className="text-[10px] font-normal text-stone-400">• {new Date(msg.adminReply.repliedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </p>
+                        <p className="text-sm leading-relaxed">{msg.adminReply.text}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}

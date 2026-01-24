@@ -17,7 +17,7 @@ export async function GET() {
     // Only fetch messages for the logged-in user
     const messages = await SupportMessage.find({ userId: session.user.id })
       .sort({ createdAt: 1 }) // Chronological order
-      .select('-userId -__v'); // Do not expose internal IDs
+      .select('-userId -__v'); // Do not expose internal IDs but allow adminReply
 
     return NextResponse.json(messages);
   } catch (error: unknown) {
