@@ -32,6 +32,9 @@ export default function Navbar() {
           <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Pricing
           </Link>
+          <Link href="/dashboard/community" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Community
+          </Link>
           {session ? (
             <>
               <Link href={session.user.role === 'expert' ? '/expert/dashboard' : '/dashboard'} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">

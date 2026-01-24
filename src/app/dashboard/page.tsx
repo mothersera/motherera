@@ -74,6 +74,41 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Link href="/dashboard/community" className="block">
+           <Card className="hover:border-rose-200 transition-colors cursor-pointer h-full">
+             <CardHeader className="flex flex-row items-center gap-4">
+               <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+                 <MessageSquare className="h-6 w-6 text-rose-600" />
+               </div>
+               <div>
+                 <CardTitle className="text-lg">Community Forum</CardTitle>
+                 <p className="text-sm text-stone-500">Connect with other mothers</p>
+               </div>
+             </CardHeader>
+             <CardContent>
+               <p className="text-stone-600">Join discussions on pregnancy, postpartum care, and parenting tips. You are not alone!</p>
+             </CardContent>
+           </Card>
+        </Link>
+        <Link href="/dashboard/support" className="block">
+           <Card className="hover:border-rose-200 transition-colors cursor-pointer h-full">
+             <CardHeader className="flex flex-row items-center gap-4">
+               <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                 <HeartHandshake className="h-6 w-6 text-emerald-600" />
+               </div>
+               <div>
+                 <CardTitle className="text-lg">Support Chat</CardTitle>
+                 <p className="text-sm text-stone-500">Talk to MotherEra Team</p>
+               </div>
+             </CardHeader>
+             <CardContent>
+               <p className="text-stone-600">Have a question? Chat privately with our support team for guidance and help.</p>
+             </CardContent>
+           </Card>
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <Card>
