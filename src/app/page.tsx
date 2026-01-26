@@ -190,6 +190,7 @@ export default function Home() {
               <ul className="space-y-4">
                 <li><Link href="/pregnancy" className="hover:text-white transition-colors">Pregnancy</Link></li>
                 <li><Link href="/postpartum" className="hover:text-white transition-colors">Postpartum</Link></li>
+                <li><Link href="/newborn-care" className="hover:text-white transition-colors">Newborn Care</Link></li>
                 <li><Link href="/child" className="hover:text-white transition-colors">Child Nutrition</Link></li>
                 <li><Link href="/family-health" className="hover:text-white transition-colors">Family Health</Link></li>
               </ul>

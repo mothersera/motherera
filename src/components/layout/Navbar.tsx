@@ -84,11 +84,14 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden border-t border-border bg-background px-4 py-6">
           <div className="flex flex-col space-y-4">
-            <Link href="/about" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
-              About
-            </Link>
             <Link href="/pricing" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
               Pricing
+            </Link>
+            <Link href="/newborn-care" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
+              Newborn
+            </Link>
+            <Link href="/dashboard/community" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
+              Community
             </Link>
             {session ? (
               <>
