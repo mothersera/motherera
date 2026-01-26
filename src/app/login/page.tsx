@@ -151,11 +151,20 @@ function LoginForm() {
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-             {/* Placeholder for social logins if needed later */}
-             <Button variant="outline" className="h-11 border-stone-200 hover:bg-stone-50" disabled>
+             <Button 
+               variant="outline" 
+               className="h-11 border-stone-200 hover:bg-stone-50" 
+               onClick={() => signIn("google", { callbackUrl })}
+               disabled={isLoading}
+             >
                Google
              </Button>
-             <Button variant="outline" className="h-11 border-stone-200 hover:bg-stone-50" disabled>
+             <Button 
+               variant="outline" 
+               className="h-11 border-stone-200 hover:bg-stone-50" 
+               onClick={() => signIn("apple", { callbackUrl })}
+               disabled={isLoading}
+             >
                Apple
              </Button>
           </div>
