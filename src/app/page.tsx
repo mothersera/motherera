@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight } from "lucide-react";
+import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight, Sun } from "lucide-react";
 
 export const metadata = {
   title: "Mother Era — Global Maternal & Family Wellness",
