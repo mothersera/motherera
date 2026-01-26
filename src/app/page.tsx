@@ -75,13 +75,27 @@ export default function Home() {
             <Link href="/newborn-care" className="group" prefetch={false}>
               <Card className="h-full glass hover:bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border cursor-pointer">
                 <CardHeader className="pb-4">
-                  <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
-                    <Baby className="w-7 h-7" />
+                  <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300">
+                    <Sun className="w-7 h-7" />
                   </div>
                   <CardTitle className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">Newborn Care</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground leading-relaxed">Expert guidance for the first hours, days, and weeks after birth.</p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/child" className="group" prefetch={false}>
+              <Card className="h-full glass hover:bg-white transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border cursor-pointer">
+                <CardHeader className="pb-4">
+                  <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                    <Baby className="w-7 h-7" />
+                  </div>
+                  <CardTitle className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">Child Nutrition</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">Expert guidance from breastfeeding to healthy family meals.</p>
                 </CardContent>
               </Card>
             </Link>
