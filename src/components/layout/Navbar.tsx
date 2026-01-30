@@ -19,8 +19,9 @@ export default function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center space-x-2">
           <Image src="/logo.svg?v=3" alt="Mother Era Logo" width={32} height={32} className="w-8 h-8" />
-          <span className="text-xl font-bold tracking-tight font-serif text-primary">
-            Mother Era
+          <span className="text-xl font-serif text-[#D32547] flex items-baseline gap-1 tracking-[0.2px]">
+            <span className="font-bold">Mother</span>
+            <span className="font-semibold">Era</span>
           </span>
         </Link>
 

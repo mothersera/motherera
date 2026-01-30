@@ -87,9 +87,9 @@ export default function HomeClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-6xl md:text-8xl font-serif font-bold tracking-tight text-stone-900 mb-6 drop-shadow-sm"
+            className="text-6xl md:text-8xl font-serif text-[#D32547] mb-6 drop-shadow-sm tracking-[0.2px]"
           >
-            Mother Era
+            <span className="font-bold">Mother</span> <span className="font-semibold">Era</span>
           </motion.h1>
           
           <motion.p 
@@ -304,7 +304,9 @@ export default function HomeClient() {
         <div className="container-width">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-2">
-              <h3 className="text-3xl font-serif font-bold text-white mb-6">Mother Era</h3>
+              <h3 className="text-3xl font-serif text-white mb-6 tracking-[0.2px]">
+                <span className="font-bold">Mother</span> <span className="font-semibold">Era</span>
+              </h3>
               <p className="max-w-md mb-6 leading-relaxed text-stone-400">
                 Dedicated to empowering mothers worldwide through expert guidance, 
                 personalized nutrition, and a supportive community.
