@@ -172,7 +172,7 @@ export default function HomeClient() {
               </Link>
             </motion.div>
 
-            <motion.div variants={itemVariants} whileHover="hover" className="lg:col-start-1 lg:translate-x-1/2">
+            <motion.div variants={itemVariants} whileHover="hover">
               <Link href="/child" className="group block h-full">
                 <motion.div variants={cardHoverVariants} className="h-full bg-white/60 backdrop-blur-md border border-white/40 rounded-3xl p-1 overflow-hidden transition-colors hover:border-green-100">
                   <div className="h-full bg-white/40 rounded-[20px] p-6 flex flex-col items-start text-left">
@@ -186,7 +186,7 @@ export default function HomeClient() {
               </Link>
             </motion.div>
 
-            <motion.div variants={itemVariants} whileHover="hover" className="lg:col-start-2 lg:translate-x-1/2">
+            <motion.div variants={itemVariants} whileHover="hover">
               <Link href="/family-health" className="group block h-full">
                 <motion.div variants={cardHoverVariants} className="h-full bg-white/60 backdrop-blur-md border border-white/40 rounded-3xl p-1 overflow-hidden transition-colors hover:border-amber-100">
                   <div className="h-full bg-white/40 rounded-[20px] p-6 flex flex-col items-start text-left">
@@ -195,6 +195,20 @@ export default function HomeClient() {
                     </div>
                     <h3 className="text-xl font-serif font-bold text-stone-800 mb-2 group-hover:text-amber-600 transition-colors">Family Health</h3>
                     <p className="text-stone-500 leading-relaxed text-sm">Pre-pregnancy wellness and healthy habits for the whole family.</p>
+                  </div>
+                </motion.div>
+              </Link>
+            </motion.div>
+
+            <motion.div variants={itemVariants} whileHover="hover">
+              <Link href="/little-smiles" className="group block h-full">
+                <motion.div variants={cardHoverVariants} className="h-full bg-white/60 backdrop-blur-md border border-white/40 rounded-3xl p-1 overflow-hidden transition-colors hover:border-sky-100">
+                  <div className="h-full bg-white/40 rounded-[20px] p-6 flex flex-col items-start text-left">
+                    <div className="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500 mb-5 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                      <Smile className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-xl font-serif font-bold text-stone-800 mb-2 group-hover:text-sky-600 transition-colors">Little Smiles Care</h3>
+                    <p className="text-stone-500 leading-relaxed text-sm">Gentle dental wellness and happy habits for your little one&apos;s bright smile.</p>
                   </div>
                 </motion.div>
               </Link>
