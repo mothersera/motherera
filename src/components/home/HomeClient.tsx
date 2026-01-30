@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight, Sun, Sparkles } from "lucide-react";
+import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight, Sun, Sparkles, Smile } from "lucide-react";
 import { motion, Variants } from "framer-motion";
 
 const containerVariants: Variants = {
