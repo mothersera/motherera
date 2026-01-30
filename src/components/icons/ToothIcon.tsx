@@ -14,8 +14,8 @@ export const ToothIcon = ({ className }: { className?: string }) => {
       role="img"
       aria-label="Tooth icon with sparkle representing children’s dental care"
     >
-      {/* Tooth Body: Friendly, rounded shape with roots */}
-      <path d="M7 20L9.5 18L12 20L14.5 18L17 20V10C17 6.5 14.8 4 12 4C9.2 4 7 6.5 7 10V20Z" />
+      {/* Tooth Body: Molar shape with distinct roots and crown */}
+      <path d="M7 9c0-4 2.5-6 5-6s5 2 5 6v4c0 2 0 3-1 4.5l-1 2.5h-2l-1-3c-.5-1-1.5-1-2 0l-1 3H7l-1-2.5C5 16 5 15 5 13V9z" />
       
       {/* Sparkle: Subtle 4-point star at top right */}
       <path d="M20 2L20.5 3.5L22 4L20.5 4.5L20 6L19.5 4.5L18 4L19.5 3.5L20 2Z" />
