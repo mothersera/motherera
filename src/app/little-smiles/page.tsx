@@ -198,18 +198,98 @@ export default function LittleSmilesPage() {
         {/* Section 7: Myth vs Fact */}
         <section>
           <h2 className="text-2xl font-bold text-stone-800 mb-6 border-b border-sky-200 pb-2">
-            Myth vs. Fact
+            Myths vs Facts: What Parents Should Know About Children&apos;s Dental Health
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-rose-50 p-6 rounded-xl border border-rose-100">
-              <span className="inline-block px-3 py-1 bg-rose-200 text-rose-800 text-xs font-bold rounded-full mb-3">MYTH</span>
-              <p className="font-medium text-stone-800 mb-2">"Baby teeth don't matter because they fall out anyway."</p>
-              <p className="text-sm text-stone-600"><strong>Fact:</strong> Baby teeth hold space for adult teeth. Early loss due to decay can cause crowding and alignment issues later.</p>
+          <div className="bg-sky-50/50 p-6 rounded-2xl border border-sky-100 mb-8">
+            <p className="text-stone-600 leading-relaxed">
+              There is a lot of confusion around children&apos;s oral care. This section clears up common misconceptions with simple, evidence-based facts and explains why each one matters, helping parents make informed decisions for their child&apos;s long-term dental health.
+            </p>
+          </div>
+          
+          <div className="space-y-6">
+            {/* Myth 1 */}
+            <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="md:w-1/2 bg-rose-50 p-4 rounded-lg border border-rose-100">
+                  <span className="inline-block px-3 py-1 bg-rose-200 text-rose-800 text-xs font-bold rounded-full mb-2">MYTH</span>
+                  <p className="font-medium text-stone-800">&quot;Baby teeth don&apos;t matter because they just fall out anyway.&quot;</p>
+                </div>
+                <div className="md:w-1/2 bg-green-50 p-4 rounded-lg border border-green-100">
+                  <span className="inline-block px-3 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full mb-2">FACT</span>
+                  <p className="text-sm text-stone-700">Cavities in baby teeth cause pain and can lead to serious infections. Losing baby teeth too early due to decay causes spacing problems that negatively affect the alignment of permanent adult teeth.</p>
+                </div>
+              </div>
+              <div className="bg-sky-50 p-4 rounded-lg">
+                <p className="text-sm text-stone-700"><strong className="text-sky-700">Why this matters:</strong> Healthy baby teeth guide permanent teeth into the correct position and support proper chewing, speech development, and overall comfort for your child.</p>
+              </div>
             </div>
-            <div className="bg-sky-50 p-6 rounded-xl border border-sky-100">
-              <span className="inline-block px-3 py-1 bg-sky-200 text-sky-800 text-xs font-bold rounded-full mb-3">MYTH</span>
-              <p className="font-medium text-stone-800 mb-2">"Juice is a healthy drink for teeth."</p>
-              <p className="text-sm text-stone-600"><strong>Fact:</strong> Juice bathes teeth in sugar and acid. Whole fruits are much better for dental health.</p>
+
+            {/* Myth 2 */}
+            <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="md:w-1/2 bg-rose-50 p-4 rounded-lg border border-rose-100">
+                  <span className="inline-block px-3 py-1 bg-rose-200 text-rose-800 text-xs font-bold rounded-full mb-2">MYTH</span>
+                  <p className="font-medium text-stone-800">&quot;Cavities in baby teeth can&apos;t affect permanent adult teeth.&quot;</p>
+                </div>
+                <div className="md:w-1/2 bg-green-50 p-4 rounded-lg border border-green-100">
+                  <span className="inline-block px-3 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full mb-2">FACT</span>
+                  <p className="text-sm text-stone-700">A severe infection in a baby tooth can travel down the root and damage the developing permanent tooth bud underneath, potentially causing defects or decay before the adult tooth even erupts.</p>
+                </div>
+              </div>
+              <div className="bg-sky-50 p-4 rounded-lg">
+                <p className="text-sm text-stone-700"><strong className="text-sky-700">Why this matters:</strong> Treating cavities early protects not just baby teeth, but also the health and strength of future permanent teeth.</p>
+              </div>
+            </div>
+
+            {/* Myth 3 */}
+            <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="md:w-1/2 bg-rose-50 p-4 rounded-lg border border-rose-100">
+                  <span className="inline-block px-3 py-1 bg-rose-200 text-rose-800 text-xs font-bold rounded-full mb-2">MYTH</span>
+                  <p className="font-medium text-stone-800">&quot;Fruit juice is a healthy alternative to soda for my child.&quot;</p>
+                </div>
+                <div className="md:w-1/2 bg-green-50 p-4 rounded-lg border border-green-100">
+                  <span className="inline-block px-3 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full mb-2">FACT</span>
+                  <p className="text-sm text-stone-700">Fruit juice often contains as much sugar and acid as soda, making it a major cause of tooth decay. Water is always the safest and healthiest choice for children&apos;s teeth.</p>
+                </div>
+              </div>
+              <div className="bg-sky-50 p-4 rounded-lg">
+                <p className="text-sm text-stone-700"><strong className="text-sky-700">Why this matters:</strong> Frequent exposure to sugary or acidic drinks weakens enamel and increases cavity risk, while water helps protect teeth and build healthy lifelong habits.</p>
+              </div>
+            </div>
+
+            {/* Myth 4 */}
+            <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="md:w-1/2 bg-rose-50 p-4 rounded-lg border border-rose-100">
+                  <span className="inline-block px-3 py-1 bg-rose-200 text-rose-800 text-xs font-bold rounded-full mb-2">MYTH</span>
+                  <p className="font-medium text-stone-800">&quot;It&apos;s okay to use whitening toothpaste on my child&apos;s teeth.&quot;</p>
+                </div>
+                <div className="md:w-1/2 bg-green-50 p-4 rounded-lg border border-green-100">
+                  <span className="inline-block px-3 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full mb-2">FACT</span>
+                  <p className="text-sm text-stone-700">Whitening toothpastes are too abrasive for a child&apos;s delicate enamel and may contain chemicals like hydrogen peroxide that are not recommended for young children.</p>
+                </div>
+              </div>
+              <div className="bg-sky-50 p-4 rounded-lg">
+                <p className="text-sm text-stone-700"><strong className="text-sky-700">Why this matters:</strong> Using harsh products can permanently damage enamel, making teeth more sensitive and prone to cavities later in life.</p>
+              </div>
+            </div>
+
+            {/* Myth 5 */}
+            <div className="bg-white p-6 rounded-xl border border-stone-100 shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="md:w-1/2 bg-rose-50 p-4 rounded-lg border border-rose-100">
+                  <span className="inline-block px-3 py-1 bg-rose-200 text-rose-800 text-xs font-bold rounded-full mb-2">MYTH</span>
+                  <p className="font-medium text-stone-800">&quot;You don&apos;t need to do anything until your baby has teeth.&quot;</p>
+                </div>
+                <div className="md:w-1/2 bg-green-50 p-4 rounded-lg border border-green-100">
+                  <span className="inline-block px-3 py-1 bg-green-200 text-green-800 text-xs font-bold rounded-full mb-2">FACT</span>
+                  <p className="text-sm text-stone-700">Oral care must begin from day one. Gently wiping your baby&apos;s gums daily removes bacteria and plaque, helping prevent cavities before teeth even appear.</p>
+                </div>
+              </div>
+              <div className="bg-sky-50 p-4 rounded-lg">
+                <p className="text-sm text-stone-700"><strong className="text-sky-700">Why this matters:</strong> Early oral care builds healthy routines, reduces harmful bacteria, and makes future brushing easier for both parents and children.</p>
+              </div>
             </div>
           </div>
         </section>
