@@ -80,6 +80,18 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const firstName = user.name?.split(' ')[0] || 'Mom';
   const stage = user.motherhoodStage?.replace(/_/g, ' ') || 'Welcome';
   
+  // Journey Stages
+  const JOURNEY_STAGES = [
+    { id: 'pregnancy', label: 'Pregnancy', icon: '🤰' },
+    { id: 'postpartum', label: 'Postpartum', icon: '👶' },
+    { id: 'newborn', label: 'Newborn Care', icon: '🍼' },
+    { id: 'toddler', label: 'Toddler Care', icon: '🧸' }
+  ];
+
+  const currentStageIndex = Math.max(0, JOURNEY_STAGES.findIndex(s => stage.toLowerCase().includes(s.id)) !== -1 
+    ? JOURNEY_STAGES.findIndex(s => stage.toLowerCase().includes(s.id)) 
+    : 0);
+
   const [meals, setMeals] = useState<MealItem[]>(DEFAULT_MEALS);
   const [nextMeal, setNextMeal] = useState<string>("Lunch");
   const [dailyQuote, setDailyQuote] = useState(QUOTES[0]);
@@ -187,9 +199,46 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                   {firstName}
                 </span>
               </h1>
-              <p className="text-stone-500 mt-3 text-lg">
+              <p className="text-stone-500 mt-3 text-lg mb-4">
                 Your journey: <span className="capitalize font-medium text-stone-800">{stage}</span>
               </p>
+
+              {/* Journey Timeline */}
+              <div className="flex items-center gap-2 mt-2">
+                {JOURNEY_STAGES.map((s, i) => {
+                  const isCompleted = i < currentStageIndex;
+                  const isCurrent = i === currentStageIndex;
+                  
+                  return (
+                    <div key={s.id} className="flex items-center">
+                      <div className={`relative flex items-center justify-center w-8 h-8 rounded-full text-xs transition-all duration-300 ${
+                        isCurrent 
+                          ? "bg-rose-500 text-white shadow-md scale-110 font-bold z-10" 
+                          : isCompleted 
+                            ? "bg-stone-200 text-stone-500" 
+                            : "bg-stone-100 text-stone-300"
+                      }`} title={s.label}>
+                        {s.icon}
+                        {isCurrent && (
+                          <motion.div 
+                            layoutId="activeRing"
+                            className="absolute inset-0 rounded-full border-2 border-rose-200" 
+                            initial={{ scale: 1 }}
+                            animate={{ scale: 1.4, opacity: 0 }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          />
+                        )}
+                      </div>
+                      
+                      {i < JOURNEY_STAGES.length - 1 && (
+                        <div className={`w-8 h-0.5 mx-1 rounded-full ${
+                          isCompleted ? "bg-stone-300" : "bg-stone-100"
+                        }`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             
             <Link href="/dashboard/subscription">
