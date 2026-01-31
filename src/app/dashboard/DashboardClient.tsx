@@ -58,16 +58,44 @@ const DEFAULT_MEALS: MealItem[] = [
   { id: 'dinner', meal: "Dinner", food: "Grilled Paneer Salad with Soup", status: "pending", time: "8:00 PM" },
 ];
 
+const QUOTES = [
+  { text: "Motherhood is the greatest thing and the hardest thing.", author: "Ricki Lake" },
+  { text: "There is no way to be a perfect mother, and a million ways to be a good one.", author: "Jill Churchill" },
+  { text: "To the world you may be one person; but to one person you may be the world.", author: "Dr. Seuss" },
+  { text: "A mother's arms are more comforting than anyone else's.", author: "Princess Diana" },
+  { text: "Motherhood: All love begins and ends there.", author: "Robert Browning" },
+  { text: "The influence of a mother in the lives of her children is beyond calculation.", author: "James E. Faust" },
+  { text: "Youth fades; love droops; the leaves of friendship fall; A mother’s secret hope outlives them all.", author: "Oliver Wendell Holmes" },
+  { text: "Motherhood is the exquisite inconvenience of being another person's everything.", author: "Unknown" },
+  { text: "A mother understands what a child does not say.", author: "Jewish Proverb" },
+  { text: "Life began with waking up and loving my mother's face.", author: "George Eliot" },
+  { text: "We have a secret in our culture, and it's not that birth is painful. It's that women are strong.", author: "Laura Stavoe Harm" },
+  { text: "Whatever else is unsure in this stinking dunghill of a world a mother's love is not.", author: "James Joyce" },
+  { text: "The natural state of motherhood is unselfishness.", author: "Jessica Lange" },
+  { text: "Sometimes the strength of motherhood is greater than natural laws.", author: "Barbara Kingsolver" },
+  { text: "A mother is she who can take the place of all others but whose place no one else can take.", author: "Cardinal Mermillod" }
+];
+
 export default function DashboardClient({ user }: DashboardClientProps) {
   const firstName = user.name?.split(' ')[0] || 'Mom';
   const stage = user.motherhoodStage?.replace(/_/g, ' ') || 'Welcome';
   
   const [meals, setMeals] = useState<MealItem[]>(DEFAULT_MEALS);
   const [nextMeal, setNextMeal] = useState<string>("Lunch");
+  const [dailyQuote, setDailyQuote] = useState(QUOTES[0]);
 
   useEffect(() => {
+    // Daily Wisdom Logic
+    const todayDate = new Date();
+    const startOfYear = new Date(todayDate.getFullYear(), 0, 0);
+    const diff = todayDate.getTime() - startOfYear.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    const quoteIndex = dayOfYear % QUOTES.length;
+    setDailyQuote(QUOTES[quoteIndex]);
+
     // Load state from local storage on mount
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayDate.toISOString().split('T')[0];
     const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
     const stored = localStorage.getItem(storageKey);
     
@@ -307,9 +335,9 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                 <div className="relative z-10">
                   <h3 className="font-serif text-xl mb-4 text-stone-200">Daily Wisdom</h3>
                   <blockquote className="text-lg italic font-light leading-relaxed mb-4">
-                    "Motherhood is the greatest thing and the hardest thing."
+                    "{dailyQuote.text}"
                   </blockquote>
-                  <p className="text-xs text-stone-400 uppercase tracking-widest">— Ricki Lake</p>
+                  <p className="text-xs text-stone-400 uppercase tracking-widest">— {dailyQuote.author}</p>
                 </div>
               </div>
 
