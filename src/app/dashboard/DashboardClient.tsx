@@ -84,6 +84,8 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const [nextMeal, setNextMeal] = useState<string>("Lunch");
   const [dailyQuote, setDailyQuote] = useState(QUOTES[0]);
 
+  const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized';
+
   useEffect(() => {
     // Daily Wisdom Logic
     const todayDate = new Date();
@@ -312,15 +314,24 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                   </div>
                 </Link>
 
-                <Link href="/dashboard/support" className="block group">
-                  <div className="bg-gradient-to-br from-emerald-50 to-white p-6 rounded-3xl border border-emerald-100 hover:shadow-lg hover:shadow-emerald-100/50 transition-all duration-300 h-full">
+                <Link href={isPremium ? "/dashboard/support" : "/pricing?source=expert-support"} className="block group">
+                  <div className={`p-6 rounded-3xl border transition-all duration-300 h-full relative overflow-hidden ${
+                    isPremium 
+                      ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-100 hover:shadow-lg hover:shadow-emerald-100/50" 
+                      : "bg-gradient-to-br from-amber-50 to-white border-amber-300 hover:shadow-lg hover:shadow-amber-100/50"
+                  }`}>
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide border border-amber-200">
+                        Premium Feature
+                      </div>
+                    )}
                     <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <HeartHandshake className="w-6 h-6 text-emerald-500" />
+                      <HeartHandshake className={`w-6 h-6 ${isPremium ? "text-emerald-500" : "text-amber-500"}`} />
                     </div>
                     <h3 className="text-lg font-bold text-stone-900 mb-2">Expert Support</h3>
                     <p className="text-stone-600 text-sm mb-4">Chat privately with our care team for personalized guidance.</p>
-                    <div className="flex items-center text-emerald-600 text-sm font-medium">
-                      Get Help <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    <div className={`flex items-center text-sm font-medium ${isPremium ? "text-emerald-600" : "text-amber-600"}`}>
+                      {isPremium ? "Get Help" : "Unlock Access"} <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
