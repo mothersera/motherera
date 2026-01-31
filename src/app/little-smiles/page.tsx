@@ -58,15 +58,23 @@ export default function LittleSmilesPage() {
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeIn}
-          className="grid md:grid-cols-2 gap-12 items-center"
+          className="grid md:grid-cols-2 gap-x-12 gap-y-6"
         >
-          <div>
+          {/* Header Row (Left) */}
+          <div className="md:col-span-1">
             <div className="inline-flex items-center gap-2 mb-4">
               <Clock className="w-5 h-5 text-sky-600" />
               <h3 className="text-sky-600 font-bold tracking-wide uppercase text-sm">0–6 Months</h3>
             </div>
             <h2 className="text-3xl font-serif font-bold text-stone-900 mb-6">Care Before Teeth</h2>
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
+          </div>
+          
+          {/* Spacer for Right Column (Desktop only) */}
+          <div className="hidden md:block"></div>
+
+          {/* Left Content Card */}
+          <div className="md:col-span-1">
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 h-full">
               <ul className="space-y-6">
                 <li className="flex gap-4 items-start">
                   <div className="w-10 h-10 rounded-full bg-sky-50 flex items-center justify-center shrink-0">
@@ -95,10 +103,12 @@ export default function LittleSmilesPage() {
               </div>
             </div>
           </div>
-          <div className="relative pl-12 md:pl-0">
+
+          {/* Right Content Card */}
+          <div className="md:col-span-1 relative pl-12 md:pl-0">
              <div className="absolute right-0 bottom-0 w-64 h-64 bg-sky-100 rounded-full blur-[80px] opacity-50" />
-             <div className="relative z-10">
-                <Card className="border-none shadow-xl shadow-sky-100/50">
+             <div className="relative z-10 h-full">
+                <Card className="border-none shadow-xl shadow-sky-100/50 h-full">
                   <div className="h-2 bg-sky-500" />
                   <CardHeader>
                     <CardTitle className="text-xl flex items-center gap-3 text-stone-900">
