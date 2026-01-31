@@ -63,6 +63,7 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const stage = user.motherhoodStage?.replace(/_/g, ' ') || 'Welcome';
   
   const [meals, setMeals] = useState<MealItem[]>(DEFAULT_MEALS);
+  const [nextMeal, setNextMeal] = useState<string>("Lunch");
 
   useEffect(() => {
     // Load state from local storage on mount
@@ -72,20 +73,32 @@ export default function DashboardClient({ user }: DashboardClientProps) {
     
     if (stored) {
       try {
-        setMeals(JSON.parse(stored));
+        const storedMeals = JSON.parse(stored);
+        setMeals(storedMeals);
+        calculateNextMeal(storedMeals);
       } catch (e) {
         console.error("Failed to parse stored meals", e);
+        calculateNextMeal(DEFAULT_MEALS);
       }
     } else {
-      // If it's a new day (no storage for today), we could reset breakfast to pending if desired.
-      // For now, we'll respect the default mock state where Breakfast is already done.
+      calculateNextMeal(DEFAULT_MEALS);
     }
   }, [user.email]);
+
+  const calculateNextMeal = (currentMeals: MealItem[]) => {
+    const next = currentMeals.find(m => m.status === 'pending');
+    if (next) {
+      setNextMeal(next.meal);
+    } else {
+      setNextMeal("All meals completed for today 🎉");
+    }
+  };
 
   const markAsDone = (index: number) => {
     const newMeals = [...meals];
     newMeals[index].status = 'completed';
     setMeals(newMeals);
+    calculateNextMeal(newMeals);
     
     const today = new Date().toISOString().split('T')[0];
     const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
@@ -154,8 +167,8 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               },
               { 
                 label: "Next Meal", 
-                value: "Lunch", 
-                sub: "Spinach Dal & Roti", 
+                value: nextMeal, 
+                sub: nextMeal.includes("completed") ? "Great job!" : meals.find(m => m.meal === nextMeal)?.food || "Healthy choice", 
                 icon: Utensils, 
                 color: "text-emerald-500", 
                 bg: "bg-emerald-50" 
