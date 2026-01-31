@@ -52,37 +52,103 @@ export default function PregnancyPage() {
       <div className="container mx-auto px-4 py-16 max-w-6xl space-y-24">
         
         {/* Section 1: Global Perspective */}
-        <motion.section 
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeIn}
-          className="text-center max-w-4xl mx-auto"
-        >
-          <h2 className="text-3xl font-serif font-bold text-stone-800 mb-8">Pregnancy & Nutrition: A Global Perspective</h2>
-          <div className="grid md:grid-cols-2 gap-8 text-left">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
-              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-6">
-                <Heart className="w-6 h-6 text-rose-500" />
-              </div>
-              <h3 className="text-xl font-bold text-stone-900 mb-3">Holistic Nourishment</h3>
-              <p className="text-stone-600 leading-relaxed">
-                Nutrition isn't just counting calories. It's about quality, variety, and listening to your body. Whether you eat rice and lentils or meat and potatoes, the core principles remain: nourishment, hydration, and balance.
-              </p>
+      <motion.section 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={fadeIn}
+        className="text-center max-w-4xl mx-auto"
+      >
+        <h2 className="text-3xl font-serif font-bold text-stone-800 mb-8">Pregnancy & Nutrition: A Global Perspective</h2>
+        <div className="grid md:grid-cols-2 gap-8 text-left">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
+            <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-6">
+              <Heart className="w-6 h-6 text-rose-500" />
             </div>
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
-              <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-6">
-                <Salad className="w-6 h-6 text-amber-500" />
-              </div>
-              <h3 className="text-xl font-bold text-stone-900 mb-3">No "Perfect" Diet</h3>
-              <p className="text-stone-600 leading-relaxed">
-                Your needs are unique to your lifestyle and culture. Focus on nutrient-dense whole foods that make you feel energized, rather than strict rules.
-              </p>
-            </div>
+            <h3 className="text-xl font-bold text-stone-900 mb-3">Holistic Nourishment</h3>
+            <p className="text-stone-600 leading-relaxed">
+              Nutrition isn't just counting calories. It's about quality, variety, and listening to your body. Whether you eat rice and lentils or meat and potatoes, the core principles remain: nourishment, hydration, and balance.
+            </p>
           </div>
-        </motion.section>
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
+            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-6">
+              <Salad className="w-6 h-6 text-amber-500" />
+            </div>
+            <h3 className="text-xl font-bold text-stone-900 mb-3">No "Perfect" Diet</h3>
+            <p className="text-stone-600 leading-relaxed">
+              Your needs are unique to your lifestyle and culture. Focus on nutrient-dense whole foods that make you feel energized, rather than strict rules.
+            </p>
+          </div>
+        </div>
+      </motion.section>
 
-        {/* Timeline Section */}
+      {/* Trimester-Wise Nutrition Section (New Addition) */}
+      <motion.section 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={staggerContainer}
+        className="max-w-6xl mx-auto"
+      >
+        <h2 className="text-3xl font-serif font-bold text-stone-800 mb-10 text-left">Trimester-Wise Nutrition</h2>
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Card 1: First Trimester */}
+          <motion.div variants={fadeIn} className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold text-rose-600 mb-6">First Trimester</h3>
+            <ul className="space-y-4">
+              {[
+                "Manage nausea with small, frequent meals.",
+                "Focus on hydration (water, herbal teas).",
+                "Gentle nourishment; don't force heavy meals.",
+                "Folate-rich foods (greens, fortified grains)."
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-stone-700">
+                  <Check className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <span className="text-sm leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Card 2: Second Trimester */}
+          <motion.div variants={fadeIn} className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold text-rose-600 mb-6">Second Trimester</h3>
+            <ul className="space-y-4">
+              {[
+                "Appetite often returns; focus on quality.",
+                "Increased protein needs for baby's growth.",
+                "Calcium and Vitamin D for bone development.",
+                "Iron-rich foods to support blood volume."
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-stone-700">
+                  <Check className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <span className="text-sm leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Card 3: Third Trimester */}
+          <motion.div variants={fadeIn} className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-xl font-bold text-rose-600 mb-6">Third Trimester</h3>
+            <ul className="space-y-4">
+              {[
+                "Steady nourishment for final growth spurt.",
+                "Fiber-rich foods for digestive comfort.",
+                "Omega-3s (DHA) for brain development.",
+                "Preparing body for labor with energy-dense snacks."
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-stone-700">
+                  <Check className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                  <span className="text-sm leading-relaxed">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Timeline Section */}
         <div className="relative">
           <div className="absolute left-[28px] md:left-1/2 top-0 bottom-0 w-px bg-stone-200 hidden md:block" />
           
