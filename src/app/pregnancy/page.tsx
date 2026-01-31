@@ -1,192 +1,289 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Info } from "lucide-react";
+"use client";
 
-export const metadata = {
-  title: "Pregnancy Care — Mother Era",
-  description:
-    "Global, diet-inclusive pregnancy guidance: trimester nutrition, lifestyle, and myths debunked for supportive, calm care.",
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check, Info, Heart, Baby, Calendar, ArrowRight, Salad, Activity } from "lucide-react";
+import { motion } from "framer-motion";
+
+const fadeIn = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
 };
 
 export default function PregnancyPage() {
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
-      {/* Hero */}
-      <section className="relative py-16 bg-rose-100/50">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-3xl md:text-5xl font-bold text-stone-900 mb-4">Pregnancy Care</h1>
-          <p className="text-lg md:text-xl text-stone-600 max-w-3xl mx-auto">
-            A global, inclusive guide to nourishing yourself and your growing baby. 
-            Honoring every culture, diet, and body.
-          </p>
+      {/* Hero Section */}
+      <section className="relative py-20 md:py-32 overflow-hidden bg-rose-50/50">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-rose-100/40 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-amber-100/40 rounded-full blur-[100px]" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="inline-block py-1 px-3 rounded-full bg-rose-100 text-rose-700 text-xs font-semibold tracking-wide uppercase mb-6">
+              Expert Guidance
+            </span>
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-stone-900 mb-6 leading-tight">
+              Pregnancy <br/>
+              <span className="text-rose-500">Care & Wellness</span>
+            </h1>
+            <p className="text-lg md:text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed font-light">
+              A global, inclusive guide to nourishing yourself and your growing baby. Honoring every culture, diet, and body.
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-12 space-y-16 max-w-5xl">
+      <div className="container mx-auto px-4 py-16 max-w-6xl space-y-24">
         
         {/* Section 1: Global Perspective */}
-        <section>
-          <h2 className="text-2xl font-bold text-stone-800 mb-6 border-b border-rose-200 pb-2">
-            Pregnancy & Nutrition: A Global Perspective
-          </h2>
-          <div className="prose prose-stone max-w-none text-stone-600">
-            <p className="mb-4">
-              Nutrition during pregnancy is not just about counting calories; it&apos;s about quality, variety, and listening to your body. 
-              Around the world, expectant mothers have thrived on diverse diets for millennia. Whether you eat rice and lentils, pasta and cheese, 
-              or meat and potatoes, the core principles remain the same: nourishment, hydration, and balance.
-            </p>
-            <p>
-              Your nutritional needs are unique to your lifestyle, activity level, and cultural background. 
-              There is no single &quot;perfect&quot; pregnancy diet. Instead, focus on nutrient-dense whole foods that make you feel energized and satisfied.
-            </p>
-          </div>
-        </section>
-
-        {/* Section 2: Trimester Overview */}
-        <section>
-          <h2 className="text-2xl font-bold text-stone-800 mb-6 border-b border-rose-200 pb-2">
-            Trimester-Wise Nutrition
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-white border-stone-100 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-rose-600">First Trimester</CardTitle>
-              </CardHeader>
-              <CardContent className="text-stone-600 text-sm">
-                <ul className="space-y-2">
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Manage nausea with small, frequent meals.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Focus on hydration (water, herbal teas).</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Gentle nourishment; don&apos;t force heavy meals.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Folate-rich foods (greens, fortified grains).</li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-stone-100 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-rose-600">Second Trimester</CardTitle>
-              </CardHeader>
-              <CardContent className="text-stone-600 text-sm">
-                <ul className="space-y-2">
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Appetite often returns; focus on quality.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Increased protein needs for baby&apos;s growth.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Calcium and Vitamin D for bone development.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Iron-rich foods to support blood volume.</li>
-                </ul>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-stone-100 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-rose-600">Third Trimester</CardTitle>
-              </CardHeader>
-              <CardContent className="text-stone-600 text-sm">
-                <ul className="space-y-2">
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Steady nourishment for final growth spurt.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Fiber-rich foods for digestive comfort.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Omega-3s (DHA) for brain development.</li>
-                  <li className="flex gap-2"><Check className="w-4 h-4 text-rose-400 shrink-0" /> Preparing body for labor with energy-dense snacks.</li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Section 3: Dietary Patterns */}
-        <section>
-          <h2 className="text-2xl font-bold text-stone-800 mb-6 border-b border-rose-200 pb-2">
-            Inclusive Dietary Guidance
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-green-700">Vegetarian</h3>
-              <p className="text-stone-600 text-sm">
-                Focus on diverse plant proteins like lentils, beans, tofu, and dairy (if consumed). 
-                Pair iron-rich plant foods (spinach, legumes) with Vitamin C (citrus, peppers) to enhance absorption. 
-                Ensure adequate Vitamin B12 intake through fortified foods or supplements.
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeIn}
+          className="text-center max-w-4xl mx-auto"
+        >
+          <h2 className="text-3xl font-serif font-bold text-stone-800 mb-8">Pregnancy & Nutrition: A Global Perspective</h2>
+          <div className="grid md:grid-cols-2 gap-8 text-left">
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
+              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center mb-6">
+                <Heart className="w-6 h-6 text-rose-500" />
+              </div>
+              <h3 className="text-xl font-bold text-stone-900 mb-3">Holistic Nourishment</h3>
+              <p className="text-stone-600 leading-relaxed">
+                Nutrition isn't just counting calories. It's about quality, variety, and listening to your body. Whether you eat rice and lentils or meat and potatoes, the core principles remain: nourishment, hydration, and balance.
               </p>
             </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-red-700">Non-Vegetarian</h3>
-              <p className="text-stone-600 text-sm">
-                Lean meats, poultry, and eggs are excellent protein sources. Include fish low in mercury (like salmon, sardines) for Omega-3s. 
-                Balance meat intake with plenty of vegetables and whole grains to maintain digestive health.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-emerald-700">Plant-Based / Vegan</h3>
-              <p className="text-stone-600 text-sm">
-                A well-planned vegan diet is safe. Prioritize protein variety (quinoa, soy, chickpeas). 
-                Pay special attention to Vitamin B12, Iron, Calcium, Iodine, and Choline. 
-                Consider an algae-based DHA supplement for Omega-3s.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-purple-700">Keto / Low-Carb</h3>
-              <p className="text-stone-600 text-sm">
-                <span className="font-bold">Note:</span> Consult a specialist before maintaining strict Keto during pregnancy. 
-                Generally, focus on nutrient-dense whole foods (avocados, nuts, eggs, leafy greens) rather than just high fat. 
-                Ensure you get enough electrolytes and hydration. Avoid processed &quot;keto&quot; snacks.
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
+              <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-6">
+                <Salad className="w-6 h-6 text-amber-500" />
+              </div>
+              <h3 className="text-xl font-bold text-stone-900 mb-3">No "Perfect" Diet</h3>
+              <p className="text-stone-600 leading-relaxed">
+                Your needs are unique to your lifestyle and culture. Focus on nutrient-dense whole foods that make you feel energized, rather than strict rules.
               </p>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* Section 4: Foods to Avoid */}
-        <section className="bg-red-50 p-6 rounded-xl">
-          <h2 className="text-2xl font-bold text-stone-800 mb-4 flex items-center gap-2">
-            <Info className="text-red-500" /> Foods & Habits to Limit
-          </h2>
-          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 text-stone-700">
-            <li>• Raw or undercooked meat, fish, and eggs (risk of bacteria).</li>
-            <li>• Unpasteurized dairy and soft cheeses (Listeria risk).</li>
-            <li>• High-mercury fish (shark, swordfish, king mackerel).</li>
-            <li>• Excess caffeine (limit to ~200mg/day).</li>
-            <li>• Alcohol and smoking (strictly avoid).</li>
-            <li>• Ultra-processed foods with high added sugars/salts.</li>
-          </ul>
-        </section>
-
-        {/* Section 5: Lifestyle */}
-        <section>
-          <h2 className="text-2xl font-bold text-stone-800 mb-6 border-b border-rose-200 pb-2">
-            Lifestyle & Emotional Well-Being
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-stone-800 mb-2">Rest & Movement</h3>
-              <p className="text-stone-600 mb-4">
-                Listen to your body. Gentle movement like walking, prenatal yoga, or swimming can boost mood and reduce discomfort. 
-                Prioritize sleep—it&apos;s productive rest for building a baby.
+        {/* Timeline Section */}
+        <div className="relative">
+          <div className="absolute left-[28px] md:left-1/2 top-0 bottom-0 w-px bg-stone-200 hidden md:block" />
+          
+          {/* First Trimester */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="relative grid md:grid-cols-2 gap-12 mb-24 items-center"
+          >
+            <div className="md:text-right md:pr-12">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <span className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-sm">1</span>
+                <h3 className="text-rose-600 font-bold tracking-wide uppercase text-sm">First Trimester</h3>
+              </div>
+              <h2 className="text-3xl font-serif font-bold text-stone-900 mb-4">Gentle Beginnings</h2>
+              <p className="text-stone-600 leading-relaxed mb-6">
+                Focus on managing nausea and staying hydrated. Your body is doing the heavy lifting of forming new life.
               </p>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-stone-800 mb-2">Emotional Health</h3>
-              <p className="text-stone-600">
-                Pregnancy is an emotional journey. It&apos;s okay to feel anxious or overwhelmed. 
-                Connect with supportive friends, family, or communities. Your mental peace is as important as your nutrition.
+            <div className="relative pl-12 md:pl-0">
+              <div className="absolute left-0 md:left-[-28px] top-0 w-14 h-14 bg-white border-4 border-rose-100 rounded-full flex items-center justify-center z-10 shadow-sm">
+                <Baby className="w-6 h-6 text-rose-500" />
+              </div>
+              <Card className="border-none shadow-xl shadow-stone-200/50 bg-white overflow-hidden">
+                <div className="h-2 bg-rose-500" />
+                <CardContent className="p-8">
+                  <h4 className="font-bold text-stone-900 mb-4 text-lg">Key Focus Areas</h4>
+                  <ul className="space-y-4">
+                    {[
+                      "Manage nausea with small, frequent meals",
+                      "Focus on hydration (water, herbal teas)",
+                      "Gentle nourishment; don't force heavy meals",
+                      "Folate-rich foods (greens, fortified grains)"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-3 text-stone-600">
+                        <Check className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+
+          {/* Second Trimester */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="relative grid md:grid-cols-2 gap-12 mb-24 items-center"
+          >
+            <div className="order-2 md:order-1 relative pl-12 md:pl-0">
+               <div className="absolute left-0 md:right-[-28px] md:left-auto top-0 w-14 h-14 bg-white border-4 border-amber-100 rounded-full flex items-center justify-center z-10 shadow-sm">
+                <Activity className="w-6 h-6 text-amber-500" />
+              </div>
+              <Card className="border-none shadow-xl shadow-stone-200/50 bg-white overflow-hidden">
+                <div className="h-2 bg-amber-500" />
+                <CardContent className="p-8">
+                  <h4 className="font-bold text-stone-900 mb-4 text-lg">Nutrient Needs</h4>
+                   <ul className="space-y-4">
+                    {[
+                      "Appetite often returns; focus on quality",
+                      "Increased protein needs for baby's growth",
+                      "Calcium and Vitamin D for bone development",
+                      "Iron-rich foods to support blood volume"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-3 text-stone-600">
+                        <Check className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="order-1 md:order-2 md:pl-12">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <span className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-sm">2</span>
+                <h3 className="text-amber-600 font-bold tracking-wide uppercase text-sm">Second Trimester</h3>
+              </div>
+              <h2 className="text-3xl font-serif font-bold text-stone-900 mb-4">Growth & Energy</h2>
+              <p className="text-stone-600 leading-relaxed mb-6">
+                Often called the "honeymoon phase," you might feel a burst of energy. Use this time to nourish your body and move gently.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Third Trimester */}
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="relative grid md:grid-cols-2 gap-12 items-center"
+          >
+            <div className="md:text-right md:pr-12">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <span className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">3</span>
+                <h3 className="text-blue-600 font-bold tracking-wide uppercase text-sm">Third Trimester</h3>
+              </div>
+              <h2 className="text-3xl font-serif font-bold text-stone-900 mb-4">Preparation</h2>
+              <p className="text-stone-600 leading-relaxed mb-6">
+                As you approach the finish line, focus on steady nourishment, comfort, and preparing your body for labor.
+              </p>
+            </div>
+            <div className="relative pl-12 md:pl-0">
+              <div className="absolute left-0 md:left-[-28px] top-0 w-14 h-14 bg-white border-4 border-blue-100 rounded-full flex items-center justify-center z-10 shadow-sm">
+                <Calendar className="w-6 h-6 text-blue-500" />
+              </div>
+              <Card className="border-none shadow-xl shadow-stone-200/50 bg-white overflow-hidden">
+                <div className="h-2 bg-blue-500" />
+                <CardContent className="p-8">
+                  <h4 className="font-bold text-stone-900 mb-4 text-lg">Final Stretch Focus</h4>
+                  <ul className="space-y-4">
+                    {[
+                      "Steady nourishment for final growth spurt",
+                      "Fiber-rich foods for digestive comfort",
+                      "Omega-3s (DHA) for brain development",
+                      "Energy-dense snacks for labor prep"
+                    ].map((item, i) => (
+                      <li key={i} className="flex items-start gap-3 text-stone-600">
+                        <Check className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Inclusive Dietary Guidance */}
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeIn}
+          className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-stone-100"
+        >
+          <h2 className="text-3xl font-serif font-bold text-stone-900 mb-10 text-center">Inclusive Dietary Guidance</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="p-6 bg-green-50 rounded-2xl">
+              <h3 className="text-xl font-bold text-green-800 mb-3">Vegetarian</h3>
+              <p className="text-stone-700 text-sm leading-relaxed">
+                Focus on diverse plant proteins like lentils, beans, tofu, and dairy. Pair iron-rich plant foods with Vitamin C to enhance absorption. Ensure adequate Vitamin B12.
+              </p>
+            </div>
+            <div className="p-6 bg-red-50 rounded-2xl">
+              <h3 className="text-xl font-bold text-red-800 mb-3">Non-Vegetarian</h3>
+              <p className="text-stone-700 text-sm leading-relaxed">
+                Lean meats, poultry, and eggs are excellent protein sources. Include low-mercury fish like salmon for Omega-3s. Balance with plenty of vegetables.
+              </p>
+            </div>
+            <div className="p-6 bg-emerald-50 rounded-2xl">
+              <h3 className="text-xl font-bold text-emerald-800 mb-3">Plant-Based / Vegan</h3>
+              <p className="text-stone-700 text-sm leading-relaxed">
+                Prioritize protein variety (quinoa, soy). Pay special attention to Vitamin B12, Iron, Calcium, Iodine, and Choline. Consider algae-based DHA.
+              </p>
+            </div>
+            <div className="p-6 bg-purple-50 rounded-2xl">
+              <h3 className="text-xl font-bold text-purple-800 mb-3">Keto / Low-Carb</h3>
+              <p className="text-stone-700 text-sm leading-relaxed">
+                Consult a specialist. Focus on nutrient-dense whole foods (avocados, nuts, eggs, leafy greens). Ensure electrolytes and hydration. Avoid processed "keto" snacks.
               </p>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* Section 6: Myths */}
-        <section>
-          <h2 className="text-2xl font-bold text-stone-800 mb-6 border-b border-rose-200 pb-2">
-            Common Myths Debunked
-          </h2>
-          <div className="space-y-4">
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <p className="font-semibold text-stone-900">Myth: &quot;You must eat for two.&quot;</p>
-              <p className="text-stone-600 text-sm mt-1">
-                Fact: You only need about 300-500 extra calories in the second and third trimesters. Nutrient density matters more than quantity.
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-sm">
-              <p className="font-semibold text-stone-900">Myth: &quot;Avoid all seafood.&quot;</p>
-              <p className="text-stone-600 text-sm mt-1">
-                Fact: Fish is great for brain development! Just avoid high-mercury varieties and ensure it&apos;s cooked thoroughly.
-              </p>
+        {/* Myths vs Facts (Footer style) */}
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeIn}
+          className="bg-stone-900 rounded-[2.5rem] p-8 md:p-16 text-center text-stone-300 relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-stone-800/50 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+          
+          <div className="relative z-10 max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-6">Common Myths Debunked</h2>
+            <div className="grid md:grid-cols-2 gap-8 text-left mt-12">
+              <div className="bg-stone-800/50 p-6 rounded-2xl border border-stone-700/50">
+                <h3 className="font-bold text-white mb-2">"You must eat for two"</h3>
+                <p className="text-sm text-stone-400">
+                  <span className="text-rose-400 font-bold">Fact:</span> You only need about 300-500 extra calories in the later trimesters. Quality over quantity.
+                </p>
+              </div>
+              <div className="bg-stone-800/50 p-6 rounded-2xl border border-stone-700/50">
+                <h3 className="font-bold text-white mb-2">"Avoid all seafood"</h3>
+                <p className="text-sm text-stone-400">
+                  <span className="text-rose-400 font-bold">Fact:</span> Fish is great for brain development! Just avoid high-mercury varieties and ensure it's cooked.
+                </p>
+              </div>
             </div>
           </div>
-        </section>
+        </motion.section>
 
       </div>
     </div>
