@@ -348,7 +348,7 @@ export default function HomeClient() {
             <p>&copy; 2024 Mother Era. All rights reserved.</p>
             <div className="flex gap-8">
               <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
