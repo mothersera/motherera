@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Activity, 
@@ -11,7 +12,8 @@ import {
   ArrowRight, 
   Sparkles,
   ChevronRight,
-  Clock
+  Clock,
+  Check
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -41,9 +43,54 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
+interface MealItem {
+  id: string;
+  meal: string;
+  food: string;
+  status: 'completed' | 'pending';
+  time: string;
+}
+
+const DEFAULT_MEALS: MealItem[] = [
+  { id: 'breakfast', meal: "Breakfast", food: "Oats Porridge with Almonds & Berries", status: "completed", time: "8:00 AM" },
+  { id: 'lunch', meal: "Lunch", food: "Spinach Dal, Multigrain Roti & Curd", status: "pending", time: "1:00 PM" },
+  { id: 'snack', meal: "Snack", food: "Fresh Fruit Bowl & Green Tea", status: "pending", time: "4:00 PM" },
+  { id: 'dinner', meal: "Dinner", food: "Grilled Paneer Salad with Soup", status: "pending", time: "8:00 PM" },
+];
+
 export default function DashboardClient({ user }: DashboardClientProps) {
   const firstName = user.name?.split(' ')[0] || 'Mom';
   const stage = user.motherhoodStage?.replace(/_/g, ' ') || 'Welcome';
+  
+  const [meals, setMeals] = useState<MealItem[]>(DEFAULT_MEALS);
+
+  useEffect(() => {
+    // Load state from local storage on mount
+    const today = new Date().toISOString().split('T')[0];
+    const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
+    const stored = localStorage.getItem(storageKey);
+    
+    if (stored) {
+      try {
+        setMeals(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to parse stored meals", e);
+      }
+    } else {
+      // If it's a new day (no storage for today), we could reset breakfast to pending if desired.
+      // For now, we'll respect the default mock state where Breakfast is already done.
+    }
+  }, [user.email]);
+
+  const markAsDone = (index: number) => {
+    const newMeals = [...meals];
+    newMeals[index].status = 'completed';
+    setMeals(newMeals);
+    
+    const today = new Date().toISOString().split('T')[0];
+    const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
+    localStorage.setItem(storageKey, JSON.stringify(newMeals));
+  };
 
   // Time-based greeting
   const hour = new Date().getHours();
@@ -163,29 +210,44 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="divide-y divide-stone-100">
-                    {[
-                      { meal: "Breakfast", food: "Oats Porridge with Almonds & Berries", status: "completed", time: "8:00 AM" },
-                      { meal: "Lunch", food: "Spinach Dal, Multigrain Roti & Curd", status: "pending", time: "1:00 PM" },
-                      { meal: "Snack", food: "Fresh Fruit Bowl & Green Tea", status: "pending", time: "4:00 PM" },
-                      { meal: "Dinner", food: "Grilled Paneer Salad with Soup", status: "pending", time: "8:00 PM" },
-                    ].map((item, i) => (
+                    {meals.map((item, i) => (
                       <div key={i} className="flex items-center p-6 hover:bg-stone-50/50 transition-colors group">
                         <div className="mr-4 flex flex-col items-center">
-                          <div className={`w-3 h-3 rounded-full ${item.status === 'completed' ? 'bg-green-500' : 'bg-stone-300'}`} />
+                          <div 
+                            className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                              item.status === 'completed' ? 'bg-green-500' : 'bg-stone-300'
+                            }`} 
+                          />
                           {i !== 3 && <div className="w-0.5 h-full bg-stone-100 mt-2" />}
                         </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-medium text-stone-900">{item.meal}</h4>
+                            <h4 className={`font-medium transition-colors ${item.status === 'completed' ? 'text-stone-500' : 'text-stone-900'}`}>
+                              {item.meal}
+                            </h4>
                             <span className="text-xs font-mono text-stone-400 flex items-center gap-1">
                               <Clock className="w-3 h-3" /> {item.time}
                             </span>
                           </div>
-                          <p className="text-stone-600 text-sm">{item.food}</p>
+                          <p className={`text-sm transition-colors ${item.status === 'completed' ? 'text-stone-400 line-through decoration-stone-300' : 'text-stone-600'}`}>
+                            {item.food}
+                          </p>
                         </div>
-                        <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {item.status === 'pending' && (
-                            <Button size="sm" variant="outline" className="h-8 text-xs">Mark Done</Button>
+                        <div className="ml-4 min-w-[100px] flex justify-end">
+                          {item.status === 'pending' ? (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-8 text-xs opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-2 group-hover:translate-x-0"
+                              onClick={() => markAsDone(i)}
+                              aria-label={`Mark ${item.meal} as completed`}
+                            >
+                              Mark Done
+                            </Button>
+                          ) : (
+                            <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full animate-in fade-in zoom-in duration-300">
+                              <Check className="w-3 h-3 mr-1" /> Done
+                            </span>
                           )}
                         </div>
                       </div>
