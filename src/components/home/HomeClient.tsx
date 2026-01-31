@@ -313,11 +313,18 @@ export default function HomeClient() {
             <div>
               <h4 className="font-bold text-white mb-6 tracking-wide uppercase text-sm">Explore</h4>
               <ul className="space-y-4">
-                {['Pregnancy', 'Postpartum', 'Newborn Care', 'Child Nutrition', 'Family Health'].map((item) => (
-                  <li key={item}>
-                    <Link href={`/${item.toLowerCase().replace(' ', '-')}`} className="hover:text-white transition-colors flex items-center gap-2 group">
+                {[
+                  { name: 'Pregnancy', href: '/pregnancy' },
+                  { name: 'Postpartum', href: '/postpartum' },
+                  { name: 'Newborn Care', href: '/newborn-care' },
+                  { name: 'Child Nutrition', href: '/child' },
+                  { name: 'Family Health', href: '/family-health' },
+                  { name: 'Little Smiles Care', href: '/little-smiles' }
+                ].map((item) => (
+                  <li key={item.name}>
+                    <Link href={item.href} className="hover:text-white transition-colors flex items-center gap-2 group">
                       <span className="w-1.5 h-1.5 bg-rose-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                      {item}
+                      {item.name}
                     </Link>
                   </li>
                 ))}
