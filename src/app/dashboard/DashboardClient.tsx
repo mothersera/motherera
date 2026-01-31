@@ -83,6 +83,8 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const [meals, setMeals] = useState<MealItem[]>(DEFAULT_MEALS);
   const [nextMeal, setNextMeal] = useState<string>("Lunch");
   const [dailyQuote, setDailyQuote] = useState(QUOTES[0]);
+  const [waterCount, setWaterCount] = useState(0);
+  const [mood, setMood] = useState<string | null>(null);
 
   const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized';
 
@@ -101,6 +103,15 @@ export default function DashboardClient({ user }: DashboardClientProps) {
     const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
     const stored = localStorage.getItem(storageKey);
     
+    // Load wellness data
+    const wellnessKey = `motherera_wellness_${today}_${user.email || 'guest'}`;
+    const storedWellness = localStorage.getItem(wellnessKey);
+    if (storedWellness) {
+      const { water, currentMood } = JSON.parse(storedWellness);
+      setWaterCount(water || 0);
+      setMood(currentMood || null);
+    }
+    
     if (stored) {
       try {
         const storedMeals = JSON.parse(stored);
@@ -114,6 +125,18 @@ export default function DashboardClient({ user }: DashboardClientProps) {
       calculateNextMeal(DEFAULT_MEALS);
     }
   }, [user.email]);
+
+  const updateWellness = (newWater: number, newMood: string | null) => {
+    setWaterCount(newWater);
+    if (newMood !== undefined) setMood(newMood);
+    
+    const today = new Date().toISOString().split('T')[0];
+    const wellnessKey = `motherera_wellness_${today}_${user.email || 'guest'}`;
+    localStorage.setItem(wellnessKey, JSON.stringify({ 
+      water: newWater, 
+      currentMood: newMood !== undefined ? newMood : mood 
+    }));
+  };
 
   const calculateNextMeal = (currentMeals: MealItem[]) => {
     const next = currentMeals.find(m => m.status === 'pending');
@@ -351,6 +374,63 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                   <p className="text-xs text-stone-400 uppercase tracking-widest">— {dailyQuote.author}</p>
                 </div>
               </div>
+
+              {/* Wellness Tracker */}
+              <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
+                <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                  <CardTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-blue-500" /> Wellness Check-in
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-6">
+                  {/* Hydration */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm font-medium text-stone-600">Hydration</span>
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{waterCount} / 8 glasses</span>
+                    </div>
+                    <div className="flex justify-between gap-1">
+                      {[...Array(8)].map((_, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => updateWellness(i + 1 === waterCount ? i : i + 1, null)}
+                          className={`w-full h-8 rounded-lg transition-all duration-300 ${
+                            i < waterCount 
+                              ? "bg-blue-400 shadow-md shadow-blue-200 scale-105" 
+                              : "bg-stone-100 hover:bg-blue-100"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Mood */}
+                  <div>
+                    <span className="text-sm font-medium text-stone-600 block mb-3">How are you feeling?</span>
+                    <div className="flex justify-between gap-2">
+                      {[
+                        { icon: "😊", label: "Happy", color: "hover:bg-green-50 hover:border-green-200" },
+                        { icon: "😌", label: "Calm", color: "hover:bg-blue-50 hover:border-blue-200" },
+                        { icon: "😐", label: "Okay", color: "hover:bg-stone-50 hover:border-stone-200" },
+                        { icon: "😫", label: "Tired", color: "hover:bg-amber-50 hover:border-amber-200" },
+                      ].map((m) => (
+                        <button
+                          key={m.label}
+                          onClick={() => updateWellness(waterCount, m.label)}
+                          className={`flex-1 p-2 rounded-xl border transition-all duration-200 flex flex-col items-center gap-1 ${
+                            mood === m.label 
+                              ? "bg-stone-900 border-stone-900 text-white scale-105 shadow-md" 
+                              : `bg-white border-stone-100 text-stone-600 ${m.color}`
+                          }`}
+                        >
+                          <span className="text-xl">{m.icon}</span>
+                          <span className="text-[10px] font-medium">{m.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Experts List */}
               <Card className="border-none shadow-sm bg-white rounded-3xl">
