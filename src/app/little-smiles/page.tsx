@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Info, Smile, Baby, Utensils, Shield, Sparkles, Clock, AlertTriangle } from "lucide-react";
+import { Check, Info, Smile, Baby, Utensils, Shield, Sparkles, Clock, AlertTriangle, Music, Star, Users } from "lucide-react";
 import { motion } from "framer-motion";
 
 const fadeIn = {
@@ -198,6 +198,65 @@ export default function LittleSmilesPage() {
                 <p>• Make it fun with songs or charts.</p>
               </CardContent>
             </Card>
+          </div>
+        </motion.section>
+
+        {/* Section: Common Challenges & Solutions */}
+        <motion.section 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeIn}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <Shield className="w-6 h-6 text-sky-600" />
+            <h2 className="text-3xl font-serif font-bold text-stone-900">Common Challenges & Solutions</h2>
+          </div>
+          
+          <div className="grid gap-6">
+            {/* Card 1: Pacifiers */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 md:p-8 shadow-sm">
+              <h3 className="text-xl font-bold text-stone-900 mb-3">Pacifiers & Thumb Sucking</h3>
+              <p className="text-stone-600 mb-6 leading-relaxed">
+                Sucking is a natural soothing reflex, but prolonged habits (past age 3) can affect how teeth align and how the jaw grows.
+              </p>
+              <div className="bg-sky-50 rounded-xl p-5 border border-sky-100">
+                <p className="text-stone-700 text-sm">
+                  <span className="font-bold text-sky-700">Gentle Tip:</span> Use positive reinforcement (praise, sticker charts) to encourage stopping. Avoid scolding, which can increase anxiety and sucking.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2: Making Brushing Fun */}
+            <div className="bg-white rounded-2xl border border-stone-200 p-6 md:p-8 shadow-sm">
+              <h3 className="text-xl font-bold text-stone-900 mb-6">Making Brushing Fun</h3>
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center shrink-0">
+                    <Music className="w-4 h-4 text-pink-500" />
+                  </div>
+                  <span className="text-stone-600 font-medium">Play a 2-minute "brushing song".</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <Baby className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <span className="text-stone-600 font-medium">Let them brush a toy's teeth.</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center shrink-0">
+                    <Star className="w-4 h-4 text-yellow-500" />
+                  </div>
+                  <span className="text-stone-600 font-medium">Use a sticker reward chart.</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <span className="text-stone-600 font-medium">Brush together as a family.</span>
+                </div>
+              </div>
+            </div>
           </div>
         </motion.section>
 
