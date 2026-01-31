@@ -20,7 +20,11 @@ const staggerContainer = {
   }
 };
 
+import { useRouter } from "next/navigation";
+
 export default function ChildNutritionPage() {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
       {/* Hero Section */}
@@ -225,7 +229,11 @@ export default function ChildNutritionPage() {
               <p className="text-stone-600 leading-relaxed mb-6">
                 Toddler appetites are unpredictable. Your job is to provide the <strong>what</strong>, <strong>when</strong>, and <strong>where</strong> of feeding. Their job is to decide <strong>how much</strong> and <strong>whether</strong> to eat.
               </p>
-              <Button variant="outline" className="rounded-full border-blue-200 text-blue-700 hover:bg-blue-50">
+              <Button 
+                variant="outline" 
+                className="rounded-full border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={() => router.push('/pricing?source=child-nutrition-meal-plan')}
+              >
                 Download Meal Plan Guide
               </Button>
             </div>
