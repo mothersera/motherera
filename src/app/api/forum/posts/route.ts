@@ -24,7 +24,7 @@ export async function GET(req: Request) {
 
     const posts = await ForumPost.find(query)
       .sort({ createdAt: -1 }) // Newest first
-      .select('-authorId -__v'); // Hide internal IDs
+      .select('-__v'); // Hide internal version only
 
     return NextResponse.json(posts);
   } catch (error: unknown) {

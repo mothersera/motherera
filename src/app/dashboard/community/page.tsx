@@ -4,8 +4,9 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Plus, MessageSquare, Heart, Loader2 } from "lucide-react";
+import { Plus, MessageSquare, Heart, Loader2, Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface Post {
   _id: string;
@@ -13,6 +14,7 @@ interface Post {
   content: string;
   category: string;
   authorName: string;
+  authorId: string;
   createdAt: string;
   likes: string[];
 }
@@ -20,6 +22,7 @@ interface Post {
 const CATEGORIES = ['All', 'Pregnancy', 'Postpartum', 'Child Nutrition', 'Mental Wellness', 'Single Parents', 'General'];
 
 function CommunityContent() {
+  const { data: session } = useSession();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -46,6 +49,31 @@ function CommunityContent() {
       console.error("Failed to fetch posts", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, postId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/forum/posts/${postId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setPosts(prev => prev.filter(p => p._id !== postId));
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete post");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert("An error occurred while deleting the post");
     }
   };
 
@@ -95,7 +123,7 @@ function CommunityContent() {
         <div className="grid grid-cols-1 gap-4">
           {posts.map((post) => (
             <Link key={post._id} href={`/dashboard/community/${post._id}`}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer border-stone-200">
+              <Card className="hover:shadow-md transition-shadow cursor-pointer border-stone-200 group relative">
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <div>
@@ -104,9 +132,22 @@ function CommunityContent() {
                       </span>
                       <CardTitle className="text-xl text-stone-900">{post.title}</CardTitle>
                     </div>
-                    <span className="text-xs text-stone-400 whitespace-nowrap">
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-stone-400 whitespace-nowrap">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </span>
+                      {session?.user?.id === post.authorId && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-stone-400 hover:text-red-600 hover:bg-red-50 -mr-2"
+                          onClick={(e) => handleDelete(e, post._id)}
+                          title="Delete post"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <CardDescription className="line-clamp-2">
                     {post.content}
