@@ -82,10 +82,10 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   
   // Journey Stages
   const JOURNEY_STAGES = [
-    { id: 'pregnancy', label: 'Pregnancy', icon: '🤰' },
-    { id: 'postpartum', label: 'Postpartum', icon: '👶' },
-    { id: 'newborn', label: 'Newborn Care', icon: '🍼' },
-    { id: 'toddler', label: 'Toddler Care', icon: '🧸' }
+    { id: 'pregnancy', label: 'Pregnancy', icon: '🤰', desc: 'Tracking trimesters, health tips, and preparation.' },
+    { id: 'postpartum', label: 'Postpartum', icon: '👶', desc: 'Recovery, mental wellness, and adjusting to new life.' },
+    { id: 'newborn', label: 'Newborn Care', icon: '🍼', desc: 'Feeding, sleep schedules, and developmental milestones.' },
+    { id: 'toddler', label: 'Toddler Care', icon: '🧸', desc: 'Nutrition, behavior, and early learning activities.' }
   ];
 
   const currentStageIndex = Math.max(0, JOURNEY_STAGES.findIndex(s => stage.toLowerCase().includes(s.id)) !== -1 
@@ -204,40 +204,73 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               </p>
 
               {/* Journey Timeline */}
-              <div className="flex items-center gap-2 mt-2">
-                {JOURNEY_STAGES.map((s, i) => {
-                  const isCompleted = i < currentStageIndex;
-                  const isCurrent = i === currentStageIndex;
+              <div className="mt-6">
+                <div className="flex items-start gap-0 relative">
+                  {/* Connecting Line Background */}
+                  <div className="absolute top-4 left-4 right-4 h-0.5 bg-stone-100 -z-10" />
                   
-                  return (
-                    <div key={s.id} className="flex items-center">
-                      <div className={`relative flex items-center justify-center w-8 h-8 rounded-full text-xs transition-all duration-300 ${
-                        isCurrent 
-                          ? "bg-rose-500 text-white shadow-md scale-110 font-bold z-10" 
-                          : isCompleted 
-                            ? "bg-stone-200 text-stone-500" 
-                            : "bg-stone-100 text-stone-300"
-                      }`} title={s.label}>
-                        {s.icon}
-                        {isCurrent && (
-                          <motion.div 
-                            layoutId="activeRing"
-                            className="absolute inset-0 rounded-full border-2 border-rose-200" 
-                            initial={{ scale: 1 }}
-                            animate={{ scale: 1.4, opacity: 0 }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
+                  {JOURNEY_STAGES.map((s, i) => {
+                    const isCompleted = i < currentStageIndex;
+                    const isCurrent = i === currentStageIndex;
+                    
+                    return (
+                      <div key={s.id} className="flex-1 flex flex-col items-center group relative">
+                        {/* Icon Circle */}
+                        <div 
+                          className={`relative flex items-center justify-center w-10 h-10 rounded-full text-sm transition-all duration-300 cursor-help ${
+                            isCurrent 
+                              ? "bg-rose-500 text-white shadow-lg shadow-rose-200 scale-110 font-bold z-10" 
+                              : isCompleted 
+                                ? "bg-rose-100 text-rose-400" 
+                                : "bg-stone-100 text-stone-300"
+                          }`}
+                        >
+                          {s.icon}
+                          {isCurrent && (
+                            <motion.div 
+                              layoutId="activeRing"
+                              className="absolute inset-0 rounded-full border-2 border-rose-200" 
+                              initial={{ scale: 1 }}
+                              animate={{ scale: 1.5, opacity: 0 }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            />
+                          )}
+                          
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none w-48 text-center bg-stone-900 text-white text-xs p-2 rounded-lg shadow-xl z-50">
+                            <p className="font-bold mb-1">{s.label}</p>
+                            <p className="font-light text-stone-300">{s.desc}</p>
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-900" />
+                          </div>
+                        </div>
+
+                        {/* Labels */}
+                        <div className="mt-3 text-center">
+                          <p className={`text-xs font-bold transition-colors ${isCurrent ? "text-stone-900" : "text-stone-400"}`}>
+                            {s.label}
+                          </p>
+                          {isCurrent && (
+                            <span className="inline-block mt-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              Current Stage
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Connecting Line Fill */}
+                        {i < JOURNEY_STAGES.length - 1 && (
+                          <div 
+                            className={`absolute top-5 left-[50%] w-full h-0.5 -z-10 transition-colors duration-500 ${
+                              isCompleted ? "bg-rose-200" : "bg-transparent"
+                            }`} 
                           />
                         )}
                       </div>
-                      
-                      {i < JOURNEY_STAGES.length - 1 && (
-                        <div className={`w-8 h-0.5 mx-1 rounded-full ${
-                          isCompleted ? "bg-stone-300" : "bg-stone-100"
-                        }`} />
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+                <p className="text-center text-xs text-stone-400 mt-6 font-medium">
+                  We’re guiding you through this stage step by step.
+                </p>
               </div>
             </div>
             
