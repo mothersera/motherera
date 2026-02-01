@@ -96,15 +96,6 @@ export default function SupportPage() {
               Connect directly with our care specialists. We typically reply within 1 hour.
             </p>
           </div>
-          
-          <div className="hidden md:flex gap-3">
-             <Button variant="outline" className="gap-2 text-stone-600" disabled>
-               <Phone className="w-4 h-4" /> Call Support
-             </Button>
-             <Button variant="outline" className="gap-2 text-stone-600" disabled>
-               <Video className="w-4 h-4" /> Video Call
-             </Button>
-          </div>
         </div>
 
         {/* Chat Area */}
