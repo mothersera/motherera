@@ -48,7 +48,7 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
-    const { name, motherhoodStage, dietaryPreference } = body;
+    const { name, motherhoodStage, dietaryPreference, image } = body;
 
     let userId = session.user.id;
     let user;
@@ -99,13 +99,19 @@ export async function PUT(req: Request) {
     }
 
     // 4. Update existing user
+    const updateData: any = { 
+      name, 
+      motherhoodStage,
+      dietaryPreference
+    };
+
+    if (image) {
+      updateData.image = image;
+    }
+
     const updatedUser = await UserModel.findByIdAndUpdate(
       user._id,
-      { 
-        name, 
-        motherhoodStage,
-        dietaryPreference
-      },
+      updateData,
       { new: true }
     ).select('-password -_id -__v');
 

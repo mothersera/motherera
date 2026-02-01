@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,8 +20,11 @@ export default function ProfilePage() {
     name: '',
     email: '',
     motherhoodStage: 'pregnancy',
-    dietaryPreference: 'veg'
+    dietaryPreference: 'veg',
+    image: ''
   });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -33,14 +36,16 @@ export default function ProfilePage() {
             name: data.name || session?.user?.name || '',
             email: data.email || session?.user?.email || '',
             motherhoodStage: data.motherhoodStage || 'pregnancy',
-            dietaryPreference: data.dietaryPreference || 'veg'
+            dietaryPreference: data.dietaryPreference || 'veg',
+            image: data.image || session?.user?.image || ''
           });
         } else {
           // Fallback to session data
           setFormData(prev => ({
             ...prev,
             name: session?.user?.name || '',
-            email: session?.user?.email || ''
+            email: session?.user?.email || '',
+            image: session?.user?.image || ''
           }));
         }
       } catch (err) {
@@ -48,7 +53,8 @@ export default function ProfilePage() {
         setFormData(prev => ({
           ...prev,
           name: session?.user?.name || '',
-          email: session?.user?.email || ''
+          email: session?.user?.email || '',
+          image: session?.user?.image || ''
         }));
       } finally {
         setIsFetching(false);
@@ -62,6 +68,30 @@ export default function ProfilePage() {
     }
   }, [session, status]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validation
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Please upload a valid image (JPG, PNG).' });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      setMessage({ type: 'error', text: 'Image size must be less than 2MB.' });
+      return;
+    }
+
+    // Convert to Base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, image: reader.result as string }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
@@ -74,7 +104,8 @@ export default function ProfilePage() {
         body: JSON.stringify({
           name: formData.name,
           motherhoodStage: formData.motherhoodStage,
-          dietaryPreference: formData.dietaryPreference
+          dietaryPreference: formData.dietaryPreference,
+          image: formData.image
         })
       });
 
@@ -89,7 +120,8 @@ export default function ProfilePage() {
           ...session?.user,
           name: formData.name,
           motherhoodStage: formData.motherhoodStage,
-          dietaryPreference: formData.dietaryPreference
+          dietaryPreference: formData.dietaryPreference,
+          image: formData.image
         }
       });
 
@@ -135,10 +167,25 @@ export default function ProfilePage() {
             <CardContent className="p-0">
               <div className="flex flex-col md:flex-row items-center gap-6 p-8">
                 <div className="relative group">
-                  <div className="w-24 h-24 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 text-3xl font-bold border-4 border-white shadow-md">
-                    {formData.name ? formData.name.charAt(0).toUpperCase() : <User className="w-10 h-10" />}
+                  <div className="w-24 h-24 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 text-3xl font-bold border-4 border-white shadow-md overflow-hidden">
+                    {formData.image ? (
+                      <img src={formData.image} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      formData.name ? formData.name.charAt(0).toUpperCase() : <User className="w-10 h-10" />
+                    )}
                   </div>
-                  <button className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-stone-100 hover:bg-stone-50 transition-colors">
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-stone-100 hover:bg-stone-50 transition-colors"
+                  >
                     <Camera className="w-4 h-4 text-stone-600" />
                   </button>
                 </div>
