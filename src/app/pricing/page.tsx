@@ -17,12 +17,13 @@ export default function PricingPage() {
       ],
       buttonText: "Get Started Free",
       buttonVariant: "default" as const,
-      href: "/register"
+      href: "/register",
+      period: "" // Added for type consistency
     },
     {
       name: "Premium",
-      price: "₹499",
-      period: "/month",
+      price: "", // TEMPORARY: Hidden for testing
+      period: "",
       description: "Personalized care and expert access",
       features: [
         "Everything in Basic",
@@ -33,13 +34,13 @@ export default function PricingPage() {
       ],
       buttonText: "Subscribe Now",
       buttonVariant: "default" as const,
-      href: "/checkout?plan=premium", // Updated to checkout
+      href: "/api/test/subscribe?plan=premium", // TEMPORARY: Direct subscribe for testing
       highlight: true
     },
     {
       name: "Specialized",
-      price: "₹1499",
-      period: "/month",
+      price: "", // TEMPORARY: Hidden for testing
+      period: "",
       description: "Intensive support for specific needs",
       features: [
         "Everything in Premium",
@@ -50,7 +51,7 @@ export default function PricingPage() {
       ],
       buttonText: "Subscribe Now",
       buttonVariant: "default" as const,
-      href: "/checkout?plan=specialized", // Updated to checkout
+      href: "/api/test/subscribe?plan=specialized", // TEMPORARY: Direct subscribe for testing
     }
   ];
 
@@ -74,8 +75,14 @@ export default function PricingPage() {
             </CardHeader>
             <CardContent className="flex-1">
               <div className="mb-6">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                {plan.period && <span className="text-stone-500">{plan.period}</span>}
+                {plan.price ? (
+                  <>
+                    <span className="text-4xl font-bold">{plan.price}</span>
+                    {plan.period && <span className="text-stone-500">{plan.period}</span>}
+                  </>
+                ) : (
+                   <span className="text-2xl font-bold text-emerald-600">Free for Testing</span>
+                )}
               </div>
               <ul className="space-y-3">
                 {plan.features.map((feature) => (

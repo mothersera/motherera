@@ -120,6 +120,15 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized';
 
   useEffect(() => {
+    // Check for subscription success
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('subscribed') === 'true') {
+      // Refresh the page to update session data or show a toast
+      // For now, let's just clean the URL
+      window.history.replaceState({}, '', '/dashboard');
+      // Ideally show a toast here: "You're now on the Premium plan 🎉"
+    }
+
     // Daily Wisdom Logic
     const todayDate = new Date();
     const startOfYear = new Date(todayDate.getFullYear(), 0, 0);
