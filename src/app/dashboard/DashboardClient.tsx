@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { 
   Activity, 
@@ -79,6 +80,7 @@ const QUOTES = [
 ];
 
 export default function DashboardClient({ user }: DashboardClientProps) {
+  const { update } = useSession();
   const firstName = user.name?.split(' ')[0] || 'Mom';
   const stage = user.motherhoodStage?.replace(/_/g, ' ') || 'Welcome';
   
@@ -125,6 +127,9 @@ export default function DashboardClient({ user }: DashboardClientProps) {
     // Check for subscription success
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('subscribed') === 'true') {
+      // Refresh the session to get the latest subscription status
+      update();
+      
       // Refresh the page to update session data or show a toast
       // For now, let's just clean the URL
       window.history.replaceState({}, '', '/dashboard');

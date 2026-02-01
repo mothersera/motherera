@@ -61,14 +61,18 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account, trigger, session }) {
-      if (trigger === 'update' && session) {
-        // Handle session update
-        if (session.user) {
-          token.name = session.user.name;
-          token.motherhoodStage = session.user.motherhoodStage;
-          token.dietaryPreference = session.user.dietaryPreference;
-          token.subscriptionPlan = session.user.subscriptionPlan;
-          token.subscriptionStatus = session.user.subscriptionStatus;
+      if (trigger === 'update') {
+        // Fetch latest user data from DB to ensure session is in sync
+        if (token.id) {
+          await dbConnect();
+          const dbUser = await UserModel.findById(token.id);
+          if (dbUser) {
+            token.name = dbUser.name;
+            token.motherhoodStage = dbUser.motherhoodStage;
+            token.dietaryPreference = dbUser.dietaryPreference;
+            token.subscriptionPlan = dbUser.subscriptionPlan;
+            token.subscriptionStatus = dbUser.subscriptionStatus;
+          }
         }
       }
 
