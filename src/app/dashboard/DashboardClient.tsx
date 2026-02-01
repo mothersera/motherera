@@ -210,32 +210,34 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
 
   return (
-    <div className="min-h-screen bg-stone-50/50 pb-20">
-      {/* Decorative Background */}
-      <div className="fixed top-0 left-0 w-full h-[500px] bg-gradient-to-b from-rose-50/80 to-transparent pointer-events-none -z-10" />
+    <div className="min-h-screen bg-[#FDFCF8] pb-20 relative overflow-hidden">
+      {/* Premium Background Effects */}
+      <div className="fixed top-0 left-0 w-full h-[600px] bg-gradient-to-b from-rose-50 via-white to-transparent pointer-events-none -z-10" />
+      <div className="fixed -top-[20%] -right-[10%] w-[600px] h-[600px] bg-purple-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="fixed top-[20%] -left-[10%] w-[500px] h-[500px] bg-rose-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
       
-      <div className="container mx-auto px-4 py-8 md:py-12">
+      <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
         <motion.div 
           variants={container}
           initial="hidden"
           animate="show"
-          className="space-y-8"
+          className="space-y-10"
         >
           {/* Header Section */}
           <motion.div variants={item} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
-              <div className="flex items-center gap-2 text-rose-600 font-medium mb-2">
+              <div className="flex items-center gap-2 text-rose-600 font-medium mb-3 bg-rose-50 w-fit px-3 py-1 rounded-full border border-rose-100">
                 <Sparkles className="w-4 h-4" />
-                <span className="text-sm uppercase tracking-wider">Dashboard</span>
+                <span className="text-xs uppercase tracking-widest font-bold">Your Dashboard</span>
               </div>
-              <h1 className="text-3xl md:text-5xl font-serif font-bold text-stone-900 leading-tight">
+              <h1 className="text-4xl md:text-6xl font-serif font-medium text-stone-900 leading-tight tracking-tight">
                 {greeting}, <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-purple-600">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 font-bold">
                   {firstName}
                 </span>
               </h1>
-              <p className="text-stone-500 mt-3 text-lg mb-4">
-                Your journey: <span className="capitalize font-medium text-stone-800">{stage}</span>
+              <p className="text-stone-500 mt-4 text-lg font-light tracking-wide">
+                Your journey: <span className="capitalize font-medium text-stone-900 border-b-2 border-rose-200 pb-0.5">{stage}</span>
               </p>
 
               {/* Journey Timeline */}
@@ -332,47 +334,51 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                 value: "Good", 
                 sub: "Last check: 2d ago", 
                 icon: Activity, 
-                color: "text-rose-500", 
-                bg: "bg-rose-50" 
+                color: "text-rose-600", 
+                bg: "bg-gradient-to-br from-rose-50 to-white border-rose-100",
+                iconBg: "bg-white shadow-sm"
               },
               { 
                 label: "Next Meal", 
                 value: nextMeal, 
                 sub: nextMeal.includes("completed") ? "Great job!" : meals.find(m => m.meal === nextMeal)?.food || "Healthy choice", 
                 icon: Utensils, 
-                color: "text-emerald-500", 
-                bg: "bg-emerald-50" 
+                color: "text-emerald-600", 
+                bg: "bg-gradient-to-br from-emerald-50 to-white border-emerald-100",
+                iconBg: "bg-white shadow-sm"
               },
               { 
                 label: "Appointment", 
                 value: "Tomorrow", 
                 sub: "10:00 AM - Dr. Sharma", 
                 icon: Calendar, 
-                color: "text-blue-500", 
-                bg: "bg-blue-50" 
+                color: "text-blue-600", 
+                bg: "bg-gradient-to-br from-blue-50 to-white border-blue-100",
+                iconBg: "bg-white shadow-sm"
               },
               { 
                 label: "Profile", 
                 value: `${profileCompletion}%`, 
                 sub: profileCompletion === 100 ? "All set!" : "Complete setup →", 
                 icon: User, 
-                color: "text-purple-500", 
-                bg: "bg-purple-50",
+                color: "text-purple-600", 
+                bg: "bg-gradient-to-br from-purple-50 to-white border-purple-100",
+                iconBg: "bg-white shadow-sm",
                 href: "/dashboard/profile"
               },
             ].map((stat, i) => (
               <Link href={stat.href || "#"} key={i} className="block group">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md hover:border-stone-200 transition-all duration-300 h-full">
+                <div className={`p-6 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full border ${stat.bg}`}>
                   <div className="flex justify-between items-start mb-4">
-                    <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
-                      <stat.icon className="w-5 h-5" />
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${stat.color} ${stat.iconBg} group-hover:scale-110 transition-transform duration-300`}>
+                      <stat.icon className="w-6 h-6" />
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-stone-500 text-sm font-medium mb-1">{stat.label}</h3>
-                    <div className="text-xl font-bold text-stone-900">{stat.value}</div>
-                    <p className={`text-xs mt-1 ${stat.href ? "text-rose-600 font-medium group-hover:translate-x-1 transition-transform inline-block" : "text-stone-400"}`}>
-                      {stat.sub}
+                    <h3 className="text-stone-500 text-sm font-medium mb-1 tracking-wide uppercase text-[10px]">{stat.label}</h3>
+                    <div className="text-xl font-bold text-stone-900 tracking-tight">{stat.value}</div>
+                    <p className={`text-xs mt-2 font-medium ${stat.href ? "text-rose-600 group-hover:translate-x-1 transition-transform inline-flex items-center" : "text-stone-400"}`}>
+                      {stat.sub} {stat.href && <ChevronRight className="w-3 h-3 ml-0.5" />}
                     </p>
                   </div>
                 </div>
@@ -385,19 +391,22 @@ export default function DashboardClient({ user }: DashboardClientProps) {
             <motion.div variants={item} className="lg:col-span-2 space-y-8">
               
               {/* Nutrition Plan */}
-              <Card className="border-none shadow-lg shadow-stone-200/50 bg-white overflow-hidden rounded-3xl">
-                <CardHeader className="border-b border-stone-100 bg-white/50 p-6">
+              <Card className="border-white/40 shadow-xl shadow-stone-200/40 bg-white/60 backdrop-blur-xl overflow-hidden rounded-[2rem] ring-1 ring-stone-100">
+                <CardHeader className="border-b border-stone-100/50 bg-white/40 p-8">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="font-serif text-xl text-stone-900">Today's Nutrition</CardTitle>
+                    <div>
+                      <CardTitle className="font-serif text-2xl text-stone-900 mb-1">Today's Nutrition</CardTitle>
+                      <p className="text-sm text-stone-500">Your personalized meal plan for today</p>
+                    </div>
                     <Link href="/dashboard/nutrition-plan">
-                      <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50">
-                        View Full Plan
+                      <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-full px-4">
+                        View Full Plan <ArrowRight className="w-4 h-4 ml-1" />
                       </Button>
                     </Link>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="divide-y divide-stone-100">
+                  <div className="divide-y divide-stone-100/50">
                     {meals.map((item, i) => (
                       <div key={i} className="flex items-center p-6 hover:bg-stone-50/50 transition-colors group">
                         <div className="mr-4 flex flex-col items-center">
@@ -447,35 +456,37 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               {/* Quick Actions / Community */}
               <div className="grid md:grid-cols-2 gap-6">
                 <Link href="/dashboard/community" className="block group">
-                  <div className="bg-gradient-to-br from-rose-50 to-white p-6 rounded-3xl border border-rose-100 hover:shadow-lg hover:shadow-rose-100/50 transition-all duration-300 h-full">
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <MessageSquare className="w-6 h-6 text-rose-500" />
+                  <div className="bg-gradient-to-br from-white to-rose-50/50 p-8 rounded-[2rem] border border-white/60 shadow-lg shadow-rose-100/20 hover:shadow-xl hover:shadow-rose-200/30 transition-all duration-300 h-full backdrop-blur-md relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-rose-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                    
+                    <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 ring-1 ring-rose-100">
+                      <MessageSquare className="w-7 h-7 text-rose-500" />
                     </div>
-                    <h3 className="text-lg font-bold text-stone-900 mb-2">Community Forum</h3>
-                    <p className="text-stone-600 text-sm mb-4">Connect with other mothers, share experiences, and find your tribe.</p>
-                    <div className="flex items-center text-rose-600 text-sm font-medium">
+                    <h3 className="text-xl font-bold text-stone-900 mb-2 font-serif">Community Forum</h3>
+                    <p className="text-stone-600 text-sm mb-6 leading-relaxed">Connect with other mothers, share experiences, and find your tribe.</p>
+                    <div className="flex items-center text-rose-600 text-sm font-bold tracking-wide uppercase">
                       Join Discussions <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
 
                 <Link href={isPremium ? "/dashboard/support" : "/pricing?source=expert-support"} className="block group">
-                  <div className={`p-6 rounded-3xl border transition-all duration-300 h-full relative overflow-hidden ${
+                  <div className={`p-8 rounded-[2rem] border transition-all duration-300 h-full relative overflow-hidden backdrop-blur-md ${
                     isPremium 
-                      ? "bg-gradient-to-br from-emerald-50 to-white border-emerald-100 hover:shadow-lg hover:shadow-emerald-100/50" 
-                      : "bg-gradient-to-br from-amber-50 to-white border-amber-300 hover:shadow-lg hover:shadow-amber-100/50"
+                      ? "bg-gradient-to-br from-white to-emerald-50/50 border-white/60 hover:shadow-xl hover:shadow-emerald-100/30" 
+                      : "bg-gradient-to-br from-white to-amber-50/50 border-white/60 hover:shadow-xl hover:shadow-amber-100/30"
                   }`}>
                     {!isPremium && (
-                      <div className="absolute top-4 right-4 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide border border-amber-200">
+                      <div className="absolute top-4 right-4 bg-amber-100/80 backdrop-blur-sm text-amber-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wide border border-amber-200 shadow-sm">
                         Premium Feature
                       </div>
                     )}
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                      <HeartHandshake className={`w-6 h-6 ${isPremium ? "text-emerald-500" : "text-amber-500"}`} />
+                    <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 ring-1 ring-stone-100">
+                      <HeartHandshake className={`w-7 h-7 ${isPremium ? "text-emerald-500" : "text-amber-500"}`} />
                     </div>
-                    <h3 className="text-lg font-bold text-stone-900 mb-2">Expert Support</h3>
-                    <p className="text-stone-600 text-sm mb-4">Chat privately with our care team for personalized guidance.</p>
-                    <div className={`flex items-center text-sm font-medium ${isPremium ? "text-emerald-600" : "text-amber-600"}`}>
+                    <h3 className="text-xl font-bold text-stone-900 mb-2 font-serif">Expert Support</h3>
+                    <p className="text-stone-600 text-sm mb-6 leading-relaxed">Chat privately with our care team for personalized guidance.</p>
+                    <div className={`flex items-center text-sm font-bold tracking-wide uppercase ${isPremium ? "text-emerald-600" : "text-amber-600"}`}>
                       {isPremium ? "Get Help" : "Unlock Access"} <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
@@ -486,40 +497,47 @@ export default function DashboardClient({ user }: DashboardClientProps) {
             {/* Sidebar (Right) */}
             <motion.div variants={item} className="space-y-6">
               {/* Daily Wisdom */}
-              <div className="bg-stone-900 text-white p-8 rounded-3xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-stone-800 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+              <div className="bg-stone-900 text-white p-8 rounded-[2rem] relative overflow-hidden shadow-2xl shadow-stone-900/20 group">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-stone-800 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-rose-900/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 opacity-50" />
+                
                 <div className="relative z-10">
-                  <h3 className="font-serif text-xl mb-4 text-stone-200">Daily Wisdom</h3>
-                  <blockquote className="text-lg italic font-light leading-relaxed mb-4">
+                  <div className="flex items-center gap-2 mb-6 text-stone-400">
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span className="text-xs uppercase tracking-widest font-bold">Daily Wisdom</span>
+                  </div>
+                  <blockquote className="text-xl italic font-light leading-relaxed mb-6 font-serif text-stone-100">
                     "{dailyQuote.text}"
                   </blockquote>
-                  <p className="text-xs text-stone-400 uppercase tracking-widest">— {dailyQuote.author}</p>
+                  <p className="text-xs text-stone-400 uppercase tracking-widest font-medium border-t border-stone-800 pt-4 inline-block pr-8">— {dailyQuote.author}</p>
                 </div>
               </div>
 
               {/* Wellness Tracker */}
-              <Card className="border-none shadow-sm bg-white rounded-3xl overflow-hidden">
-                <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+              <Card className="border-white/40 shadow-xl shadow-stone-200/40 bg-white/60 backdrop-blur-xl rounded-[2rem] ring-1 ring-stone-100 overflow-hidden">
+                <CardHeader className="pb-4 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-blue-100/30">
                   <CardTitle className="text-lg font-bold text-stone-900 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-blue-500" /> Wellness Check-in
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-6">
+                <CardContent className="pt-6 space-y-8 px-6 pb-8">
                   {/* Hydration */}
                   <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm font-medium text-stone-600">Hydration</span>
-                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">{waterCount} / 8 glasses</span>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm font-medium text-stone-600 flex items-center gap-2">
+                        💧 Hydration
+                      </span>
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">{waterCount} / 8 glasses</span>
                     </div>
-                    <div className="flex justify-between gap-1">
+                    <div className="flex justify-between gap-1.5">
                       {[...Array(8)].map((_, i) => (
                         <button 
                           key={i}
                           onClick={() => updateWellness(i + 1 === waterCount ? i : i + 1, null)}
-                          className={`w-full h-8 rounded-lg transition-all duration-300 ${
+                          className={`w-full h-10 rounded-xl transition-all duration-300 ${
                             i < waterCount 
-                              ? "bg-blue-400 shadow-md shadow-blue-200 scale-105" 
-                              : "bg-stone-100 hover:bg-blue-100"
+                              ? "bg-gradient-to-b from-blue-400 to-blue-500 shadow-lg shadow-blue-200 scale-105" 
+                              : "bg-stone-100 hover:bg-blue-50 hover:shadow-inner"
                           }`}
                         />
                       ))}
@@ -528,25 +546,27 @@ export default function DashboardClient({ user }: DashboardClientProps) {
 
                   {/* Mood */}
                   <div>
-                    <span className="text-sm font-medium text-stone-600 block mb-3">How are you feeling?</span>
-                    <div className="flex justify-between gap-2">
+                    <span className="text-sm font-medium text-stone-600 block mb-4 flex items-center gap-2">
+                       ✨ How are you feeling?
+                    </span>
+                    <div className="grid grid-cols-4 gap-3">
                       {[
-                        { icon: "😊", label: "Happy", color: "hover:bg-green-50 hover:border-green-200" },
-                        { icon: "😌", label: "Calm", color: "hover:bg-blue-50 hover:border-blue-200" },
-                        { icon: "😐", label: "Okay", color: "hover:bg-stone-50 hover:border-stone-200" },
-                        { icon: "😫", label: "Tired", color: "hover:bg-amber-50 hover:border-amber-200" },
+                        { icon: "😊", label: "Happy", color: "hover:bg-green-50 hover:border-green-200 hover:text-green-600" },
+                        { icon: "😌", label: "Calm", color: "hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600" },
+                        { icon: "😐", label: "Okay", color: "hover:bg-stone-50 hover:border-stone-200 hover:text-stone-600" },
+                        { icon: "😫", label: "Tired", color: "hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600" },
                       ].map((m) => (
                         <button
                           key={m.label}
                           onClick={() => updateWellness(waterCount, m.label)}
-                          className={`flex-1 p-2 rounded-xl border transition-all duration-200 flex flex-col items-center gap-1 ${
+                          className={`p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-2 ${
                             mood === m.label 
-                              ? "bg-stone-900 border-stone-900 text-white scale-105 shadow-md" 
-                              : `bg-white border-stone-100 text-stone-600 ${m.color}`
+                              ? "bg-stone-900 border-stone-900 text-white scale-105 shadow-xl" 
+                              : `bg-white border-stone-100 text-stone-400 ${m.color} hover:shadow-md`
                           }`}
                         >
-                          <span className="text-xl">{m.icon}</span>
-                          <span className="text-[10px] font-medium">{m.label}</span>
+                          <span className="text-2xl filter drop-shadow-sm">{m.icon}</span>
+                          <span className="text-[10px] font-bold tracking-wide uppercase">{m.label}</span>
                         </button>
                       ))}
                     </div>
@@ -555,34 +575,34 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               </Card>
 
               {/* Experts List */}
-              <Card className="border-none shadow-sm bg-white rounded-3xl">
-                <CardHeader>
+              <Card className="border-white/40 shadow-xl shadow-stone-200/40 bg-white/60 backdrop-blur-xl rounded-[2rem] ring-1 ring-stone-100">
+                <CardHeader className="border-b border-stone-100/50 pb-4">
                   <CardTitle className="text-lg font-bold text-stone-900">Recommended Experts</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="pt-4">
+                  <div className="space-y-3">
                     {[
                       { name: "Dr. Anjali Gupta", role: "Nutritionist", exp: "10 Yrs Exp", img: "bg-orange-100 text-orange-600" },
                       { name: "Ms. Riya Singh", role: "Yoga Expert", exp: "5 Yrs Exp", img: "bg-blue-100 text-blue-600" },
                       { name: "Dr. Sarah Lee", role: "Pediatrician", exp: "8 Yrs Exp", img: "bg-purple-100 text-purple-600" },
                     ].map((expert, i) => (
-                      <div key={i} className="flex items-center gap-4 p-2 hover:bg-stone-50 rounded-xl transition-colors cursor-pointer">
-                        <div className={`w-12 h-12 rounded-full ${expert.img} flex items-center justify-center font-bold text-sm`}>
+                      <div key={i} className="flex items-center gap-4 p-3 hover:bg-white hover:shadow-md hover:shadow-stone-100 rounded-2xl transition-all duration-300 cursor-pointer border border-transparent hover:border-stone-100 group">
+                        <div className={`w-12 h-12 rounded-2xl ${expert.img} flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-105 transition-transform`}>
                           {expert.name.split(' ')[1][0]}
                         </div>
                         <div className="flex-1">
                           <h4 className="font-bold text-stone-900 text-sm">{expert.name}</h4>
-                          <p className="text-xs text-stone-500">{expert.role} • {expert.exp}</p>
+                          <p className="text-xs text-stone-500 font-medium">{expert.role} • {expert.exp}</p>
                         </div>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-stone-400">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-stone-300 group-hover:text-rose-500 transition-colors">
                           <ChevronRight className="w-4 h-4" />
                         </Button>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-6 pt-4 border-t border-stone-100">
+                  <div className="mt-6 pt-2">
                     <Link href="/dashboard/experts">
-                      <Button className="w-full" variant="outline">Find More Experts</Button>
+                      <Button className="w-full rounded-xl" variant="outline">Find More Experts</Button>
                     </Link>
                   </div>
                 </CardContent>
