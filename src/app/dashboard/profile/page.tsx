@@ -153,6 +153,8 @@ export default function ProfilePage() {
                     <option value="pregnancy">Pregnancy</option>
                     <option value="postpartum">Postpartum</option>
                     <option value="child_0_5">Child (0-5 Years)</option>
+                    <option value="toddler">Toddler Care</option>
+                    
                   </select>
                 </div>
 

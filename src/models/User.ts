@@ -7,7 +7,7 @@ export interface IUser extends mongoose.Document {
   image?: string;
   role: 'mother' | 'expert' | 'admin';
   // Mother specific fields
-  motherhoodStage?: 'pregnancy' | 'postpartum' | 'child_0_5';
+  motherhoodStage?: 'pregnancy' | 'postpartum' | 'child_0_5' | 'toddler';
   healthConditions?: string[];
   dietaryPreference?: 'veg' | 'non-veg' | 'vegan' | 'egg';
   subscriptionPlan?: 'basic' | 'premium' | 'specialized';
@@ -32,7 +32,7 @@ const UserSchema: Schema<IUser> = new Schema(
     // Mother fields
     motherhoodStage: { 
       type: String, 
-      enum: ['pregnancy', 'postpartum', 'child_0_5'],
+      enum: ['pregnancy', 'postpartum', 'child_0_5', 'toddler'],
       required: function(this: IUser) { return this.role === 'mother'; }
     },
     healthConditions: { type: [String], default: [] },
