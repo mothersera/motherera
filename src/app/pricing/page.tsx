@@ -63,7 +63,7 @@ export default function PricingPage() {
         "Priority chat support",
         "Exclusive workshops"
       ],
-      buttonText: "Subscribe Now",
+      buttonText: "Activate Free Test",
       buttonVariant: "default" as const,
       href: "/api/test/subscribe?plan=premium", // TEMPORARY: Direct subscribe for testing
       highlight: true
@@ -80,7 +80,7 @@ export default function PricingPage() {
         "24/7 dedicated care manager",
         "Postpartum recovery program"
       ],
-      buttonText: "Subscribe Now",
+      buttonText: "Activate Free Test",
       buttonVariant: "default" as const,
       href: "/api/test/subscribe?plan=specialized", // TEMPORARY: Direct subscribe for testing
     }
@@ -89,6 +89,9 @@ export default function PricingPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="text-center mb-16">
+        <div className="inline-block bg-amber-100 text-amber-800 text-sm font-bold px-4 py-2 rounded-full mb-6 border border-amber-200">
+          🚧 TEST MODE ACTIVE: All Plans are FREE 🚧
+        </div>
         <h1 className="text-4xl font-bold tracking-tight text-stone-900 mb-4">
           Invest in Your Health Journey
         </h1>
