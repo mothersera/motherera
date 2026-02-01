@@ -59,7 +59,16 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
+      if (trigger === 'update' && session) {
+        // Handle session update
+        if (session.user) {
+          token.name = session.user.name;
+          token.motherhoodStage = session.user.motherhoodStage;
+          token.dietaryPreference = session.user.dietaryPreference;
+        }
+      }
+
       if (user) {
         // If logging in with a provider (Google/Apple), ensure user exists in DB
         if (account?.provider === 'google' || account?.provider === 'apple') {

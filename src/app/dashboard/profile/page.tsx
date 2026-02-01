@@ -79,7 +79,10 @@ export default function ProfilePage() {
         })
       });
 
-      if (!res.ok) throw new Error('Failed to update profile');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to update profile');
+      }
 
       // Update session to reflect changes
       await update({
@@ -99,9 +102,9 @@ export default function ProfilePage() {
         router.push('/dashboard');
       }, 1500);
 
-          } catch (err) {
+          } catch (err: any) {
             console.error(err);
-            setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+            setMessage({ type: 'error', text: err.message || 'Something went wrong. Please try again.' });
           } finally {
       setIsLoading(false);
     }
