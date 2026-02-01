@@ -10,6 +10,7 @@ declare module "next-auth" {
       role: string;
       motherhoodStage?: string;
       subscriptionPlan?: string;
+      subscriptionStatus?: string;
       dietaryPreference?: string;
     } & DefaultSession["user"]
   }
@@ -18,6 +19,7 @@ declare module "next-auth" {
     role: string;
     motherhoodStage?: string;
     subscriptionPlan?: string;
+    subscriptionStatus?: string;
     dietaryPreference?: string;
   }
 }
@@ -28,6 +30,7 @@ declare module "next-auth/jwt" {
     role: string;
     motherhoodStage?: string;
     subscriptionPlan?: string;
+    subscriptionStatus?: string;
     dietaryPreference?: string;
   }
 }

@@ -53,6 +53,7 @@ export const authOptions: NextAuthOptions = {
           image: user.image,
           motherhoodStage: user.motherhoodStage,
           subscriptionPlan: user.subscriptionPlan,
+          subscriptionStatus: user.subscriptionStatus,
           dietaryPreference: user.dietaryPreference
         };
       }
@@ -66,6 +67,8 @@ export const authOptions: NextAuthOptions = {
           token.name = session.user.name;
           token.motherhoodStage = session.user.motherhoodStage;
           token.dietaryPreference = session.user.dietaryPreference;
+          token.subscriptionPlan = session.user.subscriptionPlan;
+          token.subscriptionStatus = session.user.subscriptionStatus;
         }
       }
 
@@ -85,6 +88,7 @@ export const authOptions: NextAuthOptions = {
                 role: 'mother',
                 motherhoodStage: 'pregnancy', // Default
                 subscriptionPlan: 'basic',
+                subscriptionStatus: 'active',
                 password: '' // Passwordless
               });
             } catch (error) {
@@ -97,6 +101,7 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
             token.motherhoodStage = dbUser.motherhoodStage;
             token.subscriptionPlan = dbUser.subscriptionPlan;
+            token.subscriptionStatus = dbUser.subscriptionStatus;
             token.dietaryPreference = dbUser.dietaryPreference;
           }
         } else {
@@ -105,6 +110,7 @@ export const authOptions: NextAuthOptions = {
           token.id = user.id;
           token.motherhoodStage = user.motherhoodStage;
           token.subscriptionPlan = user.subscriptionPlan;
+          token.subscriptionStatus = user.subscriptionStatus;
           token.dietaryPreference = (user as any).dietaryPreference;
         }
       }
@@ -116,6 +122,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.motherhoodStage = token.motherhoodStage as string;
         session.user.subscriptionPlan = token.subscriptionPlan as string;
+        session.user.subscriptionStatus = token.subscriptionStatus as string;
         session.user.dietaryPreference = token.dietaryPreference as string;
       }
       return session;

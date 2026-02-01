@@ -25,6 +25,7 @@ interface DashboardClientProps {
     email?: string | null;
     motherhoodStage?: string | null;
     subscriptionPlan?: string | null;
+    subscriptionStatus?: string | null;
     dietaryPreference?: string | null;
   };
 }
@@ -117,7 +118,8 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const [waterCount, setWaterCount] = useState(0);
   const [mood, setMood] = useState<string | null>(null);
 
-  const isPremium = user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized';
+  const isPremium = user.subscriptionStatus === 'active' && 
+    (user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized');
 
   useEffect(() => {
     // Check for subscription success
@@ -306,12 +308,12 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               <Button 
                 size="lg" 
                 className={`${
-                  user.subscriptionPlan === 'basic' 
-                    ? "bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200" 
-                    : "bg-white text-stone-900 border border-stone-200 hover:bg-stone-50"
+                  isPremium
+                    ? "bg-white text-stone-900 border border-stone-200 hover:bg-stone-50"
+                    : "bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200" 
                 } transition-all duration-300`}
               >
-                {user.subscriptionPlan === 'basic' ? 'Upgrade to Premium' : 'Manage Subscription'}
+                {isPremium ? 'Manage Subscription' : 'Upgrade to Premium'}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
