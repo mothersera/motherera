@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { data: session, update } = useSession();
+  const { data: session, update, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -27,20 +27,39 @@ export default function ProfilePage() {
         if (res.ok) {
           const data = await res.json();
           setFormData({
-            name: data.name || '',
-            email: data.email || '',
+            name: data.name || session?.user?.name || '',
+            email: data.email || session?.user?.email || '',
             motherhoodStage: data.motherhoodStage || 'pregnancy',
             dietaryPreference: data.dietaryPreference || 'veg'
           });
+        } else {
+          // Fallback to session data if profile fetch fails (e.g. 404 or first login)
+          setFormData(prev => ({
+            ...prev,
+            name: session?.user?.name || '',
+            email: session?.user?.email || ''
+          }));
         }
       } catch (err) {
         console.error("Failed to fetch profile", err);
+        // Fallback to session data on error
+        setFormData(prev => ({
+          ...prev,
+          name: session?.user?.name || '',
+          email: session?.user?.email || ''
+        }));
       } finally {
         setIsFetching(false);
       }
     }
-    fetchProfile();
-  }, []);
+    
+    if (session) {
+      fetchProfile();
+    } else if (status !== 'loading') {
+       // If no session and not loading, stop fetching
+       setIsFetching(false);
+    }
+  }, [session]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();

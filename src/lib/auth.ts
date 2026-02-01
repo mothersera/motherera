@@ -58,12 +58,43 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.role = user.role;
-        token.id = user.id;
-        token.motherhoodStage = user.motherhoodStage;
-        token.subscriptionPlan = user.subscriptionPlan;
+        // If logging in with a provider (Google/Apple), ensure user exists in DB
+        if (account?.provider === 'google' || account?.provider === 'apple') {
+          await dbConnect();
+          let dbUser = await UserModel.findOne({ email: user.email });
+
+          if (!dbUser && user.email) {
+            // Create new user
+            try {
+              dbUser = await UserModel.create({
+                name: user.name || 'Mother',
+                email: user.email,
+                image: user.image || undefined,
+                role: 'mother',
+                motherhoodStage: 'pregnancy', // Default
+                subscriptionPlan: 'basic',
+                password: '' // Passwordless
+              });
+            } catch (error) {
+              console.error("Error creating user from provider:", error);
+            }
+          }
+
+          if (dbUser) {
+            token.id = dbUser._id.toString();
+            token.role = dbUser.role;
+            token.motherhoodStage = dbUser.motherhoodStage;
+            token.subscriptionPlan = dbUser.subscriptionPlan;
+          }
+        } else {
+          // Credentials login already returns mapped user object
+          token.role = user.role;
+          token.id = user.id;
+          token.motherhoodStage = user.motherhoodStage;
+          token.subscriptionPlan = user.subscriptionPlan;
+        }
       }
       return token;
     },
