@@ -319,24 +319,29 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               { 
                 label: "Profile", 
                 value: "85%", 
-                sub: "Complete setup", 
+                sub: "Complete setup →", 
                 icon: User, 
                 color: "text-purple-500", 
-                bg: "bg-purple-50" 
+                bg: "bg-purple-50",
+                href: "/dashboard/profile"
               },
             ].map((stat, i) => (
-              <div key={i} className="group bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md transition-all duration-300">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
-                    <stat.icon className="w-5 h-5" />
+              <Link href={stat.href || "#"} key={i} className="block group">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md hover:border-stone-200 transition-all duration-300 h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
+                      <stat.icon className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-stone-500 text-sm font-medium mb-1">{stat.label}</h3>
+                    <div className="text-xl font-bold text-stone-900">{stat.value}</div>
+                    <p className={`text-xs mt-1 ${stat.href ? "text-rose-600 font-medium group-hover:translate-x-1 transition-transform inline-block" : "text-stone-400"}`}>
+                      {stat.sub}
+                    </p>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-stone-500 text-sm font-medium mb-1">{stat.label}</h3>
-                  <div className="text-xl font-bold text-stone-900">{stat.value}</div>
-                  <p className="text-xs text-stone-400 mt-1">{stat.sub}</p>
-                </div>
-              </div>
+              </Link>
             ))}
           </motion.div>
 
