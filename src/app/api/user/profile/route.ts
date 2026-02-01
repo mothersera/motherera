@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import UserModel from '@/models/User';
+import mongoose from 'mongoose';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -17,7 +18,7 @@ export async function GET() {
     let userId = session.user.id;
     let user;
 
-    if (userId) {
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
       user = await UserModel.findById(userId).select('-password -_id -__v');
     }
 
@@ -52,8 +53,8 @@ export async function PUT(req: Request) {
     let userId = session.user.id;
     let user;
 
-    // 1. Try to find user by ID
-    if (userId) {
+    // 1. Try to find user by ID (only if valid ObjectId)
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
       user = await UserModel.findById(userId);
     }
 
