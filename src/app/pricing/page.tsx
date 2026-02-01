@@ -1,9 +1,40 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function PricingPage() {
+  const router = useRouter();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const handleSubscribe = async (planName: string) => {
+    const plan = planName.toLowerCase();
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch(`/api/test/subscribe?plan=${plan}`);
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        router.push('/dashboard?subscribed=true');
+      } else {
+        if (res.status === 401) {
+          router.push('/login');
+        } else {
+          alert(data.error || 'Subscription failed');
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Something went wrong');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   const plans = [
     {
       name: "Basic",
@@ -94,11 +125,29 @@ export default function PricingPage() {
               </ul>
             </CardContent>
             <CardFooter>
-              <Link href={plan.href} className="w-full">
-                <Button className="w-full" variant={plan.buttonVariant}>
-                  {plan.buttonText}
+              {plan.name === 'Basic' ? (
+                <Link href={plan.href} className="w-full">
+                  <Button className="w-full" variant={plan.buttonVariant}>
+                    {plan.buttonText}
+                  </Button>
+                </Link>
+              ) : (
+                <Button 
+                  className="w-full" 
+                  variant={plan.buttonVariant}
+                  onClick={() => handleSubscribe(plan.name)}
+                  disabled={loadingPlan === plan.name.toLowerCase()}
+                >
+                  {loadingPlan === plan.name.toLowerCase() ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    plan.buttonText
+                  )}
                 </Button>
-              </Link>
+              )}
             </CardFooter>
           </Card>
         ))}

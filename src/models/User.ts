@@ -12,6 +12,8 @@ export interface IUser extends mongoose.Document {
   dietaryPreference?: 'veg' | 'non-veg' | 'vegan' | 'egg';
   subscriptionPlan?: 'basic' | 'premium' | 'specialized';
   subscriptionStatus?: 'active' | 'inactive' | 'canceled';
+  subscriptionSource?: string;
+  subscribedAt?: Date;
   // Expert specific fields
   specialization?: string;
   experience?: number;
@@ -39,6 +41,8 @@ const UserSchema: Schema<IUser> = new Schema(
     dietaryPreference: { type: String, enum: ['veg', 'non-veg', 'vegan', 'egg'] },
     subscriptionPlan: { type: String, enum: ['basic', 'premium', 'specialized'], default: 'basic' },
     subscriptionStatus: { type: String, enum: ['active', 'inactive', 'canceled'], default: 'active' }, // simplified for now
+    subscriptionSource: { type: String },
+    subscribedAt: { type: Date },
 
     // Expert fields
     specialization: { type: String },
