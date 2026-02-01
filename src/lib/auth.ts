@@ -52,7 +52,8 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           image: user.image,
           motherhoodStage: user.motherhoodStage,
-          subscriptionPlan: user.subscriptionPlan
+          subscriptionPlan: user.subscriptionPlan,
+          dietaryPreference: user.dietaryPreference
         };
       }
     })
@@ -87,6 +88,7 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
             token.motherhoodStage = dbUser.motherhoodStage;
             token.subscriptionPlan = dbUser.subscriptionPlan;
+            token.dietaryPreference = dbUser.dietaryPreference;
           }
         } else {
           // Credentials login already returns mapped user object
@@ -94,6 +96,7 @@ export const authOptions: NextAuthOptions = {
           token.id = user.id;
           token.motherhoodStage = user.motherhoodStage;
           token.subscriptionPlan = user.subscriptionPlan;
+          token.dietaryPreference = (user as any).dietaryPreference;
         }
       }
       return token;
@@ -104,6 +107,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.motherhoodStage = token.motherhoodStage as string;
         session.user.subscriptionPlan = token.subscriptionPlan as string;
+        session.user.dietaryPreference = token.dietaryPreference as string;
       }
       return session;
     }

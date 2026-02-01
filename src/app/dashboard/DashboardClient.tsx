@@ -25,6 +25,7 @@ interface DashboardClientProps {
     email?: string | null;
     motherhoodStage?: string | null;
     subscriptionPlan?: string | null;
+    dietaryPreference?: string | null;
   };
 }
 
@@ -91,6 +92,24 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const currentStageIndex = Math.max(0, JOURNEY_STAGES.findIndex(s => stage.toLowerCase().includes(s.id)) !== -1 
     ? JOURNEY_STAGES.findIndex(s => stage.toLowerCase().includes(s.id)) 
     : 0);
+
+  const [profileCompletion, setProfileCompletion] = useState(0);
+
+  useEffect(() => {
+    // Calculate profile completion
+    let completed = 0;
+    let total = 4; // Name, Email, Stage, Dietary Preference
+    
+    // Check fields
+    if (user.name && user.name !== 'Mother') completed++;
+    if (user.email) completed++;
+    if (user.motherhoodStage) completed++;
+    if (user.dietaryPreference) completed++;
+    
+    // Calculate percentage
+    setProfileCompletion(Math.round((completed / total) * 100));
+    
+  }, [user]);
 
   const [meals, setMeals] = useState<MealItem[]>(DEFAULT_MEALS);
   const [nextMeal, setNextMeal] = useState<string>("Lunch");
@@ -318,8 +337,8 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               },
               { 
                 label: "Profile", 
-                value: "85%", 
-                sub: "Complete setup →", 
+                value: `${profileCompletion}%`, 
+                sub: profileCompletion === 100 ? "All set!" : "Complete setup →", 
                 icon: User, 
                 color: "text-purple-500", 
                 bg: "bg-purple-50",

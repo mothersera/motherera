@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -85,11 +87,18 @@ export default function ProfilePage() {
         user: {
           ...session?.user,
           name: formData.name,
-          motherhoodStage: formData.motherhoodStage
+          motherhoodStage: formData.motherhoodStage,
+          dietaryPreference: formData.dietaryPreference
         }
       });
 
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setMessage({ type: 'success', text: 'Profile updated successfully! Redirecting...' });
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1500);
+
           } catch (err) {
             console.error(err);
             setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
