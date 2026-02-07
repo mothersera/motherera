@@ -120,8 +120,42 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const [waterCount, setWaterCount] = useState(0);
   const [mood, setMood] = useState<string | null>(null);
 
-  const isPremium = user.subscriptionStatus === 'active' && 
-    (user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized');
+  const isPremium = user.subscriptionStatus === 'active' && user.subscriptionPlan === 'premium';
+  const isSpecialized = user.subscriptionStatus === 'active' && user.subscriptionPlan === 'specialized';
+  const isSubscribed = isPremium || isSpecialized;
+
+  // Theme configurations based on plan
+  const getTheme = () => {
+    if (isSpecialized) {
+      return {
+        bgGradient: "from-amber-50 via-white to-stone-50",
+        accentColor: "text-amber-700",
+        accentBg: "bg-amber-50 border-amber-200",
+        buttonGradient: "bg-gradient-to-r from-amber-600 to-amber-800",
+        cardBorder: "border-amber-100",
+        badge: "Specialized Access"
+      };
+    } else if (isPremium) {
+      return {
+        bgGradient: "from-rose-50 via-white to-stone-50",
+        accentColor: "text-rose-600",
+        accentBg: "bg-rose-50 border-rose-200",
+        buttonGradient: "bg-gradient-to-r from-rose-500 to-rose-700",
+        cardBorder: "border-rose-100",
+        badge: "Premium Member"
+      };
+    }
+    return {
+      bgGradient: "from-stone-50 via-white to-stone-50",
+      accentColor: "text-stone-600",
+      accentBg: "bg-white border-stone-200",
+      buttonGradient: "bg-stone-900",
+      cardBorder: "border-stone-200",
+      badge: "Free Plan"
+    };
+  };
+
+  const theme = getTheme();
 
   useEffect(() => {
     // Check for subscription success
@@ -212,9 +246,9 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   return (
     <div className="min-h-screen bg-[#FDFCF8] pb-20 relative overflow-hidden">
       {/* Premium Background Effects */}
-      <div className="fixed top-0 left-0 w-full h-[600px] bg-gradient-to-b from-rose-50 via-white to-transparent pointer-events-none -z-10" />
-      <div className="fixed -top-[20%] -right-[10%] w-[600px] h-[600px] bg-purple-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="fixed top-[20%] -left-[10%] w-[500px] h-[500px] bg-rose-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className={`fixed top-0 left-0 w-full h-[600px] bg-gradient-to-b ${theme.bgGradient} to-transparent pointer-events-none -z-10`} />
+      <div className={`fixed -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full blur-3xl pointer-events-none -z-10 ${isSpecialized ? 'bg-amber-100/30' : 'bg-purple-100/30'}`} />
+      <div className={`fixed top-[20%] -left-[10%] w-[500px] h-[500px] rounded-full blur-3xl pointer-events-none -z-10 ${isSpecialized ? 'bg-orange-100/30' : 'bg-rose-100/30'}`} />
       
       <div className="container mx-auto px-4 py-8 md:py-12 relative z-10">
         <motion.div 
@@ -226,13 +260,13 @@ export default function DashboardClient({ user }: DashboardClientProps) {
           {/* Header Section */}
           <motion.div variants={item} className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
-              <div className="flex items-center gap-2 text-rose-600 font-medium mb-3 bg-rose-50 w-fit px-3 py-1 rounded-full border border-rose-100">
+              <div className={`flex items-center gap-2 font-medium mb-3 w-fit px-3 py-1 rounded-full border ${theme.accentBg} ${theme.accentColor}`}>
                 <Sparkles className="w-4 h-4" />
-                <span className="text-xs uppercase tracking-widest font-bold">Your Dashboard</span>
+                <span className="text-xs uppercase tracking-widest font-bold">{theme.badge}</span>
               </div>
               <h1 className="text-4xl md:text-6xl font-serif font-medium text-stone-900 leading-tight tracking-tight">
                 {greeting}, <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 font-bold">
+                <span className={`text-transparent bg-clip-text bg-gradient-to-r ${isSpecialized ? 'from-amber-600 via-orange-600 to-amber-800' : 'from-rose-500 via-purple-500 to-indigo-500'} font-bold`}>
                   {firstName}
                 </span>
               </h1>
@@ -315,12 +349,12 @@ export default function DashboardClient({ user }: DashboardClientProps) {
               <Button 
                 size="lg" 
                 className={`${
-                  isPremium
+                  isSubscribed
                     ? "bg-white text-stone-900 border border-stone-200 hover:bg-stone-50"
                     : "bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200" 
                 } transition-all duration-300`}
               >
-                {isPremium ? 'Manage Subscription' : 'Upgrade to Premium'}
+                {isSubscribed ? 'Manage Subscription' : 'Upgrade to Premium'}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
@@ -470,24 +504,24 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                   </div>
                 </Link>
 
-                <Link href={isPremium ? "/dashboard/support" : "/pricing?source=expert-support"} className="block group">
+                <Link href={isSubscribed ? "/dashboard/support" : "/pricing?source=expert-support"} className="block group">
                   <div className={`p-8 rounded-[2rem] border transition-all duration-300 h-full relative overflow-hidden backdrop-blur-md ${
-                    isPremium 
-                      ? "bg-gradient-to-br from-white to-emerald-50/50 border-white/60 hover:shadow-xl hover:shadow-emerald-100/30" 
-                      : "bg-gradient-to-br from-white to-amber-50/50 border-white/60 hover:shadow-xl hover:shadow-amber-100/30"
+                    isSubscribed 
+                      ? `bg-gradient-to-br from-white ${isSpecialized ? 'to-amber-50/50' : 'to-emerald-50/50'} border-white/60 hover:shadow-xl ${isSpecialized ? 'hover:shadow-amber-100/30' : 'hover:shadow-emerald-100/30'}`
+                      : "bg-gradient-to-br from-white to-stone-50/50 border-white/60 hover:shadow-xl hover:shadow-stone-100/30"
                   }`}>
-                    {!isPremium && (
+                    {!isSubscribed && (
                       <div className="absolute top-4 right-4 bg-amber-100/80 backdrop-blur-sm text-amber-800 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wide border border-amber-200 shadow-sm">
                         Premium Feature
                       </div>
                     )}
                     <div className="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 ring-1 ring-stone-100">
-                      <HeartHandshake className={`w-7 h-7 ${isPremium ? "text-emerald-500" : "text-amber-500"}`} />
+                      <HeartHandshake className={`w-7 h-7 ${isSubscribed ? (isSpecialized ? "text-amber-500" : "text-emerald-500") : "text-stone-400"}`} />
                     </div>
                     <h3 className="text-xl font-bold text-stone-900 mb-2 font-serif">Expert Support</h3>
                     <p className="text-stone-600 text-sm mb-6 leading-relaxed">Chat privately with our care team for personalized guidance.</p>
-                    <div className={`flex items-center text-sm font-bold tracking-wide uppercase ${isPremium ? "text-emerald-600" : "text-amber-600"}`}>
-                      {isPremium ? "Get Help" : "Unlock Access"} <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    <div className={`flex items-center text-sm font-bold tracking-wide uppercase ${isSubscribed ? (isSpecialized ? "text-amber-600" : "text-emerald-600") : "text-stone-500"}`}>
+                      {isSubscribed ? "Get Help" : "Unlock Access"} <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </Link>
