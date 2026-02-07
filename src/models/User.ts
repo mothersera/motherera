@@ -10,6 +10,9 @@ export interface IUser extends mongoose.Document {
   motherhoodStage?: 'pregnancy' | 'postpartum' | 'child_0_5' | 'toddler';
   healthConditions?: string[];
   dietaryPreference?: 'veg' | 'non-veg' | 'vegan' | 'egg';
+  activeDietPlan?: boolean;
+  planStartDate?: Date;
+  weeklyPlan?: any;
   subscriptionPlan?: 'basic' | 'premium' | 'specialized';
   subscriptionStatus?: 'active' | 'inactive' | 'canceled';
   subscriptionSource?: string;
@@ -39,6 +42,12 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     healthConditions: { type: [String], default: [] },
     dietaryPreference: { type: String, enum: ['veg', 'non-veg', 'vegan', 'egg', 'keto', 'vegetarian', 'non-vegetarian', 'eggetarian'] },
+    
+    // Premium Diet Plan
+    activeDietPlan: { type: Boolean, default: false },
+    planStartDate: { type: Date },
+    weeklyPlan: { type: Object }, // Stores the 7-day plan structure
+
     subscriptionPlan: { type: String, enum: ['basic', 'premium', 'specialized'], default: 'basic' },
     subscriptionStatus: { type: String, enum: ['active', 'inactive', 'canceled'], default: 'active' }, // simplified for now
     subscriptionSource: { type: String },

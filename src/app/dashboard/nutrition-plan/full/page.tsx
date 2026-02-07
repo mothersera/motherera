@@ -17,6 +17,7 @@ interface Meal {
 
 interface DailyPlan {
   day: number;
+  weekday: string;
   meals: {
     breakfast: Meal;
     midMorningSnack: Meal;
@@ -65,14 +66,18 @@ export default function FullDietPlanPage() {
 
       if (res.ok) {
         const data = await res.json();
-        setPlan(data.plan);
         setDietOptions(data.dietOptions);
-        setSelectedDiet(data.userPreference);
-        // If plan exists, go straight to plan view? Or let them choose?
-        // Let's default to selection view if they want to change, but show plan if generated.
-        // Actually, let's show selection first to confirm intent, or just show plan.
-        // Prompt says: "Page 1: Selection... Page 2: 7-Day Plan"
-        setStep('select'); 
+        
+        if (data.plan) {
+          // If active plan exists, load it directly
+          setPlan(data.plan);
+          setStep('plan');
+          setSelectedDiet(data.plan.dietType);
+        } else {
+          // No active plan, show selection
+          setSelectedDiet(data.userPreference);
+          setStep('select');
+        }
       }
     } catch (error) {
       console.error("Error fetching plan:", error);
@@ -99,6 +104,28 @@ export default function FullDietPlanPage() {
       console.error("Error generating plan:", error);
     } finally {
       setIsGenerating(false);
+    }
+  };
+  
+  const handleSwitchDiet = async () => {
+    if (confirm("Are you sure? This will create a new 7-day plan and overwrite your current one.")) {
+      setIsLoading(true);
+      try {
+        // Reset via API
+        await fetch('/api/nutrition-plan/full', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'reset' }),
+        });
+        
+        // Go back to selection
+        setStep('select');
+        setPlan(null);
+      } catch (error) {
+        console.error("Error resetting plan:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -205,7 +232,7 @@ export default function FullDietPlanPage() {
                     {plan.dietType}
                   </span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="text-stone-500 hover:text-stone-900">
+                <Button variant="ghost" size="sm" onClick={handleSwitchDiet} className="text-stone-500 hover:text-stone-900">
                   Switch Diet
                 </Button>
               </div>
@@ -240,7 +267,7 @@ export default function FullDietPlanPage() {
                         <span className="bg-stone-900 text-white w-8 h-8 rounded-lg flex items-center justify-center mr-3 text-sm">
                           {day.day}
                         </span>
-                        Day {day.day}
+                        {day.weekday}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
