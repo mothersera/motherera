@@ -202,7 +202,7 @@ export default function PostpartumPage() {
             </p>
             <div className="bg-stone-800/50 p-8 rounded-3xl border border-stone-700/50">
               <p className="text-white text-lg font-medium">
-                Reach out to your village. Asking for help is a sign of strength, not weakness.
+                Reach out to us. Asking for help is a sign of strength, not weakness.
               </p>
             </div>
           </div>

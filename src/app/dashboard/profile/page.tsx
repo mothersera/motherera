@@ -279,6 +279,7 @@ export default function ProfilePage() {
                           <option value="non-veg">Non-Vegetarian</option>
                           <option value="vegan">Vegan</option>
                           <option value="egg">Eggetarian</option>
+                          <option value="keto">Keto</option>
                         </select>
                         <Utensils className="absolute left-3 top-2.5 w-4 h-4 text-stone-500 pointer-events-none" />
                       </div>
