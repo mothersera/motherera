@@ -114,7 +114,7 @@ export default function DashboardClient({ user }: DashboardClientProps) {
     
   }, [user]);
 
-  const [meals, setMeals] = useState<MealItem[]>(DEFAULT_MEALS);
+  const [meals, setMeals] = useState<MealItem[]>([]);
   const [nextMeal, setNextMeal] = useState<string>("Lunch");
   const [dailyQuote, setDailyQuote] = useState(QUOTES[0]);
   const [waterCount, setWaterCount] = useState(0);
@@ -179,12 +179,8 @@ export default function DashboardClient({ user }: DashboardClientProps) {
     const quoteIndex = dayOfYear % QUOTES.length;
     setDailyQuote(QUOTES[quoteIndex]);
 
-    // Load state from local storage on mount
-    const today = todayDate.toISOString().split('T')[0];
-    const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
-    const stored = localStorage.getItem(storageKey);
-    
     // Load wellness data
+    const today = todayDate.toISOString().split('T')[0];
     const wellnessKey = `motherera_wellness_${today}_${user.email || 'guest'}`;
     const storedWellness = localStorage.getItem(wellnessKey);
     if (storedWellness) {
@@ -192,19 +188,54 @@ export default function DashboardClient({ user }: DashboardClientProps) {
       setWaterCount(water || 0);
       setMood(currentMood || null);
     }
-    
-    if (stored) {
+  }, [user.email]);
+
+  useEffect(() => {
+    const fetchDailyNutrition = async () => {
       try {
-        const storedMeals = JSON.parse(stored);
-        setMeals(storedMeals);
-        calculateNextMeal(storedMeals);
-      } catch (e) {
-        console.error("Failed to parse stored meals", e);
-        calculateNextMeal(DEFAULT_MEALS);
+        const res = await fetch('/api/nutrition-plan');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.meals) {
+            // Map API meals to dashboard format
+            const apiMeals = data.meals.map((m: any, index: number) => ({
+              id: m.meal.toLowerCase().replace(/\s/g, ''),
+              meal: m.meal,
+              food: m.food,
+              status: 'pending',
+              time: index === 0 ? "8:00 AM" : index === 1 ? "11:00 AM" : index === 2 ? "1:00 PM" : index === 3 ? "4:00 PM" : "8:00 PM"
+            }));
+            
+            // Check local storage for completion status
+            const today = new Date().toISOString().split('T')[0];
+            const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
+            const stored = localStorage.getItem(storageKey);
+            
+            if (stored) {
+              const storedMeals = JSON.parse(stored);
+              // Merge status from storage with fresh data from API
+              const mergedMeals = apiMeals.map((apiMeal: any, i: number) => ({
+                ...apiMeal,
+                status: storedMeals[i]?.status || 'pending'
+              }));
+              setMeals(mergedMeals);
+              calculateNextMeal(mergedMeals);
+            } else {
+              setMeals(apiMeals);
+              calculateNextMeal(apiMeals);
+            }
+          } else {
+             // Fallback if no meals returned (shouldn't happen with updated API)
+             setMeals(DEFAULT_MEALS);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch daily nutrition", error);
+        setMeals(DEFAULT_MEALS);
       }
-    } else {
-      calculateNextMeal(DEFAULT_MEALS);
-    }
+    };
+
+    fetchDailyNutrition();
   }, [user.email]);
 
   const updateWellness = (newWater: number, newMood: string | null) => {
