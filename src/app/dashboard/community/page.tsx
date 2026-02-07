@@ -16,6 +16,7 @@ interface Post {
   category: string;
   authorName: string;
   authorId: string;
+  authorImage?: string; // Add authorImage
   createdAt: string;
   likes: string[];
 }
@@ -230,8 +231,12 @@ function CommunityContent() {
                         <CardHeader className="pb-4 pt-6 px-6 md:px-8">
                           <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-purple-100 flex items-center justify-center text-rose-600 font-bold text-sm">
-                                {post.authorName?.charAt(0) || 'M'}
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-purple-100 flex items-center justify-center text-rose-600 font-bold text-sm overflow-hidden border border-rose-100">
+                                {post.authorImage ? (
+                                  <img src={post.authorImage} alt={post.authorName} className="w-full h-full object-cover" />
+                                ) : (
+                                  post.authorName?.charAt(0) || 'M'
+                                )}
                               </div>
                               <div>
                                 <div className="text-sm font-bold text-stone-900">{post.authorName || 'Anonymous Mom'}</div>

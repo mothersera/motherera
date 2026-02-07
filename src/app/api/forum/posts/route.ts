@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import ForumPost from '@/models/ForumPost';
+import UserModel from '@/models/User';
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
@@ -22,11 +23,22 @@ export async function GET(req: Request) {
       query.category = category;
     }
 
+    // Fetch posts
     const posts = await ForumPost.find(query)
       .sort({ createdAt: -1 }) // Newest first
-      .select('-__v'); // Hide internal version only
+      .select('-__v')
+      .lean();
 
-    return NextResponse.json(posts);
+    // Enhance posts with author image from User model (single source of truth)
+    const enhancedPosts = await Promise.all(posts.map(async (post: any) => {
+      const author = await UserModel.findById(post.authorId).select('image').lean();
+      return {
+        ...post,
+        authorImage: author?.image || null
+      };
+    }));
+
+    return NextResponse.json(enhancedPosts);
   } catch (error: unknown) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }

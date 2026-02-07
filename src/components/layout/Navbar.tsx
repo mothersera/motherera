@@ -40,15 +40,19 @@ export default function Navbar() {
               <Link href={session.user.role === 'expert' ? '/expert/dashboard' : '/dashboard'} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Dashboard
               </Link>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1">
-                  <UserIcon className="h-4 w-4 text-primary" />
+              <Link href="/dashboard/profile" className="flex items-center gap-2 group">
+                <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 group-hover:bg-primary/20 transition-colors">
+                  {session.user.image ? (
+                    <img src={session.user.image} alt="Profile" className="w-5 h-5 rounded-full object-cover" />
+                  ) : (
+                    <UserIcon className="h-4 w-4 text-primary" />
+                  )}
                   <span className="text-sm font-medium text-primary">{session.user.name?.split(' ')[0]}</span>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => signOut()}>
-                  Sign Out
-                </Button>
-              </div>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                Sign Out
+              </Button>
             </>
           ) : (
             <>
