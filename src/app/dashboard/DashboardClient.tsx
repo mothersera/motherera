@@ -432,9 +432,9 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                       <CardTitle className="font-serif text-2xl text-stone-900 mb-1">Today's Nutrition</CardTitle>
                       <p className="text-sm text-stone-500">Your personalized meal plan for today</p>
                     </div>
-                    <Link href="/dashboard/nutrition-plan">
+                    <Link href={isSubscribed ? "/dashboard/nutrition-plan/full" : "/dashboard/nutrition-plan"}>
                       <Button variant="ghost" size="sm" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-full px-4">
-                        View Full Plan <ArrowRight className="w-4 h-4 ml-1" />
+                        {isSubscribed ? "View Full 7-Day Plan" : "View Full Plan"} <ArrowRight className="w-4 h-4 ml-1" />
                       </Button>
                     </Link>
                   </div>

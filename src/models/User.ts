@@ -38,7 +38,7 @@ const UserSchema: Schema<IUser> = new Schema(
       required: function(this: IUser) { return this.role === 'mother'; }
     },
     healthConditions: { type: [String], default: [] },
-    dietaryPreference: { type: String, enum: ['veg', 'non-veg', 'vegan', 'egg'] },
+    dietaryPreference: { type: String, enum: ['veg', 'non-veg', 'vegan', 'egg', 'keto', 'vegetarian', 'non-vegetarian', 'eggetarian'] },
     subscriptionPlan: { type: String, enum: ['basic', 'premium', 'specialized'], default: 'basic' },
     subscriptionStatus: { type: String, enum: ['active', 'inactive', 'canceled'], default: 'active' }, // simplified for now
     subscriptionSource: { type: String },
