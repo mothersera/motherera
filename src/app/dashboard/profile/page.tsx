@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, User, Mail, Baby, Utensils, Camera, ArrowLeft } from "lucide-react";
+import { Loader2, User, Mail, Baby, Utensils, Camera, ArrowLeft, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
@@ -153,13 +153,18 @@ export default function ProfilePage() {
       <div className="h-48 bg-gradient-to-r from-rose-100 to-purple-100 w-full absolute top-0 left-0 z-0" />
 
       <div className="container mx-auto px-4 pt-24 relative z-10 max-w-4xl">
-        <div className="flex items-center gap-4 mb-8">
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="bg-white/80 hover:bg-white text-stone-600 backdrop-blur-sm">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
-            </Button>
-          </Link>
-        </div>
+        <div className="flex items-center gap-4 mb-8 justify-between">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="bg-white/80 hover:bg-white text-stone-600 backdrop-blur-sm">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+              </Button>
+            </Link>
+            <Link href="/dashboard/orders">
+              <Button variant="outline" size="sm" className="bg-white/80 hover:bg-white text-stone-600 backdrop-blur-sm border-stone-200">
+                <ShoppingBag className="w-4 h-4 mr-2" /> My Orders
+              </Button>
+            </Link>
+          </div>
 
         <div className="grid gap-8">
           {/* Profile Header Card */}

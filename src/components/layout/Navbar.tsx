@@ -37,6 +37,9 @@ export default function Navbar() {
           </Link>
           {session ? (
             <>
+              <Link href="/dashboard/shop" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Shop
+              </Link>
               <Link href={session.user.role === 'expert' ? '/expert/dashboard' : '/dashboard'} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Dashboard
               </Link>
@@ -99,6 +102,9 @@ export default function Navbar() {
             </Link>
             {session ? (
               <>
+                <Link href="/dashboard/shop" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
+                  Shop
+                </Link>
                 <Link href={session.user.role === 'expert' ? '/expert/dashboard' : '/dashboard'} className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
                   Dashboard
                 </Link>
