@@ -16,6 +16,7 @@ export interface Product {
   category: 'Baby Care' | 'Feeding' | 'Sleep' | 'Hygiene & Safety' | 'Mother Wellness';
   tags: string[];
   recommendedStage?: string[]; // pregnancy, postpartum, newborn, toddler
+  shopifyId?: string; // Real Shopify ID for Buy Button
 }
 
 const MOCK_PRODUCTS: Product[] = [
@@ -30,7 +31,8 @@ const MOCK_PRODUCTS: Product[] = [
     images: [{ src: 'https://images.unsplash.com/photo-1522771753035-4850d32fa302?auto=format&fit=crop&q=80&w=800', alt: 'Baby Onesie' }],
     category: 'Baby Care',
     tags: ['clothing', 'organic', 'soft'],
-    recommendedStage: ['newborn', 'child_0_5']
+    recommendedStage: ['newborn', 'child_0_5'],
+    shopifyId: '10118653149460'
   },
   {
     id: 'prod_2',
@@ -44,7 +46,8 @@ const MOCK_PRODUCTS: Product[] = [
     images: [{ src: 'https://images.unsplash.com/photo-1520013320623-28f0b09436d9?auto=format&fit=crop&q=80&w=800', alt: 'Baby Carrier' }],
     category: 'Baby Care',
     tags: ['gear', 'travel'],
-    recommendedStage: ['newborn', 'child_0_5', 'toddler']
+    recommendedStage: ['newborn', 'child_0_5', 'toddler'],
+    shopifyId: '10118653149460' // Using same ID for demo as requested by "Map products" but lacking unique IDs
   },
   {
     id: 'prod_3',
@@ -57,7 +60,8 @@ const MOCK_PRODUCTS: Product[] = [
     images: [{ src: 'https://images.unsplash.com/photo-1596700683057-0dc221087e53?auto=format&fit=crop&q=80&w=800', alt: 'Feeding Set' }],
     category: 'Feeding',
     tags: ['feeding', 'weaning'],
-    recommendedStage: ['child_0_5', 'toddler']
+    recommendedStage: ['child_0_5', 'toddler'],
+    shopifyId: '10118653149460'
   },
   {
     id: 'prod_4',
@@ -70,12 +74,13 @@ const MOCK_PRODUCTS: Product[] = [
     images: [{ src: 'https://images.unsplash.com/photo-1555819206-98a44b94420e?auto=format&fit=crop&q=80&w=800', alt: 'Recovery Kit' }],
     category: 'Mother Wellness',
     tags: ['recovery', 'mom-care'],
-    recommendedStage: ['postpartum']
+    recommendedStage: ['postpartum'],
+    shopifyId: '10118653149460'
   },
   {
     id: 'prod_5',
-    handle: 'pregnancy-pillow',
-    title: 'U-Shaped Pregnancy Pillow',
+    handle: 'pregnancy-pillow', // Mapping "Portable Sleep Device" to this or adding new? User said "Portable Sleep Device -> Sleep". I'll rename/repurpose.
+    title: 'Portable Sleep Device', // Renaming per request
     description: 'Support your back, hips, and belly for a good night\'s sleep.',
     descriptionHtml: '<p>Support your back, hips, and belly for a good night\'s sleep.</p>',
     price: '1899.00',
@@ -83,7 +88,8 @@ const MOCK_PRODUCTS: Product[] = [
     images: [{ src: 'https://images.unsplash.com/photo-1542866789-bb9c9d086a5d?auto=format&fit=crop&q=80&w=800', alt: 'Pregnancy Pillow' }],
     category: 'Sleep',
     tags: ['sleep', 'comfort'],
-    recommendedStage: ['pregnancy']
+    recommendedStage: ['pregnancy'],
+    shopifyId: '10118653149460'
   },
   {
     id: 'prod_6',
