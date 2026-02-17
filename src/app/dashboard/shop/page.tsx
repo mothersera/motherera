@@ -23,6 +23,175 @@ export default function ShopPage() {
   const userStage = session?.user?.motherhoodStage || 'general';
 
   useEffect(() => {
+    // Shopify Buy Button Script
+    const scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+    
+    function ShopifyBuyInit() {
+      // @ts-ignore
+      var client = ShopifyBuy.buildClient({
+        domain: 'ax5vz1-3k.myshopify.com',
+        storefrontAccessToken: '837a99e08fd06228ef42332d931df334',
+      });
+      // @ts-ignore
+      ShopifyBuy.UI.onReady(client).then(function (ui) {
+        ui.createComponent('product', {
+          id: '10118653149460',
+          node: document.getElementById('product-component-1771331293768'),
+          moneyFormat: 'Rs.%20%7B%7Bamount%7D%7D',
+          options: {
+            "product": {
+              "styles": {
+                "product": {
+                  "@media (min-width: 601px)": {
+                    "max-width": "calc(25% - 20px)",
+                    "margin-left": "20px",
+                    "margin-bottom": "50px"
+                  }
+                },
+                "button": {
+                  "font-family": "Arial, sans-serif",
+                  "font-size": "16px",
+                  "padding-top": "16px",
+                  "padding-bottom": "16px",
+                  ":hover": {
+                    "background-color": "#181816"
+                  },
+                  "background-color": "#0e0e0d",
+                  ":focus": {
+                    "background-color": "#181816"
+                  },
+                  "border-radius": "28px",
+                  "padding-left": "41px",
+                  "padding-right": "41px"
+                },
+                "quantityInput": {
+                  "font-size": "16px",
+                  "padding-top": "16px",
+                  "padding-bottom": "16px"
+                }
+              },
+              "text": {
+                "button": "Add to cart"
+              }
+            },
+            "productSet": {
+              "styles": {
+                "products": {
+                  "@media (min-width: 601px)": {
+                    "margin-left": "-20px"
+                  }
+                }
+              }
+            },
+            "modalProduct": {
+              "contents": {
+                "img": false,
+                "imgWithCarousel": true,
+                "button": false,
+                "buttonWithQuantity": true
+              },
+              "styles": {
+                "product": {
+                  "@media (min-width: 601px)": {
+                    "max-width": "100%",
+                    "margin-left": "0px",
+                    "margin-bottom": "0px"
+                  }
+                },
+                "button": {
+                  "font-family": "Arial, sans-serif",
+                  "font-size": "16px",
+                  "padding-top": "16px",
+                  "padding-bottom": "16px",
+                  ":hover": {
+                    "background-color": "#181816"
+                  },
+                  "background-color": "#0e0e0d",
+                  ":focus": {
+                    "background-color": "#181816"
+                  },
+                  "border-radius": "28px",
+                  "padding-left": "41px",
+                  "padding-right": "41px"
+                },
+                "quantityInput": {
+                  "font-size": "16px",
+                  "padding-top": "16px",
+                  "padding-bottom": "16px"
+                }
+              },
+              "text": {
+                "button": "Add to cart"
+              }
+            },
+            "option": {},
+            "cart": {
+              "styles": {
+                "button": {
+                  "font-family": "Arial, sans-serif",
+                  "font-size": "16px",
+                  "padding-top": "16px",
+                  "padding-bottom": "16px",
+                  ":hover": {
+                    "background-color": "#181816"
+                  },
+                  "background-color": "#0e0e0d",
+                  ":focus": {
+                    "background-color": "#181816"
+                  },
+                  "border-radius": "28px"
+                  }
+              },
+              "text": {
+                "total": "Subtotal",
+                "button": "Checkout"
+              }
+            },
+            "toggle": {
+              "styles": {
+                "toggle": {
+                  "font-family": "Arial, sans-serif",
+                  "background-color": "#0e0e0d",
+                  ":hover": {
+                    "background-color": "#181816"
+                  },
+                  ":focus": {
+                    "background-color": "#181816"
+                  }
+                },
+                "count": {
+                  "font-size": "16px"
+                }
+              }
+            }
+          },
+        });
+      });
+    }
+
+    function loadScript() {
+      var script = document.createElement('script');
+      script.async = true;
+      script.src = scriptURL;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
+      // @ts-ignore
+      script.onload = ShopifyBuyInit;
+    }
+
+    // @ts-ignore
+    if (window.ShopifyBuy) {
+      // @ts-ignore
+      if (window.ShopifyBuy.UI) {
+        ShopifyBuyInit();
+      } else {
+        loadScript();
+      }
+    } else {
+      loadScript();
+    }
+  }, []);
+
+  useEffect(() => {
     loadProducts();
   }, [activeCategory]);
 
@@ -79,6 +248,16 @@ export default function ShopPage() {
                 />
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Shopify Buy Button Section */}
+      <div className="py-[60px] bg-white border-b border-stone-100">
+        <div className="container mx-auto max-w-[1200px] px-4">
+          <h2 className="text-3xl font-serif font-bold text-stone-900 mb-12 text-center">Shop Baby Products</h2>
+          <div className="flex justify-center">
+             <div id='product-component-1771331293768'></div>
           </div>
         </div>
       </div>
