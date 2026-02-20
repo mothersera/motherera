@@ -276,7 +276,8 @@ export async function createCheckout(variantId: string, quantity: number = 1): P
       cache: 'no-store',
     });
 
-    const { data, errors } = await res.json();
+    const result = await res.json();
+    const { data, errors } = result;
     
     if (errors) {
       console.error("GraphQL Errors:", JSON.stringify(errors, null, 2));
