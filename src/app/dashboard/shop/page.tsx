@@ -23,184 +23,6 @@ export default function ShopPage() {
   const userStage = session?.user?.motherhoodStage || 'general';
 
   useEffect(() => {
-    // Shopify Buy Button Script
-    const scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
-    
-    function ShopifyBuyInit() {
-      // @ts-ignore
-      var client = ShopifyBuy.buildClient({
-        domain: 'ax5vz1-3k.myshopify.com',
-        storefrontAccessToken: '837a99e08fd06228ef42332d931df334',
-      });
-      // @ts-ignore
-      ShopifyBuy.UI.onReady(client).then(function (ui) {
-        ui.createComponent('collection', {
-          id: '527217295636',
-          node: document.getElementById('collection-component-1771597030956'),
-          moneyFormat: 'Rs.%20%7B%7Bamount%7D%7D',
-          options: {
-            "product": {
-              "styles": {
-                "product": {
-                  "@media (min-width: 601px)": {
-                    "max-width": "calc(25% - 20px)",
-                    "margin-left": "20px",
-                    "margin-bottom": "50px",
-                    "width": "calc(25% - 20px)"
-                  },
-                  "img": {
-                    "height": "calc(100% - 15px)",
-                    "position": "absolute",
-                    "left": "0",
-                    "right": "0",
-                    "top": "0"
-                  },
-                  "imgWrapper": {
-                    "padding-top": "calc(75% + 15px)",
-                    "position": "relative",
-                    "height": "0"
-                  }
-                },
-                "button": {
-                  "font-family": "Arial, sans-serif",
-                  "font-size": "16px",
-                  "padding-top": "16px",
-                  "padding-bottom": "16px",
-                  ":hover": {
-                    "background-color": "#181816"
-                  },
-                  "background-color": "#0e0e0d",
-                  ":focus": {
-                    "background-color": "#181816"
-                  },
-                  "border-radius": "28px"
-                },
-                "quantityInput": {
-                  "font-size": "16px",
-                  "padding-top": "16px",
-                  "padding-bottom": "16px"
-                }
-              },
-              "text": {
-                "button": "Add to cart"
-              }
-            },
-            "productSet": {
-              "styles": {
-                "products": {
-                  "@media (min-width: 601px)": {
-                    "margin-left": "-20px"
-                  }
-                }
-              }
-            },
-            "modalProduct": {
-              "contents": {
-                "img": false,
-                "imgWithCarousel": true,
-                "button": false,
-                "buttonWithQuantity": true
-              },
-              "styles": {
-                "product": {
-                  "@media (min-width: 601px)": {
-                    "max-width": "100%",
-                    "margin-left": "0px",
-                    "margin-bottom": "0px"
-                  }
-                },
-                "button": {
-                  "font-family": "Arial, sans-serif",
-                  "font-size": "16px",
-                  "padding-top": "16px",
-                  "padding-bottom": "16px",
-                  ":hover": {
-                    "background-color": "#181816"
-                  },
-                  "background-color": "#0e0e0d",
-                  ":focus": {
-                    "background-color": "#181816"
-                  },
-                  "border-radius": "28px"
-                },
-                "quantityInput": {
-                  "font-size": "16px",
-                  "padding-top": "16px",
-                  "padding-bottom": "16px"
-                }
-              },
-              "text": {
-                "button": "Add to cart"
-              }
-            },
-            "option": {},
-            "cart": {
-              "styles": {
-                "button": {
-                  "font-family": "Arial, sans-serif",
-                  "font-size": "16px",
-                  "padding-top": "16px",
-                  "padding-bottom": "16px",
-                  ":hover": {
-                    "background-color": "#181816"
-                  },
-                  "background-color": "#0e0e0d",
-                  ":focus": {
-                    "background-color": "#181816"
-                  },
-                  "border-radius": "28px"
-                }
-              },
-              "text": {
-                "total": "Subtotal",
-                "button": "Checkout"
-              }
-            },
-            "toggle": {
-              "styles": {
-                "toggle": {
-                  "font-family": "Arial, sans-serif",
-                  "background-color": "#0e0e0d",
-                  ":hover": {
-                    "background-color": "#181816"
-                  },
-                  ":focus": {
-                    "background-color": "#181816"
-                  }
-                },
-                "count": {
-                  "font-size": "16px"
-                }
-              }
-            }
-          },
-        });
-      });
-    }
-
-    function loadScript() {
-      var script = document.createElement('script');
-      script.async = true;
-      script.src = scriptURL;
-      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(script);
-      // @ts-ignore
-      script.onload = ShopifyBuyInit;
-    }
-
-    // @ts-ignore
-    if (window.ShopifyBuy) {
-      // @ts-ignore
-      if (window.ShopifyBuy.UI) {
-        ShopifyBuyInit();
-      } else {
-        loadScript();
-      }
-    } else {
-      loadScript();
-    }
-  }, []);
-
-  useEffect(() => {
     loadProducts();
   }, [activeCategory]);
 
@@ -261,16 +83,7 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Shopify Buy Button Section */}
-      <div className="py-[60px] bg-white border-b border-stone-100">
-        <div className="container mx-auto max-w-[1200px] px-4">
-          <h2 className="text-3xl font-serif font-bold text-stone-900 mb-12 text-center">Featured Collection</h2>
-          <div className="flex justify-center">
-             <div id='collection-component-1771597030956'></div>
-          </div>
-        </div>
-      </div>
-
+      {/* Categories */}
       <div className="container mx-auto px-4 py-12">
         {/* Categories */}
         <div className="flex flex-wrap gap-2 mb-10 justify-center md:justify-start">
@@ -318,16 +131,6 @@ export default function ShopPage() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {product.shopifyId ? (
-                    <Card className="h-full border-none shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 rounded-3xl overflow-hidden bg-white ring-1 ring-stone-100 flex flex-col p-4">
-                      {product.recommendedStage?.some(s => userStage.includes(s)) && (
-                        <div className="absolute top-3 left-3 z-10 bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide shadow-sm flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> Recommended
-                        </div>
-                      )}
-                      <div id={`product-component-${product.id}`} className="shopify-product-container flex-grow"></div>
-                    </Card>
-                  ) : (
                   <Link href={`/dashboard/shop/${product.handle}`} className="group h-full block">
                     <Card className="h-full border-none shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 rounded-3xl overflow-hidden bg-white ring-1 ring-stone-100 flex flex-col">
                       <div className="relative aspect-square overflow-hidden bg-stone-50">
@@ -341,12 +144,14 @@ export default function ShopPage() {
                             Sale
                           </div>
                         )}
-                        <Image
-                          src={product.images[0].src}
-                          alt={product.images[0].alt}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-700"
-                        />
+                        {product.images[0] && (
+                          <Image
+                            src={product.images[0].src}
+                            alt={product.images[0].alt}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
+                        )}
                       </div>
                       
                       <CardContent className="p-6 flex-grow">
@@ -372,7 +177,6 @@ export default function ShopPage() {
                       </CardFooter>
                     </Card>
                   </Link>
-                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
