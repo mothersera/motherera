@@ -62,9 +62,9 @@ export default function ProductDetailPage() {
         throw new Error("Invalid checkout URL");
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Checkout failed", error);
-      alert("Failed to initiate checkout. Please try again.");
+      alert(`Failed to initiate checkout: ${error.message || "Unknown error"}`);
       setIsCheckingOut(false);
     }
   };

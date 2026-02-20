@@ -248,6 +248,11 @@ export async function createCheckout(variantId: string, quantity: number = 1): P
     }
   `;
 
+  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
+    console.error("Missing Shopify environment variables");
+    throw new Error("Store configuration error");
+  }
+
   try {
     const res = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/2023-10/graphql.json`, {
       method: 'POST',
@@ -268,20 +273,26 @@ export async function createCheckout(variantId: string, quantity: number = 1): P
           }
         } 
       }),
+      cache: 'no-store',
     });
 
-    const { data } = await res.json();
+    const { data, errors } = await res.json();
     
-    if (data.checkoutCreate?.checkout?.webUrl) {
+    if (errors) {
+      console.error("GraphQL Errors:", JSON.stringify(errors, null, 2));
+      throw new Error(errors[0].message);
+    }
+
+    if (data?.checkoutCreate?.checkout?.webUrl) {
       return data.checkoutCreate.checkout.webUrl;
     }
     
-    if (data.checkoutCreate?.checkoutUserErrors?.length > 0) {
+    if (data?.checkoutCreate?.checkoutUserErrors?.length > 0) {
        console.log("Checkout User Errors:", JSON.stringify(data.checkoutCreate.checkoutUserErrors, null, 2));
        throw new Error(data.checkoutCreate.checkoutUserErrors[0].message);
     }
     
-    throw new Error("Failed to create checkout");
+    throw new Error("Failed to create checkout - unknown error");
 
   } catch (error) {
     console.error("Checkout error:", error);
