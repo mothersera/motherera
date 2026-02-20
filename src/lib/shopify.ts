@@ -234,13 +234,13 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
 
 export async function createCheckout(variantId: string, quantity: number = 1): Promise<string> {
   const mutation = `
-    mutation checkoutCreate($input: CheckoutCreateInput!) {
-      checkoutCreate(input: $input) {
-        checkout {
+    mutation cartCreate($input: CartInput!) {
+      cartCreate(input: $input) {
+        cart {
           id
-          webUrl
+          checkoutUrl
         }
-        checkoutUserErrors {
+        userErrors {
           field
           message
         }
@@ -264,9 +264,9 @@ export async function createCheckout(variantId: string, quantity: number = 1): P
         query: mutation, 
         variables: { 
           input: {
-            lineItems: [
+            lines: [
               {
-                variantId: variantId,
+                merchandiseId: variantId,
                 quantity: quantity
               }
             ]
@@ -284,16 +284,16 @@ export async function createCheckout(variantId: string, quantity: number = 1): P
       throw new Error(errors[0].message);
     }
 
-    if (data?.checkoutCreate?.checkout?.webUrl) {
-      return data.checkoutCreate.checkout.webUrl;
+    if (data?.cartCreate?.cart?.checkoutUrl) {
+      return data.cartCreate.cart.checkoutUrl;
     }
     
-    if (data?.checkoutCreate?.checkoutUserErrors?.length > 0) {
-       console.log("Checkout User Errors:", JSON.stringify(data.checkoutCreate.checkoutUserErrors, null, 2));
-       throw new Error(data.checkoutCreate.checkoutUserErrors[0].message);
+    if (data?.cartCreate?.userErrors?.length > 0) {
+       console.log("Cart User Errors:", JSON.stringify(data.cartCreate.userErrors, null, 2));
+       throw new Error(data.cartCreate.userErrors[0].message);
     }
     
-    throw new Error("Failed to create checkout - unknown error");
+    throw new Error("Failed to create cart - unknown error");
 
   } catch (error) {
     console.error("Checkout error:", error);
