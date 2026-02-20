@@ -14,6 +14,7 @@ export interface Product {
   category: 'Baby Care' | 'Feeding' | 'Sleep' | 'Hygiene & Safety' | 'Mother Wellness';
   tags: string[];
   recommendedStage?: string[]; // pregnancy, postpartum, newborn, toddler
+  variantId?: string;
 }
 
 const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
@@ -56,6 +57,13 @@ export async function fetchProducts(category?: string, stage?: string): Promise<
                 node {
                   url
                   altText
+                }
+              }
+            }
+            variants(first: 1) {
+              edges {
+                node {
+                  id
                 }
               }
             }
@@ -114,7 +122,8 @@ export async function fetchProducts(category?: string, stage?: string): Promise<
       })),
       category: mapTagsToCategory(node.tags),
       tags: node.tags,
-      recommendedStage: mapTagsToStage(node.tags)
+      recommendedStage: mapTagsToStage(node.tags),
+      variantId: node.variants.edges[0]?.node.id
     }));
 
     // Filter by Category
@@ -154,6 +163,13 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
             node {
               url
               altText
+            }
+          }
+        }
+        variants(first: 1) {
+          edges {
+            node {
+              id
             }
           }
         }
@@ -206,7 +222,8 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
       })),
       category: mapTagsToCategory(node.tags),
       tags: node.tags,
-      recommendedStage: mapTagsToStage(node.tags)
+      recommendedStage: mapTagsToStage(node.tags),
+      variantId: node.variants.edges[0]?.node.id
     };
 
   } catch (error) {
@@ -215,12 +232,12 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
   }
 }
 
-export async function createCheckout(productId: string, quantity: number = 1): Promise<string> {
+export async function createCheckout(variantId: string, quantity: number = 1): Promise<string> {
   // In a real implementation, this would call checkoutCreate mutation
   // For now, we'll construct a direct permalink if possible or simulate success
   // Shopify Storefront API checkoutCreate requires productId (Base64)
   
-    const mutation = `
+  const mutation = `
     mutation checkoutCreate($variantId: ID!) {
       checkoutCreate(input: {
         lineItems: [
@@ -242,45 +259,10 @@ export async function createCheckout(productId: string, quantity: number = 1): P
   `;
 
   try {
-    // Note: productId from Storefront API is already Base64 (gid://shopify/Product/...)
-    // But checkoutCreate needs Variant ID, not Product ID.
-    // We need to fetch the first variant ID for the product first.
-    // This is getting complex for a "mock" migration but let's try to be cleaner.
-    // Since we don't have variant selection UI yet, we assume first variant.
+    // Note: variantId is now expected as the first argument, not productId.
+    // The previous logic to fetch variant ID from product ID is no longer needed 
+    // because we are fetching variant ID upfront in the product queries.
     
-    // 1. Fetch Variant ID and Handle
-    const variantQuery = `
-      query getProductVariant($id: ID!) {
-        node(id: $id) {
-          ... on Product {
-            handle
-            variants(first: 1) {
-              edges {
-                node {
-                  id
-                }
-              }
-            }
-          }
-        }
-      }
-    `;
-    
-    const variantRes = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/2023-10/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': SHOPIFY_STOREFRONT_TOKEN!,
-      },
-      body: JSON.stringify({ query: variantQuery, variables: { id: productId } }),
-    });
-    
-    const variantData = await variantRes.json();
-    const variantId = variantData.data?.node?.variants?.edges[0]?.node?.id;
-    // const handle = variantData.data?.node?.handle; // Handle not needed for direct checkout
-
-    if (!variantId) throw new Error("Variant not found");
-
     // 2. Create Checkout
     const res = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/2023-10/graphql.json`, {
       method: 'POST',
@@ -315,6 +297,7 @@ export async function createCheckout(productId: string, quantity: number = 1): P
     }
     
     if (data.checkoutCreate?.checkoutUserErrors?.length > 0) {
+       console.log(data.checkoutCreate.checkoutUserErrors);
        throw new Error(data.checkoutCreate.checkoutUserErrors[0].message);
     }
     

@@ -40,11 +40,18 @@ export default function ProductDetailPage() {
   const handleBuyNow = async () => {
     if (!product) return;
     
+    // Check if variantId is available
+    if (!product.variantId) {
+      console.error("No variant ID found for product", product);
+      alert("This product is currently unavailable for checkout.");
+      return;
+    }
+    
     setIsCheckingOut(true);
     try {
       // 1. Create mock checkout URL
       // In real app: Call /api/shop/checkout which talks to Shopify
-      const checkoutUrl = await createCheckout(product.id, quantity);
+      const checkoutUrl = await createCheckout(product.variantId, quantity);
       
       // 2. Log order intent (optional, for analytics)
       
