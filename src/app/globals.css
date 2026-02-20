@@ -36,7 +36,7 @@
   --radius: 0.75rem; /* 12px - rounded-xl */
 }
 
-@theme {
+@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   
