@@ -57,13 +57,8 @@ export default function ProductDetailPage() {
       
     } catch (error) {
       console.error("Checkout failed", error);
-      // Fallback only if product handle exists
-      if (product.handle) {
-        window.location.href = `/dashboard/shop/success?product=${product.handle}&qty=${quantity}`;
-      } else {
-        alert("Failed to initiate checkout. Please try again.");
-        setIsCheckingOut(false);
-      }
+      alert("Failed to initiate checkout. Please try again.");
+      setIsCheckingOut(false);
     }
   };
 
