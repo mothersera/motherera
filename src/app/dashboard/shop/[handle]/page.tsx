@@ -49,12 +49,21 @@ export default function ProductDetailPage() {
       // 2. Log order intent (optional, for analytics)
       
       // 3. Redirect
-      window.location.href = checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        throw new Error("Invalid checkout URL");
+      }
       
     } catch (error) {
       console.error("Checkout failed", error);
-      alert("Failed to initiate checkout. Please try again.");
-      setIsCheckingOut(false);
+      // Fallback only if product handle exists
+      if (product.handle) {
+        window.location.href = `/dashboard/shop/success?product=${product.handle}&qty=${quantity}`;
+      } else {
+        alert("Failed to initiate checkout. Please try again.");
+        setIsCheckingOut(false);
+      }
     }
   };
 
