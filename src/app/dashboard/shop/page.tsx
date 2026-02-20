@@ -139,11 +139,7 @@ export default function ShopPage() {
                             <Sparkles className="w-3 h-3" /> Recommended
                           </div>
                         )}
-                        {product.compareAtPrice && (
-                          <div className="absolute top-3 right-3 z-10 bg-white/80 backdrop-blur-sm text-stone-900 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide shadow-sm">
-                            Sale
-                          </div>
-                        )}
+
                         {product.images[0] && (
                           <Image
                             src={product.images[0].src}
@@ -167,7 +163,7 @@ export default function ShopPage() {
                       <CardFooter className="p-6 pt-0 flex items-center justify-between mt-auto">
                         <div className="flex flex-col">
                           <span className="text-xl font-bold text-stone-900">₹{product.price}</span>
-                          {product.compareAtPrice && (
+                          {product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price) && (
                             <span className="text-xs text-stone-400 line-through">₹{product.compareAtPrice}</span>
                           )}
                         </div>
