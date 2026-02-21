@@ -24,6 +24,7 @@ export default function ProductDetailPage() {
   }, [pathname]);
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -33,6 +34,12 @@ export default function ProductDetailPage() {
       loadProduct();
     }
   }, [handle]);
+
+  useEffect(() => {
+    if (product?.images?.length) {
+      setSelectedImage(product.images[0]);
+    }
+  }, [product]);
 
   const loadProduct = async () => {
     setIsLoading(true);
@@ -126,18 +133,22 @@ export default function ProductDetailPage() {
           <div className="space-y-4">
             <div className="relative aspect-square rounded-[1.5rem] md:rounded-[2rem] overflow-hidden bg-stone-50 border border-stone-100 shadow-sm">
               <Image
-                src={product.images[0].src}
-                alt={product.images[0].alt}
+                src={selectedImage?.src || product.images[0].src}
+                alt={selectedImage?.alt || product.images[0].alt}
                 fill
                 className="object-cover"
                 priority
               />
             </div>
-            {/* Thumbnails (Mock) */}
+            {/* Thumbnails */}
             <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 no-scrollbar">
-              {[product.images[0], product.images[0], product.images[0]].map((img, i) => (
-                <div key={i} className={`relative w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden cursor-pointer border-2 flex-shrink-0 ${i === 0 ? 'border-rose-500' : 'border-transparent'}`}>
-                  <Image src={img.src} alt={img.alt} fill className="object-cover" />
+              {product.images.map((img, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => setSelectedImage(img)}
+                  className={`relative w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden cursor-pointer border-2 flex-shrink-0 ${selectedImage?.src === img.src ? 'border-rose-500' : 'border-transparent'}`}
+                >
+                  <Image src={img.src} alt={img.alt || ""} fill className="object-cover" />
                 </div>
               ))}
             </div>
