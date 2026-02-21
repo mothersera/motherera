@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,15 @@ import { useCart } from "@/context/CartContext";
 export default function ProductDetailPage() {
   const { handle } = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const { addToCart, openCart } = useCart();
   
+  // Force scroll to top on mount and route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
