@@ -6,17 +6,20 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, ShieldCheck, Truck, Star, Heart } from "lucide-react";
-import { fetchProductByHandle, createCheckout, Product } from "@/lib/shopify";
+import { Loader2, ArrowLeft, ShieldCheck, Truck, Star, Heart, ShoppingBag } from "lucide-react";
+import { fetchProductByHandle, Product } from "@/lib/shopify";
 import { useSession } from "next-auth/react";
+import { useCart } from "@/context/CartContext";
 
 export default function ProductDetailPage() {
   const { handle } = useParams();
   const router = useRouter();
   const { data: session } = useSession();
+  const { addToCart, openCart } = useCart();
+  
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
@@ -59,35 +62,25 @@ export default function ProductDetailPage() {
     }
   }, [product]);
 
-  const handleBuyNow = async () => {
+  const handleAddToCart = async () => {
     if (!product) return;
     
     // Check if variantId is available
     if (!product.variantId) {
       console.error("No variant ID found for product", product);
-      alert("This product is currently unavailable for checkout.");
+      alert("This product is currently unavailable for purchase.");
       return;
     }
     
-    setIsCheckingOut(true);
+    setIsAddingToCart(true);
     try {
-      // 1. Create mock checkout URL
-      // In real app: Call /api/shop/checkout which talks to Shopify
-      const checkoutUrl = await createCheckout(product.variantId, quantity);
-      
-      // 2. Log order intent (optional, for analytics)
-      
-      // 3. Redirect
-      if (checkoutUrl) {
-        window.location.href = checkoutUrl;
-      } else {
-        throw new Error("Invalid checkout URL");
-      }
-      
+      await addToCart(product.variantId, quantity);
+      openCart();
     } catch (error: any) {
-      console.error("Checkout failed", error);
-      alert(`Failed to initiate checkout: ${error.message || "Unknown error"}`);
-      setIsCheckingOut(false);
+      console.error("Failed to add to cart", error);
+      alert(`Failed to add item to cart: ${error.message || "Unknown error"}`);
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
@@ -200,15 +193,17 @@ export default function ProductDetailPage() {
                 <Button 
                   size="lg" 
                   className="flex-1 h-14 text-lg bg-stone-900 hover:bg-rose-600 rounded-full shadow-xl shadow-stone-200 hover:shadow-rose-200 transition-all duration-300"
-                  onClick={handleBuyNow}
-                  disabled={isCheckingOut}
+                  onClick={handleAddToCart}
+                  disabled={isAddingToCart}
                 >
-                  {isCheckingOut ? (
+                  {isAddingToCart ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Adding...
                     </>
                   ) : (
-                    "Buy Now"
+                    <>
+                      <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
+                    </>
                   )}
                 </Button>
                 <Button 

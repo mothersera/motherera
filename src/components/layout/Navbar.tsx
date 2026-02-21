@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, User as UserIcon } from "lucide-react";
 import { useState } from "react";
+import { CartIcon } from "@/components/cart/CartIcon";
 
 import Image from "next/image";
 
@@ -44,18 +45,19 @@ export default function Navbar() {
                 Dashboard
               </Link>
               <Link href="/dashboard/profile" className="flex items-center gap-2 group">
-                <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 group-hover:bg-primary/20 transition-colors">
-                  {session.user.image ? (
-                    <img src={session.user.image} alt="Profile" className="w-5 h-5 rounded-full object-cover" />
-                  ) : (
-                    <UserIcon className="h-4 w-4 text-primary" />
-                  )}
-                  <span className="text-sm font-medium text-primary">{session.user.name?.split(' ')[0]}</span>
-                </div>
-              </Link>
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>
-                Sign Out
-              </Button>
+            <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 group-hover:bg-primary/20 transition-colors">
+              {session.user.image ? (
+                <img src={session.user.image} alt="Profile" className="w-5 h-5 rounded-full object-cover" />
+              ) : (
+                <UserIcon className="h-4 w-4 text-primary" />
+              )}
+              <span className="text-sm font-medium text-primary">{session.user.name?.split(' ')[0]}</span>
+            </div>
+          </Link>
+          <CartIcon />
+          <Button variant="ghost" size="sm" onClick={() => signOut()}>
+            Sign Out
+          </Button>
             </>
           ) : (
             <>
@@ -74,17 +76,20 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu Button */}
-        <button
-          className="md:hidden"
-          onClick={toggleMenu}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? (
-            <X className="h-6 w-6 text-foreground" />
-          ) : (
-            <Menu className="h-6 w-6 text-foreground" />
-          )}
-        </button>
+        <div className="flex items-center gap-4 md:hidden">
+          <CartIcon />
+          <button
+            className=""
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6 text-foreground" />
+            ) : (
+              <Menu className="h-6 w-6 text-foreground" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}

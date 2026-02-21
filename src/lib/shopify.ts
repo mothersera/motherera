@@ -17,8 +17,76 @@ export interface Product {
   variantId?: string;
 }
 
+export interface CartItem {
+  id: string; // Line item ID
+  quantity: number;
+  merchandise: {
+    id: string;
+    title: string;
+    price: {
+      amount: string;
+      currencyCode: string;
+    };
+    image: {
+      url: string;
+      altText: string;
+    };
+    product: {
+      title: string;
+      handle: string;
+    };
+  };
+}
+
+export interface Cart {
+  id: string;
+  checkoutUrl: string;
+  lines: CartItem[];
+  cost: {
+    subtotalAmount: {
+      amount: string;
+      currencyCode: string;
+    };
+    totalAmount: {
+      amount: string;
+      currencyCode: string;
+    };
+  };
+  totalQuantity: number;
+}
+
 const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN;
+
+async function shopifyFetch<T>(query: string, variables?: object): Promise<T> {
+  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
+    throw new Error("Missing Shopify environment variables");
+  }
+
+  try {
+    const res = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/2023-10/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Storefront-Access-Token': SHOPIFY_STOREFRONT_TOKEN,
+      },
+      body: JSON.stringify({ query, variables }),
+      cache: 'no-store',
+    });
+
+    const { data, errors } = await res.json();
+
+    if (errors) {
+      console.error("GraphQL Errors:", JSON.stringify(errors, null, 2));
+      throw new Error(errors[0].message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Shopify Fetch Error:", error);
+    throw error;
+  }
+}
 
 // Helper to categorize products based on tags
 function mapTagsToCategory(tags: string[]): Product['category'] {
@@ -86,26 +154,9 @@ export async function fetchProducts(category?: string, stage?: string): Promise<
   `;
 
   try {
-    const res = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/2023-10/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': SHOPIFY_STOREFRONT_TOKEN!,
-      },
-      body: JSON.stringify({ query, variables: { first: 20 } }),
-      cache: 'no-store', // Ensure fresh data
-    });
-
-    if (!res.ok) {
-      console.error('Shopify API Error:', res.statusText);
-      return [];
-    }
-
-    const { data } = await res.json();
+    const data = await shopifyFetch<{ products: { edges: { node: any }[] } }>(query, { first: 20 });
     
-    if (!data || !data.products) {
-      return [];
-    }
+    if (!data || !data.products) return [];
 
     let products: Product[] = data.products.edges.map(({ node }: any) => ({
       id: node.id,
@@ -190,19 +241,8 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
   `;
 
   try {
-    const res = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/2023-10/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': SHOPIFY_STOREFRONT_TOKEN!,
-      },
-      body: JSON.stringify({ query, variables: { handle } }),
-      cache: 'no-store',
-    });
-
-    if (!res.ok) return null;
-
-    const { data } = await res.json();
+    const data = await shopifyFetch<{ productByHandle: any }>(query, { handle });
+    
     if (!data || !data.productByHandle) return null;
 
     const node = data.productByHandle;
@@ -232,13 +272,76 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
   }
 }
 
-export async function createCheckout(variantId: string, quantity: number = 1): Promise<string> {
-  const mutation = `
-    mutation cartCreate($input: CartInput!) {
-      cartCreate(input: $input) {
+// --- Cart Logic ---
+
+const cartFragment = `
+  id
+  checkoutUrl
+  totalQuantity
+  cost {
+    subtotalAmount {
+      amount
+      currencyCode
+    }
+    totalAmount {
+      amount
+      currencyCode
+    }
+  }
+  lines(first: 100) {
+    edges {
+      node {
+        id
+        quantity
+        merchandise {
+          ... on ProductVariant {
+            id
+            title
+            price {
+              amount
+              currencyCode
+            }
+            image {
+              url
+              altText
+            }
+            product {
+              title
+              handle
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+function formatCart(data: any): Cart {
+  return {
+    id: data.id,
+    checkoutUrl: data.checkoutUrl,
+    totalQuantity: data.totalQuantity,
+    cost: data.cost,
+    lines: data.lines.edges.map(({ node }: any) => ({
+      id: node.id,
+      quantity: node.quantity,
+      merchandise: {
+        id: node.merchandise.id,
+        title: node.merchandise.title,
+        price: node.merchandise.price,
+        image: node.merchandise.image,
+        product: node.merchandise.product
+      }
+    }))
+  };
+}
+
+export async function createCart(): Promise<Cart> {
+  const query = `
+    mutation cartCreate {
+      cartCreate {
         cart {
-          id
-          checkoutUrl
+          ${cartFragment}
         }
         userErrors {
           field
@@ -248,55 +351,131 @@ export async function createCheckout(variantId: string, quantity: number = 1): P
     }
   `;
 
-  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
-    console.error("Missing Shopify environment variables");
-    throw new Error("Store configuration error");
+  const data = await shopifyFetch<{ cartCreate: { cart: any; userErrors: any[] } }>(query);
+  
+  if (data.cartCreate.userErrors.length > 0) {
+    throw new Error(data.cartCreate.userErrors[0].message);
   }
+
+  return formatCart(data.cartCreate.cart);
+}
+
+export async function getCart(cartId: string): Promise<Cart | null> {
+  const query = `
+    query getCart($cartId: ID!) {
+      cart(id: $cartId) {
+        ${cartFragment}
+      }
+    }
+  `;
 
   try {
-    const res = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/api/2023-10/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': SHOPIFY_STOREFRONT_TOKEN!,
-      },
-      body: JSON.stringify({ 
-        query: mutation, 
-        variables: { 
-          input: {
-            lines: [
-              {
-                merchandiseId: variantId,
-                quantity: quantity
-              }
-            ]
-          }
-        } 
-      }),
-      cache: 'no-store',
-    });
-
-    const result = await res.json();
-    const { data, errors } = result;
-    
-    if (errors) {
-      console.error("GraphQL Errors:", JSON.stringify(errors, null, 2));
-      throw new Error(errors[0].message);
-    }
-
-    if (data?.cartCreate?.cart?.checkoutUrl) {
-      return data.cartCreate.cart.checkoutUrl;
-    }
-    
-    if (data?.cartCreate?.userErrors?.length > 0) {
-       console.log("Cart User Errors:", JSON.stringify(data.cartCreate.userErrors, null, 2));
-       throw new Error(data.cartCreate.userErrors[0].message);
-    }
-    
-    throw new Error("Failed to create cart - unknown error");
-
+    const data = await shopifyFetch<{ cart: any }>(query, { cartId });
+    if (!data.cart) return null;
+    return formatCart(data.cart);
   } catch (error) {
-    console.error("Checkout error:", error);
-    throw error;
+    console.error("Error fetching cart:", error);
+    return null;
   }
+}
+
+export async function addToCart(cartId: string, variantId: string, quantity: number = 1): Promise<Cart> {
+  const query = `
+    mutation cartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
+      cartLinesAdd(cartId: $cartId, lines: $lines) {
+        cart {
+          ${cartFragment}
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    cartId,
+    lines: [
+      {
+        merchandiseId: variantId,
+        quantity
+      }
+    ]
+  };
+
+  const data = await shopifyFetch<{ cartLinesAdd: { cart: any; userErrors: any[] } }>(query, variables);
+
+  if (data.cartLinesAdd.userErrors.length > 0) {
+    throw new Error(data.cartLinesAdd.userErrors[0].message);
+  }
+
+  return formatCart(data.cartLinesAdd.cart);
+}
+
+export async function removeFromCart(cartId: string, lineIds: string[]): Promise<Cart> {
+  const query = `
+    mutation cartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
+      cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+        cart {
+          ${cartFragment}
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const data = await shopifyFetch<{ cartLinesRemove: { cart: any; userErrors: any[] } }>(query, { cartId, lineIds });
+
+  if (data.cartLinesRemove.userErrors.length > 0) {
+    throw new Error(data.cartLinesRemove.userErrors[0].message);
+  }
+
+  return formatCart(data.cartLinesRemove.cart);
+}
+
+export async function updateCartLine(cartId: string, lineId: string, quantity: number): Promise<Cart> {
+  const query = `
+    mutation cartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
+      cartLinesUpdate(cartId: $cartId, lines: $lines) {
+        cart {
+          ${cartFragment}
+        }
+        userErrors {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    cartId,
+    lines: [
+      {
+        id: lineId,
+        quantity
+      }
+    ]
+  };
+
+  const data = await shopifyFetch<{ cartLinesUpdate: { cart: any; userErrors: any[] } }>(query, variables);
+
+  if (data.cartLinesUpdate.userErrors.length > 0) {
+    throw new Error(data.cartLinesUpdate.userErrors[0].message);
+  }
+
+  return formatCart(data.cartLinesUpdate.cart);
+}
+
+// Deprecated: Keeping for backward compatibility if needed, but redirects to new flow
+export async function createCheckout(variantId: string, quantity: number = 1): Promise<string> {
+  // This function creates a new cart and returns checkout URL
+  // Useful for "Buy Now" buttons that bypass the cart drawer
+  const cart = await createCart();
+  const updatedCart = await addToCart(cart.id, variantId, quantity);
+  return updatedCart.checkoutUrl;
 }
