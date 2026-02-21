@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,6 +36,28 @@ export default function ProductDetailPage() {
       setIsLoading(false);
     }
   };
+
+  const reviewCount = useMemo(() => {
+    if (!product) return 128; // Default fallback
+    
+    const price = parseFloat(product.price);
+    
+    // Seed random generator with product id to ensure stable count per product
+    // Simple hash function for string
+    const hash = product.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const randomFactor = (hash % 100) / 100; // 0.0 to 0.99
+    
+    if (price < 1500) {
+      // Range: 100 - 200
+      return Math.floor(100 + (randomFactor * 100));
+    } else if (price >= 1500 && price <= 3500) {
+      // Range: 150 - 350
+      return Math.floor(150 + (randomFactor * 200));
+    } else {
+      // Range: 300 - 700 (price > 3500)
+      return Math.floor(300 + (randomFactor * 400));
+    }
+  }, [product]);
 
   const handleBuyNow = async () => {
     if (!product) return;
@@ -139,7 +161,7 @@ export default function ProductDetailPage() {
                   <Star className="w-5 h-5 fill-current" />
                   <Star className="w-5 h-5 fill-current" />
                 </div>
-                <span className="text-stone-400 text-sm">(128 Reviews)</span>
+                <span className="text-stone-400 text-sm">({reviewCount} Reviews)</span>
               </div>
               <div className="flex items-end gap-4 mb-8">
                 <span className="text-4xl font-bold text-stone-900">₹{product.price}</span>
