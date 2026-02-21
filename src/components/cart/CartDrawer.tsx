@@ -2,6 +2,7 @@
 "use client";
 
 import { useCart } from "@/context/CartContext";
+import { useRouter } from "next/navigation";
 import { X, Trash2, ShoppingBag, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export function CartDrawer() {
   const { isOpen, closeCart, cart, removeFromCart, updateCartItem, isLoading } = useCart();
+  const router = useRouter();
 
   const handleQuantityChange = (lineId: string, quantity: number) => {
     if (quantity < 1) return;
@@ -70,7 +72,10 @@ export function CartDrawer() {
                   <p className="text-sm">Looks like you haven't added anything yet.</p>
                   <Button 
                     variant="outline" 
-                    onClick={closeCart}
+                    onClick={() => {
+                      closeCart();
+                      router.push('/dashboard/shop');
+                    }}
                     className="mt-4 rounded-full border-stone-200 hover:bg-stone-50 text-stone-900"
                   >
                     Start Shopping
