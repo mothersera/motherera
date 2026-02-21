@@ -43,10 +43,10 @@ export function CartDrawer() {
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 flex flex-col h-full border-l border-stone-100"
           >
             {/* Header */}
-            <div className="p-6 border-b border-stone-100 flex items-center justify-between bg-white">
+            <div className="p-4 md:p-6 border-b border-stone-100 flex items-center justify-between bg-white">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-rose-600" />
-                <h2 className="text-xl font-serif font-bold text-stone-900">Your Cart</h2>
+                <h2 className="text-lg md:text-xl font-serif font-bold text-stone-900">Your Cart</h2>
                 <span className="text-xs font-medium bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">
                   {cart?.totalQuantity || 0} items
                 </span>
@@ -60,7 +60,7 @@ export function CartDrawer() {
             </div>
 
             {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
               {!cart || cart.lines.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 text-stone-400">
                   <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center">
@@ -107,38 +107,38 @@ export function CartDrawer() {
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 border border-stone-200 rounded-full px-2 py-1 bg-white">
-                            <button
-                              onClick={() => updateCartItem(item.id, item.quantity - 1)}
-                              disabled={isLoading || item.quantity <= 1}
-                              className="w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-900 disabled:opacity-30 transition-colors"
-                            >
-                              -
-                            </button>
-                            <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
-                            <button
-                              onClick={() => updateCartItem(item.id, item.quantity + 1)}
-                              disabled={isLoading}
-                              className="w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-900 disabled:opacity-30 transition-colors"
-                            >
-                              +
-                            </button>
+                          <div className="flex items-center justify-between mt-2 md:mt-0">
+                            <div className="flex items-center gap-2 md:gap-3 border border-stone-200 rounded-full px-2 py-1 bg-white">
+                              <button
+                                onClick={() => updateCartItem(item.id, item.quantity - 1)}
+                                disabled={isLoading || item.quantity <= 1}
+                                className="w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-900 disabled:opacity-30 transition-colors"
+                              >
+                                -
+                              </button>
+                              <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
+                              <button
+                                onClick={() => updateCartItem(item.id, item.quantity + 1)}
+                                disabled={isLoading}
+                                className="w-5 h-5 flex items-center justify-center text-stone-500 hover:text-stone-900 disabled:opacity-30 transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 md:gap-3">
+                              <span className="font-bold text-stone-900 text-sm md:text-base">
+                                ₹{parseFloat(item.merchandise.price.amount) * item.quantity}
+                              </span>
+                              <button
+                                onClick={() => removeFromCart(item.id)}
+                                disabled={isLoading}
+                                className="text-stone-400 hover:text-rose-500 transition-colors p-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <span className="font-bold text-stone-900">
-                              ₹{parseFloat(item.merchandise.price.amount) * item.quantity}
-                            </span>
-                            <button
-                              onClick={() => removeFromCart(item.id)}
-                              disabled={isLoading}
-                              className="text-stone-400 hover:text-rose-500 transition-colors p-1"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -148,7 +148,7 @@ export function CartDrawer() {
 
             {/* Footer */}
             {cart && cart.lines.length > 0 && (
-              <div className="p-6 border-t border-stone-100 bg-stone-50/50 space-y-4">
+              <div className="p-4 md:p-6 border-t border-stone-100 bg-stone-50/50 space-y-4">
                 <div className="flex items-center justify-between text-stone-500">
                   <span>Subtotal</span>
                   <span className="font-bold text-stone-900 text-lg">

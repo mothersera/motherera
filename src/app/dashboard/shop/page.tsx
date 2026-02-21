@@ -51,21 +51,21 @@ export default function ShopPage() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-50/50 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
         
-        <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="container mx-auto px-4 py-12 md:py-16 relative z-10">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-xs font-medium uppercase tracking-wider mb-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-[10px] md:text-xs font-medium uppercase tracking-wider mb-2 md:mb-4">
               <Sparkles className="w-3 h-3" />
               <span>Curated for Mother & Baby</span>
             </div>
             
-            <h1 className="text-4xl md:text-6xl font-serif font-bold text-stone-900 leading-tight">
+            <h1 className="text-3xl md:text-6xl font-serif font-bold text-stone-900 leading-tight">
               Essentials for Your <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-purple-600">
                 Beautiful Journey
               </span>
             </h1>
             
-            <p className="text-lg text-stone-500 max-w-xl mx-auto leading-relaxed">
+            <p className="text-base md:text-lg text-stone-500 max-w-xl mx-auto leading-relaxed">
               Discover safe, premium, and lovingly selected products designed to support you through every stage of motherhood.
             </p>
 
@@ -137,7 +137,7 @@ export default function ShopPage() {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8"
           >
             <AnimatePresence mode="popLayout">
               {filteredProducts.map((product) => (
@@ -150,17 +150,17 @@ export default function ShopPage() {
                   transition={{ duration: 0.3 }}
                 >
                   <Link href={`/dashboard/shop/${product.handle}`} className="group h-full block">
-                    <Card className="h-full border-none shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-500 rounded-[2rem] overflow-hidden bg-white flex flex-col relative group">
+                    <Card className="h-full border-none shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-500 rounded-2xl md:rounded-[2rem] overflow-hidden bg-white flex flex-col relative group">
                       <div className="relative aspect-[4/5] overflow-hidden bg-stone-100">
                         {product.recommendedStage?.some(s => userStage.includes(s)) && (
-                          <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md text-stone-900 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wide shadow-sm flex items-center gap-1.5 border border-white/50">
-                            <Sparkles className="w-3 h-3 text-amber-500" /> 
+                          <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 bg-white/90 backdrop-blur-md text-stone-900 text-[8px] md:text-[10px] font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full uppercase tracking-wide shadow-sm flex items-center gap-1 md:gap-1.5 border border-white/50">
+                            <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-500" /> 
                             <span>For You</span>
                           </div>
                         )}
 
                         {product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price) && (
-                          <div className="absolute top-4 right-4 z-10 bg-rose-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wide shadow-sm">
+                          <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-rose-500 text-white text-[8px] md:text-[10px] font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full uppercase tracking-wide shadow-sm">
                             Sale
                           </div>
                         )}
@@ -182,24 +182,24 @@ export default function ShopPage() {
                         </div>
                       </div>
                       
-                      <CardContent className="p-6 flex-grow flex flex-col">
-                        <div className="text-[10px] font-bold text-rose-600 mb-2 uppercase tracking-widest">{product.category}</div>
-                        <h3 className="font-serif font-bold text-lg text-stone-900 mb-2 leading-tight group-hover:text-rose-600 transition-colors line-clamp-2">
+                      <CardContent className="p-3 md:p-6 flex-grow flex flex-col">
+                        <div className="text-[8px] md:text-[10px] font-bold text-rose-600 mb-1 md:mb-2 uppercase tracking-widest truncate">{product.category}</div>
+                        <h3 className="font-serif font-bold text-sm md:text-lg text-stone-900 mb-1 md:mb-2 leading-tight group-hover:text-rose-600 transition-colors line-clamp-2">
                           {product.title}
                         </h3>
-                        <p className="text-stone-500 text-sm line-clamp-2 mb-4 leading-relaxed flex-grow">
+                        <p className="text-stone-500 text-xs md:text-sm line-clamp-2 mb-2 md:mb-4 leading-relaxed flex-grow">
                           {product.description}
                         </p>
                         
-                        <div className="flex items-end justify-between mt-auto pt-4 border-t border-stone-50">
+                        <div className="flex items-end justify-between mt-auto pt-2 md:pt-4 border-t border-stone-50">
                           <div className="flex flex-col">
-                            <span className="text-xl font-bold text-stone-900">₹{product.price}</span>
+                            <span className="text-base md:text-xl font-bold text-stone-900">₹{product.price}</span>
                             {product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price) && (
-                              <span className="text-xs text-stone-400 line-through">₹{product.compareAtPrice}</span>
+                              <span className="text-[10px] md:text-xs text-stone-400 line-through">₹{product.compareAtPrice}</span>
                             )}
                           </div>
-                          <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-colors duration-300 lg:hidden">
-                            <ArrowLeft className="w-4 h-4 rotate-180" />
+                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-colors duration-300 lg:hidden">
+                            <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 rotate-180" />
                           </div>
                         </div>
                       </CardContent>
