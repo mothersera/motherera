@@ -25,6 +25,8 @@ export default function ProductDetailPage() {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState<any>(null);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [currentVariant, setCurrentVariant] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -36,10 +38,50 @@ export default function ProductDetailPage() {
   }, [handle]);
 
   useEffect(() => {
-    if (product?.images?.length) {
-      setSelectedImage(product.images[0]);
+    if (product) {
+      if (product.images?.length) {
+        setSelectedImage(product.images[0]);
+      }
+      
+      // Initialize options and variant
+      if (product.options && product.options.length > 0) {
+        const initialOptions: Record<string, string> = {};
+        product.options.forEach(opt => {
+          initialOptions[opt.name] = opt.values[0];
+        });
+        setSelectedOptions(initialOptions);
+      }
+      
+      if (product.variants && product.variants.length > 0) {
+        setCurrentVariant(product.variants[0]);
+      }
     }
-  }, [product]);
+  }, [product, currentVariant]);
+
+  // Update variant when options change
+  useEffect(() => {
+    if (!product || !product.variants) return;
+    
+    const matchingVariant = product.variants.find(variant => {
+      return variant.selectedOptions.every(selectedOpt => {
+        return selectedOptions[selectedOpt.name] === selectedOpt.value;
+      });
+    });
+    
+    if (matchingVariant) {
+      setCurrentVariant(matchingVariant);
+      if (matchingVariant.image) {
+        setSelectedImage(matchingVariant.image);
+      }
+    }
+  }, [selectedOptions, product]);
+
+  const handleOptionChange = (name: string, value: string) => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const loadProduct = async () => {
     setIsLoading(true);
@@ -56,7 +98,7 @@ export default function ProductDetailPage() {
   const reviewCount = useMemo(() => {
     if (!product) return 128; // Default fallback
     
-    const price = parseFloat(product.price);
+    const price = parseFloat(currentVariant?.price?.amount || product.price);
     
     // Seed random generator with product id to ensure stable count per product
     // Simple hash function for string
@@ -79,7 +121,9 @@ export default function ProductDetailPage() {
     if (!product) return;
     
     // Check if variantId is available
-    if (!product.variantId) {
+    const variantIdToAdd = currentVariant?.id || product.variantId;
+    
+    if (!variantIdToAdd) {
       console.error("No variant ID found for product", product);
       alert("This product is currently unavailable for purchase.");
       return;
@@ -87,7 +131,7 @@ export default function ProductDetailPage() {
     
     setIsAddingToCart(true);
     try {
-      await addToCart(product.variantId, quantity);
+      await addToCart(variantIdToAdd, quantity);
       openCart();
     } catch (error: any) {
       console.error("Failed to add to cart", error);
@@ -174,14 +218,45 @@ export default function ProductDetailPage() {
                 <span className="text-stone-400 text-xs md:text-sm">({reviewCount} Reviews)</span>
               </div>
               <div className="flex items-end gap-3 md:gap-4 mb-6 md:mb-8">
-                <span className="text-3xl md:text-4xl font-bold text-stone-900">₹{product.price}</span>
-                {product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price) && (
+                <span className="text-3xl md:text-4xl font-bold text-stone-900">
+                  ₹{currentVariant?.price?.amount || product.price}
+                </span>
+                {product.compareAtPrice && Number(product.compareAtPrice) > Number(currentVariant?.price?.amount || product.price) && (
                   <span className="text-lg md:text-xl text-stone-400 line-through mb-1">₹{product.compareAtPrice}</span>
                 )}
               </div>
             </div>
 
             <div className="prose prose-stone max-w-none mb-8 md:mb-10 text-stone-600 leading-relaxed text-sm md:text-base" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
+
+            {/* Variant Selectors */}
+            {product.options && product.options.length > 0 && product.options[0].name !== "Title" && (
+              <div className="space-y-4 mb-8">
+                {product.options.map((option) => (
+                  <div key={option.name}>
+                    <h3 className="text-sm font-medium text-stone-900 mb-2">{option.name}</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {option.values.map((value) => {
+                        const isSelected = selectedOptions[option.name] === value;
+                        return (
+                          <button
+                            key={value}
+                            onClick={() => handleOptionChange(option.name, value)}
+                            className={`px-4 py-2 rounded-full text-sm border transition-all ${
+                              isSelected
+                                ? "border-rose-600 bg-rose-50 text-rose-700 font-medium"
+                                : "border-stone-200 hover:border-stone-300 text-stone-600"
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Quantity & Actions - Sticky on Mobile */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-stone-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:static md:p-0 md:bg-transparent md:border-none md:shadow-none z-40 mt-auto space-y-4 md:space-y-6">
@@ -202,10 +277,10 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
                 <div className="text-sm text-stone-500 hidden md:block">
-                  Total: <span className="font-bold text-stone-900">₹{(parseFloat(product.price) * quantity).toFixed(2)}</span>
+                  Total: <span className="font-bold text-stone-900">₹{(parseFloat(currentVariant?.price?.amount || product.price) * quantity).toFixed(2)}</span>
                 </div>
                 <div className="text-sm text-stone-500 md:hidden ml-auto">
-                   <span className="font-bold text-stone-900 text-lg">₹{(parseFloat(product.price) * quantity).toFixed(2)}</span>
+                   <span className="font-bold text-stone-900 text-lg">₹{(parseFloat(currentVariant?.price?.amount || product.price) * quantity).toFixed(2)}</span>
                 </div>
               </div>
 

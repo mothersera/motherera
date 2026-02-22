@@ -14,7 +14,15 @@ export interface Product {
   category: 'Baby Care' | 'Feeding' | 'Sleep' | 'Hygiene & Safety' | 'Mother Wellness';
   tags: string[];
   recommendedStage?: string[]; // pregnancy, postpartum, newborn, toddler
-  variantId?: string;
+  variantId?: string; // Default/First variant ID
+  options: { name: string; values: string[] }[];
+  variants: {
+    id: string;
+    title: string;
+    price: { amount: string; currencyCode: string };
+    image?: { src: string; alt: string };
+    selectedOptions: { name: string; value: string }[];
+  }[];
 }
 
 export interface CartItem {
@@ -174,7 +182,9 @@ export async function fetchProducts(category?: string, stage?: string): Promise<
       category: mapTagsToCategory(node.tags),
       tags: node.tags,
       recommendedStage: mapTagsToStage(node.tags),
-      variantId: node.variants.edges[0]?.node.id
+      variantId: node.variants.edges[0]?.node.id,
+      options: [], // For fetchProducts, we don't fetch full options/variants to keep it light
+      variants: [] // For fetchProducts, we don't fetch full options/variants to keep it light
     }));
 
     // Filter by Category
@@ -209,7 +219,12 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
         description
         descriptionHtml
         tags
-        images(first: 5) {
+        options(first: 20) {
+          id
+          name
+          values
+        }
+        images(first: 10) {
           edges {
             node {
               url
@@ -217,10 +232,23 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
             }
           }
         }
-        variants(first: 1) {
+        variants(first: 20) {
           edges {
             node {
               id
+              title
+              price {
+                amount
+                currencyCode
+              }
+              image {
+                url
+                altText
+              }
+              selectedOptions {
+                name
+                value
+              }
             }
           }
         }
@@ -263,7 +291,15 @@ export async function fetchProductByHandle(handle: string): Promise<Product | nu
       category: mapTagsToCategory(node.tags),
       tags: node.tags,
       recommendedStage: mapTagsToStage(node.tags),
-      variantId: node.variants.edges[0]?.node.id
+      variantId: node.variants.edges[0]?.node.id,
+      options: node.options?.map((o: any) => ({ name: o.name, values: o.values })) || [],
+      variants: node.variants.edges.map(({ node: v }: any) => ({
+        id: v.id,
+        title: v.title,
+        price: v.price,
+        image: v.image ? { src: v.image.url, alt: v.image.altText } : undefined,
+        selectedOptions: v.selectedOptions
+      }))
     };
 
   } catch (error) {
