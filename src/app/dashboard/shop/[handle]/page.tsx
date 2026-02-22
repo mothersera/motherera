@@ -209,8 +209,8 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Details Section */}
-          <div className="flex flex-col h-full">
+          {/* Details Section - Right Column */}
+          <div className="flex flex-col h-full lg:sticky lg:top-8">
             <div className="mb-6">
               <span className="text-xs md:text-sm font-bold text-rose-600 uppercase tracking-wider bg-rose-50 px-3 py-1 rounded-full mb-3 md:mb-4 inline-block">
                 {product.category}
@@ -237,8 +237,6 @@ export default function ProductDetailPage() {
                 )}
               </div>
             </div>
-
-            <div className="prose prose-stone max-w-none mb-8 md:mb-10 text-stone-600 leading-relaxed text-sm md:text-base" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
 
             {/* Variant Selectors */}
             {product.options && product.options.length > 0 && product.options[0].name !== "Title" && (
@@ -322,8 +320,8 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Trust Badges - Add margin bottom for mobile to account for sticky bar */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4 pt-6 md:pt-8 border-t border-stone-100 mb-20 md:mb-0">
+            {/* Trust Badges */}
+            <div className="grid grid-cols-2 gap-3 md:gap-4 pt-6 md:pt-8 border-t border-stone-100 mb-8 md:mb-10">
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
                   <ShieldCheck className="w-4 h-4 md:w-5 md:h-5" />
@@ -343,6 +341,9 @@ export default function ProductDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Product Description - Moved to bottom of right column */}
+            <div className="prose prose-stone max-w-none text-stone-600 leading-relaxed text-sm md:text-base mb-20 md:mb-0" dangerouslySetInnerHTML={{ __html: product.descriptionHtml }} />
           </div>
         </div>
       </div>
