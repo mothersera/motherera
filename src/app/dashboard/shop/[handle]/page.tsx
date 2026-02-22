@@ -43,20 +43,31 @@ export default function ProductDetailPage() {
         setSelectedImage(product.images[0]);
       }
       
-      // Initialize options and variant
-      if (product.options && product.options.length > 0) {
+      // Initialize options and variant from the first available variant
+      if (product.variants && product.variants.length > 0) {
+        const firstVariant = product.variants[0];
+        setCurrentVariant(firstVariant);
+        
+        const initialOptions: Record<string, string> = {};
+        firstVariant.selectedOptions.forEach(opt => {
+            initialOptions[opt.name] = opt.value;
+        });
+        setSelectedOptions(initialOptions);
+        
+        // Also set the image if the variant has one
+        if (firstVariant.image) {
+            setSelectedImage(firstVariant.image);
+        }
+      } else if (product.options && product.options.length > 0) {
+        // Fallback if no variants but options exist (should be rare)
         const initialOptions: Record<string, string> = {};
         product.options.forEach(opt => {
           initialOptions[opt.name] = opt.values[0];
         });
         setSelectedOptions(initialOptions);
       }
-      
-      if (product.variants && product.variants.length > 0) {
-        setCurrentVariant(product.variants[0]);
-      }
     }
-  }, [product, currentVariant]);
+  }, [product]);
 
   // Update variant when options change
   useEffect(() => {
