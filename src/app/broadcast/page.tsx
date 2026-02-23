@@ -240,7 +240,7 @@ export default function BroadcastPage() {
 
     return () => {
       if (client) {
-        client.disconnectUser();
+        // client.disconnectUser(); // Removed as it might not be available or needed
         setClient(null);
         setCall(null);
         setIsJoined(false);
