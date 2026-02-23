@@ -249,6 +249,19 @@ export default function BroadcastPage() {
     };
   }, [session, status, isAdmin]); // Only run once session is ready
 
+  // Listen for call ended event
+  useEffect(() => {
+    if (!call) return;
+
+    const unsubscribe = call.on('call.ended', () => {
+      router.push("/");
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [call, router]);
+
   const handleStartBroadcast = async () => {
     if (!call) return;
     setIsJoining(true);
@@ -266,11 +279,14 @@ export default function BroadcastPage() {
 
   const handleEndStream = async () => {
     if (!call) return;
+    
+    if (isAdmin) {
+      await call.endCall();
+    }
+    
     await call.leave();
     setIsJoined(false);
-    if (!isAdmin) {
-      router.push("/");
-    }
+    router.push("/");
   };
 
   if (status === "loading") {
