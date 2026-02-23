@@ -212,7 +212,7 @@ export default function BroadcastPage() {
           id: userId,
           name: userName,
           image: userImage,
-          type: isAdmin ? "admin" : "user", // Custom role mapping if needed
+          type: "authenticated",
         };
 
         const streamClient = new StreamVideoClient({ apiKey, user, token });
