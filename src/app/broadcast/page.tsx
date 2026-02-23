@@ -180,7 +180,7 @@ export default function BroadcastPage() {
   const [error, setError] = useState<string | null>(null);
 
   // @ts-ignore - Role check
-  const isAdmin = session?.user?.role === "admin";
+  const isAdmin = session?.user?.email === "support@motherera.com";
 
   // Check auth
   useEffect(() => {
@@ -225,7 +225,8 @@ export default function BroadcastPage() {
         // Auto-join for non-admins
         if (!isAdmin) {
           setIsJoining(true);
-          await streamCall.join({ create: true });
+          // Viewers join as 'viewer' role (cannot publish)
+          await streamCall.join({ create: false });
           setIsJoined(true);
           setIsJoining(false);
         }
@@ -252,6 +253,7 @@ export default function BroadcastPage() {
     if (!call) return;
     setIsJoining(true);
     try {
+      // Host joins with default (admin/host) capabilities
       await call.join({ create: true });
       setIsJoined(true);
     } catch (err: any) {
