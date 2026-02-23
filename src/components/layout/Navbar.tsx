@@ -38,6 +38,9 @@ export default function Navbar() {
           </Link>
           {session ? (
             <>
+              <Link href="/broadcast" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Broadcast
+              </Link>
               <Link href="/dashboard/shop" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Shop
               </Link>
@@ -107,6 +110,9 @@ export default function Navbar() {
             </Link>
             {session ? (
               <>
+                <Link href="/broadcast" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
+                  Broadcast
+                </Link>
                 <Link href="/dashboard/shop" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
                   Shop
                 </Link>
