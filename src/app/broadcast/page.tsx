@@ -30,8 +30,8 @@ function BroadcastHeader({ isAdmin, onEndStream }: { isAdmin: boolean; onEndStre
   const participantCount = useParticipantCount();
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 md:p-6 bg-gradient-to-b from-black/80 to-transparent transition-all duration-300">
-      <div className="flex items-center gap-4">
+    <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 md:p-6 bg-gradient-to-b from-black/80 to-transparent transition-all duration-300 pointer-events-none">
+      <div className="flex items-center gap-4 pointer-events-auto">
         <div className="flex items-center gap-2 bg-red-600/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg shadow-red-900/20">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -44,7 +44,7 @@ function BroadcastHeader({ isAdmin, onEndStream }: { isAdmin: boolean; onEndStre
         </h1>
       </div>
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pointer-events-auto">
         <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full text-white/90 text-xs md:text-sm font-medium transition-colors hover:bg-black/60">
           <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
           <span>{participantCount} Watching</span>
