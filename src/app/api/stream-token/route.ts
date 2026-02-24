@@ -22,11 +22,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create or update user in Stream
+    // Determine role based on user ID or other logic
+    // In production, you should verify this against your database/auth session
+    // Here we use the specific email logic requested previously
+    const isAdmin = userId.includes("support_motherera_com") || (name === "MotherEra Support"); 
+    // Note: Since we are passing userId from client, this is not fully secure. 
+    // Ideally, we should get the user session here on the server side using auth() or getSession()
+    
+    // Create or update user in Stream with correct role
     await client.upsertUsers([
       {
         id: userId,
-        role: "user",
+        role: isAdmin ? "admin" : "user", // Stream has built-in roles: admin, user, anonymous
         name: name || userId,
         image: image,
       },

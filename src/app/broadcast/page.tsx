@@ -180,6 +180,10 @@ function BroadcastView({ isAdmin, onEndStream }: { isAdmin: boolean; onEndStream
                   <CallControls onLeave={onEndStream} />
                 </div>
               )}
+              {!isAdmin && (
+                 // Hide controls for viewers or provide simplified controls if needed (e.g. just leave)
+                 <div className="hidden"></div>
+              )}
             </StreamTheme>
           </div>
           
