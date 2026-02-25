@@ -34,6 +34,13 @@
   
   /* Radii */
   --radius: 0.75rem; /* 12px - rounded-xl */
+
+  /* Stream Video Global Overrides */
+  --str-video__dropdown-background: #1f2937 !important;
+  --str-video__dropdown-text-color: #ffffff !important;
+  --str-video__dropdown-item-color: #ffffff !important;
+  --str-video__menu-background: #1f2937 !important;
+  --str-video__menu-color: #ffffff !important;
 }
 
 @theme inline {
@@ -132,18 +139,30 @@ h1, h2, h3, h4, h5, h6 {
 /* Stream Video Customization */
 .str-video__menu,
 .str-video__dropdown,
-.str-video__menu-item {
+.str-video__menu-item,
+.str-video__dropdown-item,
+div[class*="str-video__menu"],
+div[class*="str-video__dropdown"] {
   background-color: #1f2937 !important; /* dark slate - gray-800 */
   color: #ffffff !important;
   border-color: #374151 !important; /* gray-700 */
 }
 
 .str-video__menu-item:hover,
-.str-video__menu-item:focus {
+.str-video__menu-item:focus,
+.str-video__dropdown-item:hover,
+.str-video__dropdown-item:focus {
   background-color: #374151 !important; /* gray-700 */
+  color: #ffffff !important;
 }
 
-.str-video__menu-item svg {
+.str-video__menu-item,
+.str-video__dropdown-item {
+  color: #ffffff !important;
+}
+
+.str-video__menu-item svg,
+.str-video__dropdown-item svg {
   color: white !important;
   fill: white !important;
 }
