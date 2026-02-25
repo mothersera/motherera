@@ -128,3 +128,36 @@ h1, h2, h3, h4, h5, h6 {
   66% { transform: translate(-20px, 20px) scale(0.9); }
   100% { transform: translate(0px, 0px) scale(1); }
 }
+
+/* Stream Video Customization */
+.str-video__menu,
+.str-video__dropdown,
+.str-video__menu-item {
+  background-color: #1f2937 !important; /* dark slate - gray-800 */
+  color: #ffffff !important;
+  border-color: #374151 !important; /* gray-700 */
+}
+
+.str-video__menu-item:hover,
+.str-video__menu-item:focus {
+  background-color: #374151 !important; /* gray-700 */
+}
+
+.str-video__menu-item svg {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Ensure participant list and other dropdowns match */
+.str-video__participant-list,
+.str-video__device-settings {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+/* Scrollbar for dark theme dropdowns */
+.str-video__menu::-webkit-scrollbar-thumb {
+  background-color: #4b5563; /* gray-600 */
+  border-radius: 4px;
+}
+
