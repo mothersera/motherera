@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight, Sun, Sparkles } from "lucide-react";
+import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight, Sun, Sparkles, Brain } from "lucide-react";
 import { ToothIcon } from "@/components/icons/ToothIcon";
 import { motion, Variants } from "framer-motion";
 
@@ -214,6 +214,20 @@ export default function HomeClient() {
                 </motion.div>
               </Link>
             </motion.div>
+
+            <motion.div variants={itemVariants} whileHover="hover">
+              <Link href="/neurodiverse-care" className="group block h-full">
+                <motion.div variants={cardHoverVariants} className="h-full bg-white/60 backdrop-blur-md border border-white/40 rounded-3xl p-1 overflow-hidden transition-colors hover:border-rose-100">
+                  <div className="h-full bg-white/40 rounded-[20px] p-6 flex flex-col items-start text-left">
+                    <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mb-5 group-hover:bg-rose-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                      <Brain className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-xl font-serif font-bold text-stone-800 mb-2 group-hover:text-rose-600 transition-colors">Neurodiverse Care</h3>
+                    <p className="text-stone-500 leading-relaxed text-sm">Strategic roadmap for family support and community integration.</p>
+                  </div>
+                </motion.div>
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -319,7 +333,8 @@ export default function HomeClient() {
                   { name: 'Newborn Care', href: '/newborn-care' },
                   { name: 'Child Nutrition', href: '/child' },
                   { name: 'Family Health', href: '/family-health' },
-                  { name: 'Little Smiles Care', href: '/little-smiles' }
+                  { name: 'Little Smiles Care', href: '/little-smiles' },
+                  { name: 'Neurodiverse Care', href: '/neurodiverse-care' }
                 ].map((item) => (
                   <li key={item.name}>
                     <Link href={item.href} className="hover:text-white transition-colors flex items-center gap-2 group">
