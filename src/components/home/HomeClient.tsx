@@ -242,6 +242,20 @@ export default function HomeClient() {
                 </motion.div>
               </Link>
             </motion.div>
+
+            <motion.div variants={itemVariants} whileHover="hover">
+              <Link href="/partnership-wellness" className="group block h-full">
+                <motion.div variants={cardHoverVariants} className="h-full bg-white/60 backdrop-blur-md border border-white/40 rounded-3xl p-1 overflow-hidden transition-colors hover:border-sky-100">
+                  <div className="h-full bg-white/40 rounded-[20px] p-6 flex flex-col items-start text-left">
+                    <div className="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center text-sky-500 mb-5 group-hover:bg-sky-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                      <Users className="w-7 h-7" />
+                    </div>
+                    <h3 className="text-xl font-serif font-bold text-stone-800 mb-2 group-hover:text-sky-600 transition-colors">Partnership Wellness</h3>
+                    <p className="text-stone-500 leading-relaxed text-sm">Intentional relationship care and resilience strategies for couples.</p>
+                  </div>
+                </motion.div>
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -349,7 +363,8 @@ export default function HomeClient() {
                   { name: 'Family Health', href: '/family-health' },
                   { name: 'Little Smiles Care', href: '/little-smiles' },
                   { name: 'Neurodiverse Care', href: '/neurodiverse-care' },
-                  { name: 'Emotional Well-Being', href: '/emotional-well-being' }
+                  { name: 'Emotional Well-Being', href: '/emotional-well-being' },
+                  { name: 'Partnership Wellness', href: '/partnership-wellness' }
                 ].map((item) => (
                   <li key={item.name}>
                     <Link href={item.href} className="hover:text-white transition-colors flex items-center gap-2 group">
