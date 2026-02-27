@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight, Sun, Sparkles, Brain } from "lucide-react";
+import { Heart, Globe, ShieldCheck, Stethoscope, Users, Baby, Activity, ArrowRight, Sun, Sparkles, Brain, Loader2 } from "lucide-react";
 import { ToothIcon } from "@/components/icons/ToothIcon";
 import { motion, Variants } from "framer-motion";
 
@@ -37,6 +39,19 @@ const cardHoverVariants: Variants = {
 };
 
 export default function HomeClient() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    if (status === "loading") return; // Prevent action while loading
+    
+    if (status === "authenticated") {
+      router.push("/pricing");
+    } else {
+      router.push("/register");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden">
       {/* Hero Section */}
@@ -112,11 +127,20 @@ export default function HomeClient() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-24"
           >
-            <Link href="/register">
-              <Button size="lg" className="px-10 h-14 text-lg rounded-full bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all hover:scale-105">
-                Start Your Journey
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="px-10 h-14 text-lg rounded-full bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all hover:scale-105"
+              onClick={handleGetStarted}
+              disabled={status === "loading"}
+            >
+              {status === "loading" ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                </>
+              ) : (
+                "Start Your Journey"
+              )}
+            </Button>
             <Link href="/about">
               <Button variant="outline" size="lg" className="px-10 h-14 text-lg rounded-full border-stone-300 hover:bg-white hover:text-rose-600 hover:border-rose-200 transition-all">
                 Our Philosophy
@@ -331,12 +355,21 @@ export default function HomeClient() {
             <p className="text-xl text-stone-600 mb-10 max-w-2xl mx-auto font-light">
               Join thousands of mothers worldwide who trust Mother Era for their wellness journey.
             </p>
-            <Link href="/register">
-              <Button size="lg" className="px-12 h-16 text-xl rounded-full bg-stone-900 text-white hover:bg-stone-800 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group">
-                Get Started Now
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="px-12 h-16 text-xl rounded-full bg-stone-900 text-white hover:bg-stone-800 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
+              onClick={handleGetStarted}
+              disabled={status === "loading"}
+            >
+              {status === "loading" ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                <>
+                  Get Started Now
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </Button>
           </motion.div>
         </div>
       </section>
