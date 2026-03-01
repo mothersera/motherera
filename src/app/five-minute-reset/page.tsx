@@ -98,32 +98,36 @@ export default function FiveMinuteResetPage() {
 
   // Audio initialization and control
   useEffect(() => {
+    // Only run on client
+    if (typeof window === 'undefined') return;
+
     if (!audioRef.current) {
       audioRef.current = new Audio("/audio/spiritual_serenity_rain_temple_bell_5min.mp3");
       audioRef.current.loop = false;
-      // Preload
-      audioRef.current.load();
+      audioRef.current.preload = "auto";
+      audioRef.current.onerror = (e) => console.error("Audio load error:", e);
     }
 
     const audio = audioRef.current;
     audio.volume = isMuted ? 0 : volume;
 
-    if (isActive && !isFinished) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((error) => {
-          console.log("Audio play blocked by browser:", error);
-          setIsActive(false); // Fallback: pause UI so user must click Play
-        });
+    // Handle play/pause based on isActive state
+    const handleAudio = async () => {
+      if (isActive && !isFinished) {
+        try {
+          await audio.play();
+        } catch (error) {
+          console.error("Audio autoplay blocked:", error);
+          setIsActive(false); // Pause UI if autoplay fails
+        }
+      } else {
+        audio.pause();
       }
-    } else {
-      audio.pause();
-    }
-
-    // Cleanup
-    return () => {
-      audio.pause();
     };
+
+    handleAudio();
+
+    // Cleanup not needed for singleton audio instance in this scope
   }, [isActive, isFinished, isMuted, volume]);
 
   // Handle audio fade out at the end
@@ -132,6 +136,9 @@ export default function FiveMinuteResetPage() {
       const fadeInterval = setInterval(() => {
         if (audioRef.current && audioRef.current.volume > 0.05) {
           audioRef.current.volume = Math.max(0, audioRef.current.volume - 0.05);
+        } else if (audioRef.current) {
+          audioRef.current.pause();
+          clearInterval(fadeInterval);
         }
       }, 100);
       return () => clearInterval(fadeInterval);
@@ -150,7 +157,7 @@ export default function FiveMinuteResetPage() {
       trackEvent('reset_completed', { activity: activeActivity, duration: ACTIVITIES.find(a => a.id === activeActivity)?.duration });
       
       if (audioRef.current) {
-        audioRef.current.pause();
+        // Audio pause handled by fade out logic or isActive effect
         audioRef.current.currentTime = 0;
         audioRef.current.volume = volume; // Reset volume for next time
       }
@@ -164,7 +171,7 @@ export default function FiveMinuteResetPage() {
 
   // Sync audio time with timer if drift occurs
   useEffect(() => {
-    if (audioRef.current && isActive) {
+    if (audioRef.current && isActive && !audioRef.current.paused) {
       const currentActivity = ACTIVITIES.find(a => a.id === activeActivity);
       if (currentActivity) {
         const expectedAudioTime = currentActivity.duration - timeLeft;
@@ -195,6 +202,16 @@ export default function FiveMinuteResetPage() {
   const toggleTimer = () => {
     const newActiveState = !isActive;
     setIsActive(newActiveState);
+    
+    // Explicit audio control for click interaction
+    if (audioRef.current) {
+      if (newActiveState) {
+        audioRef.current.play().catch(e => console.error("Play failed:", e));
+      } else {
+        audioRef.current.pause();
+      }
+    }
+    
     trackEvent(newActiveState ? 'reset_resumed' : 'reset_paused', { timeLeft });
   };
 
@@ -226,7 +243,7 @@ export default function FiveMinuteResetPage() {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.volume = volume;
-      // Auto-play handled by useEffect dependency on isActive
+      // Audio play handled by useEffect when isActive becomes true
     }
   };
 
