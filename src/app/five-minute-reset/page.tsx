@@ -1,17 +1,92 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, RotateCcw, ArrowLeft } from "lucide-react";
+import { Play, Pause, RotateCcw, ArrowLeft, Volume2, VolumeX, Download, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+// Types
+type ActivityType = 'meditation' | 'breathing' | 'movement' | 'writing' | 'affirmations';
+
+interface Activity {
+  id: ActivityType;
+  title: string;
+  icon: string;
+  duration: number; // seconds
+}
+
+const ACTIVITIES: Activity[] = [
+  { id: 'meditation', title: 'Guided Meditation', icon: '🧘‍♀️', duration: 300 },
+  { id: 'breathing', title: 'Box Breathing', icon: '🌬️', duration: 300 },
+  { id: 'movement', title: 'Desk Movement', icon: '🙆‍♀️', duration: 300 },
+  { id: 'writing', title: 'Journaling', icon: '✍️', duration: 300 },
+  { id: 'affirmations', title: 'Affirmations', icon: '✨', duration: 240 },
+];
+
+const TRANSCRIPTS: Record<ActivityType, { time: number; text: string }[]> = {
+  meditation: [
+    { time: 0, text: "Find a comfortable seated position. Rest your hands in your lap. If it feels safe, gently close your eyes. Begin by noticing the surface beneath you — the support you have in this moment." },
+    { time: 30, text: "Take a long, slow inhale through the nose for 4 counts… hold for 2… and exhale through the mouth for 6 counts. Again: inhale 4… hold 2… exhale 6. Continue breathing slowly and gently." },
+    { time: 75, text: "Shift your attention to the top of the head, then gently scan down: forehead, eyes, jaw — release any tension. Soften shoulders on the outbreath. Continue to breathe calmly." },
+    { time: 150, text: "Bring to mind one small thing you can be grateful for today — a sip of tea, a steady breath, a kind word. Hold that small thing with curiosity and warmth." },
+    { time: 210, text: "If the mind wanders, that is OK. Notice the thought and let it pass like a cloud. Return to the breath. Breathe in presence; breathe out distraction." },
+    { time: 270, text: "Take a final deep inhalation… and exhale fully. When ready, open your eyes slowly. You’ve completed your five-minute reset." }
+  ],
+  breathing: [
+    { time: 0, text: "Sit upright, feet on the floor. Place one hand on the belly. Let’s start with slow grounding breaths." },
+    { time: 20, text: "Box breathing: inhale for 4… hold for 4… exhale for 4… hold for 4. I’ll guide a few rounds with a soft bell at each change." },
+    { time: 60, text: "Continue at your pace. Notice how the inhalation fills the belly, the hold brings stability, the exhale releases." },
+    { time: 120, text: "Now lengthen the exhale slightly: inhale 4… hold 2… exhale 6. Use this longer exhale to let go of tension." },
+    { time: 210, text: "Return to easy breathing. Notice the rhythm of your breath and the solidity of your body in the chair." },
+    { time: 270, text: "Take one final deep breath in… exhale slowly. When you feel ready, open your eyes." }
+  ],
+  movement: [
+    { time: 0, text: "Stand comfortably (or stay seated if you need to). We’ll do gentle movement to energize you." },
+    { time: 20, text: "Neck rolls: drop chin to chest, roll slowly to one side, then the other. Repeat twice each direction." },
+    { time: 50, text: "Shoulder rolls: inhale as you lift shoulders up to ears; exhale roll them back and down. Repeat 6x." },
+    { time: 90, text: "Side stretch: reach right arm overhead and lean left — gentle stretch on the side body. Hold 10s. Switch sides." },
+    { time: 150, text: "Hip and hamstring wake: if seated, extend one leg, flex the ankle and lift slightly; alternate 8x per leg. Or march in place gently." },
+    { time: 210, text: "Wrist and hand reset: open and close hands, stretch fingers wide, rotate wrists." },
+    { time: 270, text: "Finish: take three deep breaths; notice how your body feels lighter." }
+  ],
+  writing: [
+    { time: 0, text: "Set a timer to five minutes. Prompt: 'What is one practical thing I can do in the next 24 hours to make today easier for me?' Write without censoring for five minutes. Focus on action, not perfection." },
+    { time: 30, text: "Alternative Prompts: 'One small win I had this week was…' | 'A support I’m thankful for is…' | 'If I had 15 extra minutes in my day I would…'" },
+    { time: 120, text: "Keep writing. Don't worry about grammar or spelling. Just let the thoughts flow onto the page." },
+    { time: 240, text: "One minute left. Start to wrap up your thoughts." },
+    { time: 290, text: "Finish your last sentence. Take a deep breath." }
+  ],
+  affirmations: [
+    { time: 0, text: "Repeat after me (either out loud or in your head): 'I am doing my best with the resources I have. I can take the next small step.'" },
+    { time: 45, text: "'I am worthy of rest. I give myself permission to be human.'" },
+    { time: 90, text: "'I trust my intuition. I am capable of handling what comes my way.'" },
+    { time: 135, text: "'My needs matter. Taking care of myself allows me to care for others.'" },
+    { time: 180, text: "Now, take a moment to craft your own personal affirmation. What do you need to hear right now? Repeat it three times." },
+    { time: 220, text: "Let these words sink in. Carry this feeling with you." }
+  ]
+};
 
 export default function FiveMinuteResetPage() {
-  const [timeLeft, setTimeLeft] = useState(300); // 300 seconds = 5 minutes
-  const [isActive, setIsActive] = useState(true); // Start automatically
+  const [activeActivity, setActiveActivity] = useState<ActivityType>('meditation');
+  const [timeLeft, setTimeLeft] = useState(300);
+  const [isActive, setIsActive] = useState(true);
   const [isFinished, setIsFinished] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [transcriptIndex, setTranscriptIndex] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Initialize from localStorage or default
+  useEffect(() => {
+    const savedActivity = localStorage.getItem('motherera_reset_activity') as ActivityType;
+    if (savedActivity && ACTIVITIES.find(a => a.id === savedActivity)) {
+      setActiveActivity(savedActivity);
+      // Reset timer based on activity duration
+      const activity = ACTIVITIES.find(a => a.id === savedActivity);
+      if (activity) setTimeLeft(activity.duration);
+    }
+  }, []);
 
+  // Timer Logic
   useEffect(() => {
     if (isActive && timeLeft > 0) {
       timerRef.current = setInterval(() => {
@@ -28,14 +103,42 @@ export default function FiveMinuteResetPage() {
     };
   }, [isActive, timeLeft]);
 
+  // Update Transcript based on time elapsed
+  useEffect(() => {
+    const activity = ACTIVITIES.find(a => a.id === activeActivity);
+    if (!activity) return;
+    
+    const timeElapsed = activity.duration - timeLeft;
+    const currentTranscript = TRANSCRIPTS[activeActivity];
+    
+    // Find the latest transcript segment that matches the elapsed time
+    const index = currentTranscript.reduce((acc, segment, idx) => {
+      return timeElapsed >= segment.time ? idx : acc;
+    }, 0);
+    
+    setTranscriptIndex(index);
+  }, [timeLeft, activeActivity]);
+
   const toggleTimer = () => {
     setIsActive(!isActive);
   };
 
   const resetTimer = () => {
     setIsActive(false);
-    setTimeLeft(300);
+    const activity = ACTIVITIES.find(a => a.id === activeActivity);
+    setTimeLeft(activity?.duration || 300);
     setIsFinished(false);
+    setTranscriptIndex(0);
+  };
+
+  const changeActivity = (id: ActivityType) => {
+    setActiveActivity(id);
+    localStorage.setItem('motherera_reset_activity', id);
+    const activity = ACTIVITIES.find(a => a.id === id);
+    setTimeLeft(activity?.duration || 300);
+    setIsActive(true); // Auto-start on change
+    setIsFinished(false);
+    setTranscriptIndex(0);
   };
 
   const formatTime = (seconds: number) => {
@@ -44,159 +147,191 @@ export default function FiveMinuteResetPage() {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  // Breathing animation variants
-  const breatheVariants = {
-    inhale: { scale: 1.05, opacity: 0.8 },
-    exhale: { scale: 1, opacity: 0.4 },
-  };
+  // Progress calculation
+  const currentDuration = ACTIVITIES.find(a => a.id === activeActivity)?.duration || 300;
+  const progress = ((currentDuration - timeLeft) / currentDuration) * 100;
+  const circumference = 2 * Math.PI * 120; // Radius approx 120
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 to-white flex flex-col items-center justify-center relative overflow-hidden px-4">
+    <div className="min-h-screen bg-stone-50 flex flex-col items-center relative overflow-hidden px-4 py-8">
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
-          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3], x: [0, 20, 0] }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-rose-100/40 rounded-full blur-[120px]" 
-        />
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2], y: [0, -30, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-sky-100/30 rounded-full blur-[100px]" 
+          className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-rose-50/50 to-stone-50/50" 
         />
       </div>
 
-      {/* Back Button */}
-      <Link href="/emotional-well-being" className="absolute top-8 left-8 z-20 group">
-        <Button variant="ghost" className="rounded-full text-stone-500 hover:text-stone-900 hover:bg-white/80 transition-all duration-300">
-          <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" /> Back
-        </Button>
-      </Link>
+      {/* Header */}
+      <div className="w-full max-w-5xl mx-auto flex justify-between items-center mb-8 relative z-20">
+        <Link href="/emotional-well-being">
+          <Button variant="ghost" className="rounded-full text-stone-500 hover:text-stone-900 -ml-4">
+            <ArrowLeft className="w-5 h-5 mr-2" /> Back
+          </Button>
+        </Link>
+        <h1 className="text-xl font-serif font-bold text-stone-800 hidden md:block">Five-Minute Reset</h1>
+        <div className="w-20"></div> {/* Spacer */}
+      </div>
 
-      <div className="relative z-10 flex flex-col items-center max-w-md w-full">
+      <div className="w-full max-w-5xl mx-auto grid lg:grid-cols-2 gap-12 items-start relative z-10">
         
-        {/* Breathing Guide Circle */}
-        <div className="relative mb-16">
-          <motion.div
-            variants={breatheVariants}
-            animate={isActive && !isFinished ? "inhale" : "exhale"}
-            transition={{ duration: 4, ease: "easeInOut", repeat: isActive && !isFinished ? Infinity : 0, repeatType: "reverse" }}
-            className="w-72 h-72 md:w-96 md:h-96 rounded-full bg-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex items-center justify-center border border-white/60 backdrop-blur-md relative z-10"
-          >
-            <AnimatePresence mode="wait">
-              {!isFinished ? (
-                <motion.div
-                  key="timer"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-center flex flex-col items-center justify-center h-full"
-                >
-                  <span className="text-7xl md:text-8xl font-sans font-extralight text-stone-800 tracking-tight tabular-nums block leading-none">
-                    {formatTime(timeLeft)}
-                  </span>
-                  {isActive && (
-                    <motion.p 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: [0, 0.8, 0] }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                      className="text-stone-400 text-sm font-medium uppercase tracking-[0.3em] mt-6 absolute bottom-16"
-                    >
-                      Breathe
-                    </motion.p>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="done"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center p-8 flex flex-col items-center"
-                >
-                  <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                    <Check className="w-8 h-8 text-rose-400" />
-                  </div>
-                  <p className="text-xl font-serif text-stone-800 font-medium mb-2">
-                    You showed up today.
-                  </p>
-                  <p className="text-stone-500 font-light">That matters.</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+        {/* Left Column: Timer */}
+        <div className="flex flex-col items-center justify-center">
+          <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center mb-8">
+             {/* Circular Progress SVG */}
+             <svg className="absolute inset-0 w-full h-full rotate-[-90deg]" viewBox="0 0 260 260">
+                <circle
+                  cx="130"
+                  cy="130"
+                  r="120"
+                  fill="none"
+                  stroke="#e7e5e4" // stone-200
+                  strokeWidth="8"
+                />
+                <motion.circle
+                  cx="130"
+                  cy="130"
+                  r="120"
+                  fill="none"
+                  stroke="#e11d48" // rose-600
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  animate={{ strokeDashoffset }}
+                  transition={{ duration: 0.5, ease: "linear" }}
+                />
+             </svg>
+             
+             {/* Timer Display */}
+             <div className="text-center z-10">
+                <span className="text-6xl md:text-8xl font-sans font-light text-stone-800 tabular-nums block leading-none" aria-live="polite">
+                  {formatTime(timeLeft)}
+                </span>
+                {isActive && !isFinished && (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                    className="text-stone-400 text-xs font-bold uppercase tracking-widest mt-4"
+                  >
+                    Reseting...
+                  </motion.p>
+                )}
+             </div>
+          </div>
           
-          {/* Outer Pulse Rings */}
-          {isActive && (
-            <>
-              <motion.div
-                animate={{ scale: [1, 1.3], opacity: [0.4, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeOut" }}
-                className="absolute inset-0 rounded-full border border-rose-200/60 pointer-events-none"
-              />
-              <motion.div
-                animate={{ scale: [1, 1.5], opacity: [0.2, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
-                className="absolute inset-0 rounded-full border border-rose-100/40 pointer-events-none"
-              />
-            </>
-          )}
+          {/* Completion State */}
+          <AnimatePresence>
+            {isFinished && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-md rounded-3xl"
+              >
+                <div className="text-center p-8">
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+                  >
+                    <CheckCircle2 className="w-10 h-10 text-green-600" />
+                  </motion.div>
+                  <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">Complete — Well Done</h2>
+                  <p className="text-stone-600 mb-8">You showed up for yourself today. That matters.</p>
+                  <div className="flex gap-4 justify-center">
+                    <Button onClick={resetTimer} variant="outline" className="rounded-full">Replay</Button>
+                    <Link href="/emotional-well-being">
+                      <Button className="rounded-full bg-stone-900 hover:bg-stone-800">Back to Well-Being</Button>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Controls */}
-        <div className="flex gap-8 items-center">
-          {!isFinished ? (
-            <>
-              <Button
+        {/* Right Column: Controls & Transcript */}
+        <div className="flex flex-col gap-8">
+          
+          {/* Activity Selector */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {ACTIVITIES.map((activity) => (
+              <button
+                key={activity.id}
+                onClick={() => changeActivity(activity.id)}
+                className={cn(
+                  "p-3 rounded-xl border text-left transition-all hover:scale-105",
+                  activeActivity === activity.id 
+                    ? "bg-stone-900 text-white border-stone-900 shadow-md" 
+                    : "bg-white text-stone-600 border-stone-200 hover:border-stone-300"
+                )}
+              >
+                <div className="text-2xl mb-1">{activity.icon}</div>
+                <div className="text-xs font-bold truncate">{activity.title}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Main Controls */}
+          <div className="flex gap-4 items-center justify-center lg:justify-start bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
+             <Button
                 onClick={toggleTimer}
                 size="lg"
-                className="rounded-full w-20 h-20 bg-stone-900 hover:bg-stone-800 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 active:scale-95"
+                className="rounded-full w-16 h-16 bg-stone-900 hover:bg-stone-800 text-white shadow-lg transition-all active:scale-95"
+                disabled={isFinished}
               >
-                {isActive ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 ml-1 fill-current" />}
+                {isActive ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 ml-1 fill-current" />}
               </Button>
               
               <Button
                 onClick={resetTimer}
-                size="icon"
+                size="lg"
                 variant="outline"
-                className="rounded-full w-14 h-14 border-stone-200 text-stone-400 hover:text-stone-900 hover:bg-white hover:border-stone-300 transition-all duration-300 bg-transparent"
+                className="rounded-full px-6 h-16 border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-stone-50 font-medium"
               >
-                <RotateCcw className="w-6 h-6" />
+                Reset
               </Button>
-            </>
-          ) : (
-            <Button
-              onClick={resetTimer}
-              size="lg"
-              className="rounded-full px-10 h-14 bg-rose-600 hover:bg-rose-700 text-white shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all duration-300 text-lg"
-            >
-              Start Again
-            </Button>
-          )}
-        </div>
+              
+              <div className="ml-auto flex items-center gap-2 px-4 border-l border-stone-100">
+                 <button onClick={() => setIsMuted(!isMuted)} className="text-stone-400 hover:text-stone-900 transition-colors">
+                   {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                 </button>
+              </div>
+          </div>
 
-        {/* Caption */}
-        <p className="mt-16 text-stone-400 text-xs md:text-sm font-medium text-center max-w-xs mx-auto leading-relaxed tracking-wide opacity-80">
-          "Consistency matters more than duration. Even five minutes changes the trajectory of your day."
-        </p>
+          {/* Transcript / Guidance */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex-1 min-h-[300px] flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-stone-900 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                Guidance
+              </h3>
+              <button className="text-xs font-medium text-stone-400 hover:text-stone-900 flex items-center gap-1">
+                <Download className="w-3 h-3" /> Download Audio
+              </button>
+            </div>
+            
+            <div className="space-y-4 overflow-y-auto max-h-[400px] pr-2 scroll-smooth">
+              {TRANSCRIPTS[activeActivity].map((segment, i) => (
+                <div 
+                  key={i}
+                  className={cn(
+                    "p-4 rounded-xl transition-all duration-500",
+                    i === transcriptIndex 
+                      ? "bg-rose-50 text-stone-900 border border-rose-100 shadow-sm scale-[1.02]" 
+                      : "text-stone-400 hover:text-stone-600"
+                  )}
+                >
+                  <p className="leading-relaxed">{segment.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
-  );
-}
-
-function Check({ className }: { className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="3" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
   );
 }
