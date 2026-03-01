@@ -75,7 +75,9 @@ export default function FiveMinuteResetPage() {
   const [isFinished, setIsFinished] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [transcriptIndex, setTranscriptIndex] = useState(0);
+  const [volume, setVolume] = useState(0.5);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // Initialize from localStorage or default
   useEffect(() => {
@@ -88,6 +90,46 @@ export default function FiveMinuteResetPage() {
     }
   }, []);
 
+  // Audio initialization and control
+  useEffect(() => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio("/audio/spiritual_serenity_rain_temple_bell_5min.mp3");
+      audioRef.current.loop = false;
+    }
+
+    const audio = audioRef.current;
+    audio.volume = isMuted ? 0 : volume;
+
+    if (isActive && !isFinished) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.log("Audio play blocked by browser:", error);
+          // Show play overlay logic could go here, but for now user will press play manually
+        });
+      }
+    } else {
+      audio.pause();
+    }
+
+    // Cleanup
+    return () => {
+      audio.pause();
+    };
+  }, [isActive, isFinished, isMuted, volume]);
+
+  // Handle audio fade out at the end
+  useEffect(() => {
+    if (timeLeft <= 3 && timeLeft > 0 && isActive && audioRef.current) {
+      const fadeInterval = setInterval(() => {
+        if (audioRef.current && audioRef.current.volume > 0.05) {
+          audioRef.current.volume = Math.max(0, audioRef.current.volume - 0.05);
+        }
+      }, 100);
+      return () => clearInterval(fadeInterval);
+    }
+  }, [timeLeft, isActive]);
+
   // Timer Logic
   useEffect(() => {
     if (isActive && timeLeft > 0) {
@@ -97,13 +139,31 @@ export default function FiveMinuteResetPage() {
     } else if (timeLeft === 0) {
       setIsActive(false);
       setIsFinished(true);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.volume = volume; // Reset volume for next time
+      }
       if (timerRef.current) clearInterval(timerRef.current);
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, volume]);
+
+  // Sync audio time with timer if drift occurs
+  useEffect(() => {
+    if (audioRef.current && isActive) {
+      const currentActivity = ACTIVITIES.find(a => a.id === activeActivity);
+      if (currentActivity) {
+        const expectedAudioTime = currentActivity.duration - timeLeft;
+        if (Math.abs(audioRef.current.currentTime - expectedAudioTime) > 1) {
+          audioRef.current.currentTime = expectedAudioTime;
+        }
+      }
+    }
+  }, [timeLeft, isActive, activeActivity]);
 
   // Update Transcript based on time elapsed
   useEffect(() => {
@@ -131,6 +191,11 @@ export default function FiveMinuteResetPage() {
     setTimeLeft(activity?.duration || 300);
     setIsFinished(false);
     setTranscriptIndex(0);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.volume = volume;
+    }
   };
 
   const changeActivity = (id: ActivityType) => {
@@ -141,6 +206,11 @@ export default function FiveMinuteResetPage() {
     setIsActive(true); // Auto-start on change
     setIsFinished(false);
     setTranscriptIndex(0);
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.volume = volume;
+      // Auto-play handled by useEffect dependency on isActive
+    }
   };
 
   const formatTime = (seconds: number) => {
