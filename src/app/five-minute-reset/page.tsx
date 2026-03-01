@@ -46,8 +46,8 @@ export default function FiveMinuteResetPage() {
 
   // Breathing animation variants
   const breatheVariants = {
-    inhale: { scale: 1.05, opacity: 0.8, transition: { duration: 4, ease: "easeInOut" } },
-    exhale: { scale: 1, opacity: 0.4, transition: { duration: 4, ease: "easeInOut" } },
+    inhale: { scale: 1.05, opacity: 0.8 },
+    exhale: { scale: 1, opacity: 0.4 },
   };
 
   return (
@@ -79,7 +79,8 @@ export default function FiveMinuteResetPage() {
         <div className="relative mb-12">
           <motion.div
             variants={breatheVariants}
-            animate={isActive && !isFinished ? ["inhale", "exhale"] : "exhale"}
+            animate={isActive && !isFinished ? "inhale" : "exhale"}
+            transition={{ duration: 4, ease: "easeInOut", repeat: isActive && !isFinished ? Infinity : 0, repeatType: "reverse" }}
             className="w-64 h-64 md:w-80 md:h-80 rounded-full bg-white shadow-2xl shadow-rose-100/50 flex items-center justify-center border border-white/50 backdrop-blur-sm"
           >
             <AnimatePresence mode="wait">
