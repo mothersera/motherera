@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Heart, Brain, Users, Sparkles, Clock, AlertTriangle, Shield, ArrowRight, Sun, Leaf, Battery, Zap, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -22,6 +22,8 @@ const staggerContainer = {
 };
 
 export default function EmotionalWellBeingPage() {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
       {/* Hero Section */}
@@ -377,7 +379,12 @@ export default function EmotionalWellBeingPage() {
                <Button size="lg" className="rounded-full h-12 px-8 text-base bg-stone-900 hover:bg-stone-800 shadow-lg hover:shadow-xl transition-all">
                  Explore Emotional Support
                </Button>
-               <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base border-stone-300 hover:bg-white hover:text-stone-900">
+               <Button 
+                 size="lg" 
+                 variant="outline" 
+                 className="rounded-full h-12 px-8 text-base border-stone-300 hover:bg-white hover:text-stone-900"
+                 onClick={() => router.push('/five-minute-reset')}
+               >
                  Start Your Five-Minute Reset
                </Button>
              </div>
