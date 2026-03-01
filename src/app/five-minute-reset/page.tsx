@@ -154,6 +154,9 @@ export default function FiveMinuteResetPage() {
   useEffect(() => {
     // Only run if active
     if (isActive && timeLeft > 0) {
+      // Clear any existing interval to avoid duplicates
+      if (timerRef.current) clearInterval(timerRef.current);
+      
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
@@ -167,6 +170,9 @@ export default function FiveMinuteResetPage() {
         audioRef.current.currentTime = 0;
         audioRef.current.volume = volume; // Reset volume for next time
       }
+      if (timerRef.current) clearInterval(timerRef.current);
+    } else if (!isActive) {
+      // If paused, clear interval
       if (timerRef.current) clearInterval(timerRef.current);
     }
 
@@ -213,11 +219,14 @@ export default function FiveMinuteResetPage() {
     if (audioRef.current) {
       if (newActiveState) {
         // This is a direct user interaction, so we can play audio
-        audioRef.current.play().catch(e => {
-            console.error("Play failed:", e);
-            // If play fails on user click, we might need to recreate the audio context or instance
-            // But usually this means the file isn't loaded or supported
-        });
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                console.error("Play failed:", e);
+                // If play fails on user click, we might need to recreate the audio context or instance
+                // But usually this means the file isn't loaded or supported
+            });
+        }
       } else {
         audioRef.current.pause();
       }
