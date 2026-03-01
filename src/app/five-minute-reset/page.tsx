@@ -127,7 +127,9 @@ export default function FiveMinuteResetPage() {
 
     handleAudio();
 
-    // Cleanup not needed for singleton audio instance in this scope
+    return () => {
+      audio.pause();
+    };
   }, [isActive, isFinished, isMuted, volume]);
 
   // Handle audio fade out at the end
@@ -147,6 +149,7 @@ export default function FiveMinuteResetPage() {
 
   // Timer Logic
   useEffect(() => {
+    // Only run if active
     if (isActive && timeLeft > 0) {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
