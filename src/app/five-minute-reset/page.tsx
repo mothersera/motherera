@@ -200,25 +200,31 @@ export default function FiveMinuteResetPage() {
     if (audioRef.current) {
       if (newActiveState) {
         // User wants to PLAY
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                // Only start timer if audio plays successfully (or if we decide to allow silent timer)
-                setIsActive(true);
-                trackEvent('reset_resumed', { timeLeft });
-              })
-              .catch(e => {
-                console.error("Play failed:", e);
-                // Fallback: Start timer anyway if audio fails? 
-                // Decision: Yes, let timer run even if audio is broken, but log error
-                setIsActive(true);
-                trackEvent('reset_resumed_no_audio', { timeLeft, error: e.message });
-            });
+        // Always recreate the audio context/element connection if needed
+        if (audioRef.current.paused) {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise
+                  .then(() => {
+                    // Only start timer if audio plays successfully (or if we decide to allow silent timer)
+                    setIsActive(true);
+                    trackEvent('reset_resumed', { timeLeft });
+                  })
+                  .catch(e => {
+                    console.error("Play failed:", e);
+                    // Fallback: Start timer anyway if audio fails? 
+                    // Decision: Yes, let timer run even if audio is broken, but log error
+                    setIsActive(true);
+                    trackEvent('reset_resumed_no_audio', { timeLeft, error: e.message });
+                });
+            } else {
+               // No promise returned (older browsers), assume success
+               setIsActive(true);
+               trackEvent('reset_resumed', { timeLeft });
+            }
         } else {
-           // No promise returned (older browsers), assume success
-           setIsActive(true);
-           trackEvent('reset_resumed', { timeLeft });
+            // Already playing? Just ensure timer starts
+            setIsActive(true);
         }
       } else {
         // User wants to PAUSE
@@ -228,7 +234,22 @@ export default function FiveMinuteResetPage() {
       }
     } else {
       // Fallback if audio ref is missing (shouldn't happen due to useEffect)
-      setIsActive(newActiveState);
+      // Attempt to re-initialize audio if missing
+      const newAudio = new Audio("/audio/spiritual_serenity_rain_temple_bell_5min.mp3");
+      newAudio.loop = false;
+      audioRef.current = newAudio;
+      newAudio.volume = isMuted ? 0 : volume;
+      
+      if (newActiveState) {
+          newAudio.play()
+            .then(() => setIsActive(true))
+            .catch(e => {
+                console.error("New audio play failed:", e);
+                setIsActive(true);
+            });
+      } else {
+          setIsActive(false);
+      }
     }
   };
 
