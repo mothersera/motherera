@@ -152,12 +152,10 @@ export default function FiveMinuteResetPage() {
 
   // Timer Logic
   useEffect(() => {
-    // Only run if active
+    let interval: NodeJS.Timeout;
+
     if (isActive && timeLeft > 0) {
-      // Clear any existing interval to avoid duplicates
-      if (timerRef.current) clearInterval(timerRef.current);
-      
-      timerRef.current = setInterval(() => {
+      interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0) {
@@ -166,19 +164,12 @@ export default function FiveMinuteResetPage() {
       trackEvent('reset_completed', { activity: activeActivity, duration: ACTIVITIES.find(a => a.id === activeActivity)?.duration });
       
       if (audioRef.current) {
-        // Audio pause handled by fade out logic or isActive effect
         audioRef.current.currentTime = 0;
-        audioRef.current.volume = volume; // Reset volume for next time
+        audioRef.current.volume = volume;
       }
-      if (timerRef.current) clearInterval(timerRef.current);
-    } else if (!isActive) {
-      // If paused, clear interval
-      if (timerRef.current) clearInterval(timerRef.current);
     }
 
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => clearInterval(interval);
   }, [isActive, timeLeft, volume, activeActivity]);
 
   // Sync audio time with timer if drift occurs
