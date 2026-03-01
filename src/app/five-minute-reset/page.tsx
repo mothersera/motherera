@@ -113,27 +113,17 @@ export default function FiveMinuteResetPage() {
     audio.volume = isMuted ? 0 : volume;
 
     // Handle play/pause based on isActive state
-    const handleAudio = async () => {
-      if (isActive && !isFinished) {
-        try {
-          // Check if context is suspended (Chrome policy)
-          // Just try playing
-          await audio.play();
-        } catch (error) {
-          console.error("Audio autoplay blocked:", error);
-          setIsActive(false); // Pause UI if autoplay fails
-        }
-      } else {
-        audio.pause();
-      }
-    };
-
-    handleAudio();
+    // We removed the auto-play logic here to avoid conflict with the click handler
+    // The click handler now exclusively manages play/pause intent
+    
+    // Only handle volume changes here
+    audio.volume = isMuted ? 0 : volume;
 
     return () => {
-      audio.pause();
+      // Cleanup: don't pause here to avoid cutting off audio on re-renders, 
+      // rely on component unmount or explicit stop
     };
-  }, [isActive, isFinished, isMuted, volume]);
+  }, [isMuted, volume]); // Removed isActive/isFinished dependencies to break the cycle
 
   // Handle audio fade out at the end
   useEffect(() => {
@@ -203,27 +193,43 @@ export default function FiveMinuteResetPage() {
   }, [timeLeft, activeActivity]);
 
   const toggleTimer = () => {
+    // Determine the new state BEFORE setting it
     const newActiveState = !isActive;
-    setIsActive(newActiveState);
     
-    // Explicit audio control for click interaction
+    // Explicitly handle audio FIRST based on intent
     if (audioRef.current) {
       if (newActiveState) {
-        // This is a direct user interaction, so we can play audio
+        // User wants to PLAY
         const playPromise = audioRef.current.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => {
+            playPromise
+              .then(() => {
+                // Only start timer if audio plays successfully (or if we decide to allow silent timer)
+                setIsActive(true);
+                trackEvent('reset_resumed', { timeLeft });
+              })
+              .catch(e => {
                 console.error("Play failed:", e);
-                // If play fails on user click, we might need to recreate the audio context or instance
-                // But usually this means the file isn't loaded or supported
+                // Fallback: Start timer anyway if audio fails? 
+                // Decision: Yes, let timer run even if audio is broken, but log error
+                setIsActive(true);
+                trackEvent('reset_resumed_no_audio', { timeLeft, error: e.message });
             });
+        } else {
+           // No promise returned (older browsers), assume success
+           setIsActive(true);
+           trackEvent('reset_resumed', { timeLeft });
         }
       } else {
+        // User wants to PAUSE
         audioRef.current.pause();
+        setIsActive(false);
+        trackEvent('reset_paused', { timeLeft });
       }
+    } else {
+      // Fallback if audio ref is missing (shouldn't happen due to useEffect)
+      setIsActive(newActiveState);
     }
-    
-    trackEvent(newActiveState ? 'reset_resumed' : 'reset_paused', { timeLeft });
   };
 
   const resetTimer = () => {
