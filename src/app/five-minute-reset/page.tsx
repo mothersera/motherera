@@ -71,7 +71,8 @@ const TRANSCRIPTS: Record<ActivityType, { time: number; text: string }[]> = {
 export default function FiveMinuteResetPage() {
   const [activeActivity, setActiveActivity] = useState<ActivityType>('meditation');
   const [timeLeft, setTimeLeft] = useState(300);
-  const [isActive, setIsActive] = useState(true);
+  // Default to false so user MUST click play to start - solving the autoplay block issue completely
+  const [isActive, setIsActive] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [transcriptIndex, setTranscriptIndex] = useState(0);
@@ -115,6 +116,8 @@ export default function FiveMinuteResetPage() {
     const handleAudio = async () => {
       if (isActive && !isFinished) {
         try {
+          // Check if context is suspended (Chrome policy)
+          // Just try playing
           await audio.play();
         } catch (error) {
           console.error("Audio autoplay blocked:", error);
@@ -209,7 +212,12 @@ export default function FiveMinuteResetPage() {
     // Explicit audio control for click interaction
     if (audioRef.current) {
       if (newActiveState) {
-        audioRef.current.play().catch(e => console.error("Play failed:", e));
+        // This is a direct user interaction, so we can play audio
+        audioRef.current.play().catch(e => {
+            console.error("Play failed:", e);
+            // If play fails on user click, we might need to recreate the audio context or instance
+            // But usually this means the file isn't loaded or supported
+        });
       } else {
         audioRef.current.pause();
       }
@@ -238,15 +246,16 @@ export default function FiveMinuteResetPage() {
     localStorage.setItem('motherera_reset_activity', id);
     const activity = ACTIVITIES.find(a => a.id === id);
     setTimeLeft(activity?.duration || 300);
-    setIsActive(true); // Auto-start on change
+    // Don't auto-start on activity change, let user decide
+    setIsActive(false); 
     setIsFinished(false);
     setTranscriptIndex(0);
     trackEvent('reset_started', { activity: id });
 
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
+      audioRef.current.pause(); // Ensure paused
       audioRef.current.volume = volume;
-      // Audio play handled by useEffect when isActive becomes true
     }
   };
 
