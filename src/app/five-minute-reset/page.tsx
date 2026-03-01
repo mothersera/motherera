@@ -78,6 +78,12 @@ export default function FiveMinuteResetPage() {
   const [volume, setVolume] = useState(0.5);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Mock Analytics - Replace with real implementation (GA4, Segment, etc.)
+  const trackEvent = (eventName: string, data?: any) => {
+    console.log(`[Analytics] ${eventName}`, data);
+    // window.gtag?.('event', eventName, data);
+  };
   
   // Initialize from localStorage or default
   useEffect(() => {
@@ -95,6 +101,8 @@ export default function FiveMinuteResetPage() {
     if (!audioRef.current) {
       audioRef.current = new Audio("/audio/spiritual_serenity_rain_temple_bell_5min.mp3");
       audioRef.current.loop = false;
+      // Preload
+      audioRef.current.load();
     }
 
     const audio = audioRef.current;
@@ -105,7 +113,7 @@ export default function FiveMinuteResetPage() {
       if (playPromise !== undefined) {
         playPromise.catch((error) => {
           console.log("Audio play blocked by browser:", error);
-          // Show play overlay logic could go here, but for now user will press play manually
+          setIsActive(false); // Fallback: pause UI so user must click Play
         });
       }
     } else {
@@ -139,6 +147,8 @@ export default function FiveMinuteResetPage() {
     } else if (timeLeft === 0) {
       setIsActive(false);
       setIsFinished(true);
+      trackEvent('reset_completed', { activity: activeActivity, duration: ACTIVITIES.find(a => a.id === activeActivity)?.duration });
+      
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -150,7 +160,7 @@ export default function FiveMinuteResetPage() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isActive, timeLeft, volume]);
+  }, [isActive, timeLeft, volume, activeActivity]);
 
   // Sync audio time with timer if drift occurs
   useEffect(() => {
@@ -158,7 +168,8 @@ export default function FiveMinuteResetPage() {
       const currentActivity = ACTIVITIES.find(a => a.id === activeActivity);
       if (currentActivity) {
         const expectedAudioTime = currentActivity.duration - timeLeft;
-        if (Math.abs(audioRef.current.currentTime - expectedAudioTime) > 1) {
+        // Only sync if drift is > 1s and we are not in the fade-out window
+        if (timeLeft > 5 && Math.abs(audioRef.current.currentTime - expectedAudioTime) > 1) {
           audioRef.current.currentTime = expectedAudioTime;
         }
       }
@@ -182,7 +193,9 @@ export default function FiveMinuteResetPage() {
   }, [timeLeft, activeActivity]);
 
   const toggleTimer = () => {
-    setIsActive(!isActive);
+    const newActiveState = !isActive;
+    setIsActive(newActiveState);
+    trackEvent(newActiveState ? 'reset_resumed' : 'reset_paused', { timeLeft });
   };
 
   const resetTimer = () => {
@@ -191,6 +204,8 @@ export default function FiveMinuteResetPage() {
     setTimeLeft(activity?.duration || 300);
     setIsFinished(false);
     setTranscriptIndex(0);
+    trackEvent('reset_restarted', { activity: activeActivity });
+    
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -206,6 +221,8 @@ export default function FiveMinuteResetPage() {
     setIsActive(true); // Auto-start on change
     setIsFinished(false);
     setTranscriptIndex(0);
+    trackEvent('reset_started', { activity: id });
+
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.volume = volume;
