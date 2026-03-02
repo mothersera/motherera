@@ -243,6 +243,11 @@ export default function FiveMinuteResetPage() {
         // User wants to PLAY
         // Always recreate the audio context/element connection if needed
         if (audioRef.current.paused) {
+            // Attempt to load if not ready (sometimes helps with network stalls)
+            if (audioRef.current.readyState === 0) {
+                audioRef.current.load();
+            }
+            
             const playPromise = audioRef.current.play();
             if (playPromise !== undefined) {
                 playPromise
@@ -278,6 +283,8 @@ export default function FiveMinuteResetPage() {
       // Attempt to re-initialize audio if missing
       const newAudio = new Audio("/audio/spiritual_serenity_rain_temple_bell_5min.mp3");
       newAudio.loop = false;
+      // Preload immediately
+      newAudio.load();
       audioRef.current = newAudio;
       newAudio.volume = isMuted ? 0 : volume;
       
