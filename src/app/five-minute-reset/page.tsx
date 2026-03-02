@@ -77,8 +77,6 @@ export default function FiveMinuteResetPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [transcriptIndex, setTranscriptIndex] = useState(0);
   const [volume, setVolume] = useState(0.5);
-  // Default to enabled
-  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -115,56 +113,27 @@ export default function FiveMinuteResetPage() {
     audio.volume = isMuted ? 0 : volume;
 
     // Handle play/pause based on isActive state
-    // We removed the auto-play logic here to avoid conflict with the click handler
-    // The click handler now exclusively manages play/pause intent
-    
-    // Only handle volume changes here
-    audio.volume = isMuted ? 0 : volume;
+    const handleAudio = async () => {
+      if (isActive && !isFinished) {
+        try {
+          // Check if context is suspended (Chrome policy)
+          // Just try playing
+          await audio.play();
+        } catch (error) {
+          console.error("Audio autoplay blocked:", error);
+          setIsActive(false); // Pause UI if autoplay fails
+        }
+      } else {
+        audio.pause();
+      }
+    };
+
+    handleAudio();
 
     return () => {
-      // Cleanup: don't pause here to avoid cutting off audio on re-renders, 
-      // rely on component unmount or explicit stop
+      audio.pause();
     };
-  }, [isMuted, volume]); // Removed isActive/isFinished dependencies to break the cycle
-
-  // Handle TTS
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // Stop any ongoing speech if inactive
-    if (!isActive) {
-      window.speechSynthesis.cancel();
-      return;
-    }
-
-    if (isActive && isVoiceEnabled) {
-      // Get current text
-      const currentSegments = TRANSCRIPTS[activeActivity];
-      if (transcriptIndex < currentSegments.length) {
-        const text = currentSegments[transcriptIndex].text;
-        
-        // Cancel previous
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.volume = 1.0; // Voice always full volume
-        utterance.rate = 0.9; // Slightly slower for calm effect
-        utterance.pitch = 1.0;
-        
-        // Try to select a good voice
-        const voices = window.speechSynthesis.getVoices();
-        // Prefer "Google US English" or "Samantha" or "Microsoft Zira"
-        const preferredVoice = voices.find(v => 
-          v.name.includes("Google US English") || 
-          v.name.includes("Samantha") || 
-          v.name.includes("Zira")
-        );
-        if (preferredVoice) utterance.voice = preferredVoice;
-
-        window.speechSynthesis.speak(utterance);
-      }
-    }
-  }, [transcriptIndex, isActive, isVoiceEnabled, activeActivity]);
+  }, [isActive, isFinished, isMuted, volume]);
 
   // Handle audio fade out at the end
   useEffect(() => {
@@ -183,10 +152,9 @@ export default function FiveMinuteResetPage() {
 
   // Timer Logic
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
+    // Only run if active
     if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
+      timerRef.current = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0) {
@@ -195,12 +163,16 @@ export default function FiveMinuteResetPage() {
       trackEvent('reset_completed', { activity: activeActivity, duration: ACTIVITIES.find(a => a.id === activeActivity)?.duration });
       
       if (audioRef.current) {
+        // Audio pause handled by fade out logic or isActive effect
         audioRef.current.currentTime = 0;
-        audioRef.current.volume = volume;
+        audioRef.current.volume = volume; // Reset volume for next time
       }
+      if (timerRef.current) clearInterval(timerRef.current);
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [isActive, timeLeft, volume, activeActivity]);
 
   // Sync audio time with timer if drift occurs
@@ -234,71 +206,24 @@ export default function FiveMinuteResetPage() {
   }, [timeLeft, activeActivity]);
 
   const toggleTimer = () => {
-    // Determine the new state BEFORE setting it
     const newActiveState = !isActive;
+    setIsActive(newActiveState);
     
-    // Explicitly handle audio FIRST based on intent
+    // Explicit audio control for click interaction
     if (audioRef.current) {
       if (newActiveState) {
-        // User wants to PLAY
-        // Always recreate the audio context/element connection if needed
-        if (audioRef.current.paused) {
-            // Attempt to load if not ready (sometimes helps with network stalls)
-            if (audioRef.current.readyState === 0) {
-                audioRef.current.load();
-            }
-            
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise
-                  .then(() => {
-                    // Only start timer if audio plays successfully (or if we decide to allow silent timer)
-                    setIsActive(true);
-                    trackEvent('reset_resumed', { timeLeft });
-                  })
-                  .catch(e => {
-                    console.error("Play failed:", e);
-                    // Fallback: Start timer anyway if audio fails? 
-                    // Decision: Yes, let timer run even if audio is broken, but log error
-                    setIsActive(true);
-                    trackEvent('reset_resumed_no_audio', { timeLeft, error: e.message });
-                });
-            } else {
-               // No promise returned (older browsers), assume success
-               setIsActive(true);
-               trackEvent('reset_resumed', { timeLeft });
-            }
-        } else {
-            // Already playing? Just ensure timer starts
-            setIsActive(true);
-        }
+        // This is a direct user interaction, so we can play audio
+        audioRef.current.play().catch(e => {
+            console.error("Play failed:", e);
+            // If play fails on user click, we might need to recreate the audio context or instance
+            // But usually this means the file isn't loaded or supported
+        });
       } else {
-        // User wants to PAUSE
         audioRef.current.pause();
-        setIsActive(false);
-        trackEvent('reset_paused', { timeLeft });
-      }
-    } else {
-      // Fallback if audio ref is missing (shouldn't happen due to useEffect)
-      // Attempt to re-initialize audio if missing
-      const newAudio = new Audio("/audio/spiritual_serenity_rain_temple_bell_5min.mp3");
-      newAudio.loop = false;
-      // Preload immediately
-      newAudio.load();
-      audioRef.current = newAudio;
-      newAudio.volume = isMuted ? 0 : volume;
-      
-      if (newActiveState) {
-          newAudio.play()
-            .then(() => setIsActive(true))
-            .catch(e => {
-                console.error("New audio play failed:", e);
-                setIsActive(true);
-            });
-      } else {
-          setIsActive(false);
       }
     }
+    
+    trackEvent(newActiveState ? 'reset_resumed' : 'reset_paused', { timeLeft });
   };
 
   const resetTimer = () => {
@@ -487,19 +412,7 @@ export default function FiveMinuteResetPage() {
                 Reset
               </Button>
               
-              <div className="ml-auto flex items-center gap-4 px-4 border-l border-stone-100">
-                 {/* Voice Toggle */}
-                 <button 
-                   onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} 
-                   className={cn(
-                     "text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1",
-                     isVoiceEnabled ? "text-stone-900" : "text-stone-300 line-through"
-                   )}
-                   title="Toggle Voice Guidance"
-                 >
-                   Voice
-                 </button>
-
+              <div className="ml-auto flex items-center gap-2 px-4 border-l border-stone-100">
                  <button onClick={() => setIsMuted(!isMuted)} className="text-stone-400 hover:text-stone-900 transition-colors">
                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                  </button>
