@@ -77,6 +77,8 @@ export default function FiveMinuteResetPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [transcriptIndex, setTranscriptIndex] = useState(0);
   const [volume, setVolume] = useState(0.5);
+  // Default to enabled
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -124,6 +126,45 @@ export default function FiveMinuteResetPage() {
       // rely on component unmount or explicit stop
     };
   }, [isMuted, volume]); // Removed isActive/isFinished dependencies to break the cycle
+
+  // Handle TTS
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Stop any ongoing speech if inactive
+    if (!isActive) {
+      window.speechSynthesis.cancel();
+      return;
+    }
+
+    if (isActive && isVoiceEnabled) {
+      // Get current text
+      const currentSegments = TRANSCRIPTS[activeActivity];
+      if (transcriptIndex < currentSegments.length) {
+        const text = currentSegments[transcriptIndex].text;
+        
+        // Cancel previous
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.volume = 1.0; // Voice always full volume
+        utterance.rate = 0.9; // Slightly slower for calm effect
+        utterance.pitch = 1.0;
+        
+        // Try to select a good voice
+        const voices = window.speechSynthesis.getVoices();
+        // Prefer "Google US English" or "Samantha" or "Microsoft Zira"
+        const preferredVoice = voices.find(v => 
+          v.name.includes("Google US English") || 
+          v.name.includes("Samantha") || 
+          v.name.includes("Zira")
+        );
+        if (preferredVoice) utterance.voice = preferredVoice;
+
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  }, [transcriptIndex, isActive, isVoiceEnabled, activeActivity]);
 
   // Handle audio fade out at the end
   useEffect(() => {
@@ -439,7 +480,19 @@ export default function FiveMinuteResetPage() {
                 Reset
               </Button>
               
-              <div className="ml-auto flex items-center gap-2 px-4 border-l border-stone-100">
+              <div className="ml-auto flex items-center gap-4 px-4 border-l border-stone-100">
+                 {/* Voice Toggle */}
+                 <button 
+                   onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} 
+                   className={cn(
+                     "text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1",
+                     isVoiceEnabled ? "text-stone-900" : "text-stone-300 line-through"
+                   )}
+                   title="Toggle Voice Guidance"
+                 >
+                   Voice
+                 </button>
+
                  <button onClick={() => setIsMuted(!isMuted)} className="text-stone-400 hover:text-stone-900 transition-colors">
                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                  </button>
