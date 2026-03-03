@@ -1,16 +1,20 @@
 import { StreamClient } from "@stream-io/node-sdk";
 import { NextRequest, NextResponse } from "next/server";
 
-const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
-const secret = process.env.STREAM_SECRET_KEY;
-
-if (!apiKey || !secret) {
-  throw new Error("Missing Stream API Key or Secret");
-}
-
-const client = new StreamClient(apiKey, secret);
-
 export async function POST(req: NextRequest) {
+  const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
+  const secret = process.env.STREAM_SECRET_KEY;
+
+  if (!apiKey || !secret) {
+    console.error("Missing Stream API Key or Secret");
+    return NextResponse.json(
+      { error: "Server configuration error: Missing Stream API keys" },
+      { status: 500 }
+    );
+  }
+
+  const client = new StreamClient(apiKey, secret);
+
   try {
     const body = await req.json();
     const { userId, name, image } = body;
