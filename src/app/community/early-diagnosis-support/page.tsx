@@ -15,33 +15,38 @@ export default function EarlyDiagnosisSupportPage() {
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
       {/* Hero Section */}
-      <section className="relative py-20 bg-rose-50/50 border-b border-rose-100">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative py-20 md:py-32 overflow-hidden bg-rose-50/50">
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-rose-100/40 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-purple-100/40 rounded-full blur-[100px]" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="max-w-4xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-rose-200 text-rose-700 text-xs font-bold uppercase tracking-wider mb-6">
-              <Activity className="w-3 h-3" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-rose-200 text-rose-700 text-sm font-medium mb-6 shadow-sm">
+              <Activity className="w-4 h-4" />
               <span>Support & Practical Steps</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-serif font-bold text-stone-900 mb-6">
+            <h1 className="text-4xl md:text-6xl font-serif font-bold text-stone-900 mb-6 leading-tight">
               Early Diagnosis Support — <br/>
               <span className="text-rose-600">Practical Next Steps</span>
             </h1>
-            <p className="text-lg text-stone-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl font-serif font-medium text-stone-700 mb-8 max-w-3xl mx-auto leading-relaxed">
               If you or your child's provider has concerns, here are immediate, evidence-based steps you can take today to get help and build a plan.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/community/neurodiverse-families">
-                <Button size="lg" className="rounded-full bg-stone-900 text-white hover:bg-stone-800">
+                <Button size="lg" className="rounded-full h-12 px-8 text-base bg-stone-900 hover:bg-stone-800 shadow-lg hover:shadow-xl transition-all">
                   Join Our Community
                 </Button>
               </Link>
               <Link href="/pricing">
-                <Button size="lg" variant="outline" className="rounded-full border-stone-300 hover:bg-white">
+                <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base border-stone-300 hover:bg-white hover:text-stone-900">
                   Explore Programs
                 </Button>
               </Link>
