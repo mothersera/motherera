@@ -133,9 +133,9 @@ export default function SiblingFamilyDynamicsPage() {
           className="bg-stone-100 p-6 rounded-2xl"
         >
           <p className="text-stone-700 text-sm italic">
-            "Sibling-mediated interventions not only help the neurodiverse child learn social skills but significantly improve the sibling's sense of competence and relationship quality."
+            "Sibling-mediated interventions not only help the neurodiverse child learn social skills but significantly improve the sibling's sense of competence and relationship quality. Studies indicate that structured sibling involvement can reduce family stress and improve the psychological well-being of neurotypical siblings by giving them a defined, positive role (Ferraioli & Harris, 2011)."
           </p>
-          <p className="mt-2 text-xs text-stone-400">Source: Research on sibling-mediated intervention outcomes.</p>
+          <p className="mt-2 text-xs text-stone-400">Source: Research on sibling-mediated intervention outcomes (Ferraioli & Harris, 2011; Shivers & Plavnick, 2014).</p>
         </motion.section>
 
       </div>

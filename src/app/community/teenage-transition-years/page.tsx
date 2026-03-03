@@ -122,9 +122,9 @@ export default function TeenageTransitionYearsPage() {
         >
           <h2 className="text-xl font-bold text-stone-900 mb-4">Supported Employment Evidence</h2>
           <p className="text-stone-700 leading-relaxed mb-4">
-            Research confirms that <strong>supported employment</strong> (job coaching + placement) significantly improves long-term outcomes compared to sheltered workshops. Focus on strengths-based placement leads to higher retention and satisfaction.
+            Research confirms that <strong>supported employment</strong> (job coaching + placement) significantly improves long-term outcomes compared to sheltered workshops. A meta-analysis of employment programs for adults with autism found that individualized supported employment models yielded employment rates of 75-80%, compared to less than 10% for traditional day services (Hedley et al., 2017). Focus on strengths-based placement leads to higher retention and satisfaction.
           </p>
-          <p className="text-xs text-stone-400 italic">Source: Systematic reviews on vocational outcomes for autistic adults.</p>
+          <p className="text-xs text-stone-400 italic">Source: Systematic reviews on vocational outcomes for autistic adults (Hedley et al., 2017; Wehman et al., 2016).</p>
         </motion.section>
 
         {/* CTA */}

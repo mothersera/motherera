@@ -62,12 +62,13 @@ export default function ParentRegulationBurnoutPage() {
           <h2 className="text-2xl font-serif font-bold text-stone-900 mb-6">The Science of Co-Regulation</h2>
           <div className="bg-white p-8 rounded-2xl border border-stone-100 shadow-sm">
             <p className="text-stone-700 leading-relaxed mb-4">
-              Caregiver stress is the strongest predictor of family functioning. Children co-regulate with their parents. When you are grounded, you provide a safe anchor for your child's nervous system.
+              Caregiver stress is the strongest predictor of family functioning. Research shows that children co-regulate with their parents; a calm caregiver provides a biological "anchor" for a child's nervous system. Chronic parental burnout is linked to higher rates of child behavioral challenges, creating a cycle that can only be broken by supporting the parent first (Hastings et al., 2005).
             </p>
             <div className="flex items-center gap-4 bg-rose-50 p-4 rounded-xl">
               <Shield className="w-6 h-6 text-rose-500 shrink-0" />
               <p className="text-sm font-medium text-rose-800">Self-care is not selfish. It is a strategic parenting tool.</p>
             </div>
+            <p className="mt-4 text-xs text-stone-400 italic">Source: "Systems analysis of stress and positive perceptions in mothers and fathers of pre-school children with autism" (Hastings et al., 2005).</p>
           </div>
         </motion.section>
 

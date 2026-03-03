@@ -66,22 +66,24 @@ export default function EarlyDiagnosisSupportPage() {
                 <div className="w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
                   <Check className="w-3 h-3 text-rose-500" />
                 </div>
-                <p className="text-stone-700"><strong>Neuroplasticity:</strong> A young child's brain is highly adaptable. Early support builds new neural pathways more effectively than later intervention.</p>
+                <p className="text-stone-700"><strong>Neuroplasticity:</strong> The brain is most adaptable before age 5. Early support builds new neural pathways more effectively than later intervention (Center on the Developing Child at Harvard University).</p>
               </li>
               <li className="flex gap-3 items-start">
                 <div className="w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
                   <Check className="w-3 h-3 text-rose-500" />
                 </div>
-                <p className="text-stone-700"><strong>Family Confidence:</strong> Learning strategies early reduces parental stress and improves family dynamics.</p>
+                <p className="text-stone-700"><strong>Family Confidence:</strong> Learning strategies early reduces parental stress and improves family dynamics, which are key predictors of child outcomes (Guralnick, 2011).</p>
               </li>
               <li className="flex gap-3 items-start">
                 <div className="w-6 h-6 rounded-full bg-rose-50 flex items-center justify-center shrink-0 mt-0.5">
                   <Check className="w-3 h-3 text-rose-500" />
                 </div>
-                <p className="text-stone-700"><strong>Long-term Outcomes:</strong> Research consistently shows that earlier access to therapy improves communication and social skills.</p>
+                <p className="text-stone-700"><strong>Long-term Outcomes:</strong> Research consistently shows that earlier access to therapy significantly improves communication, social skills, and adaptive behavior, reducing the need for intensive support later (National Research Council).</p>
               </li>
             </ul>
-            <p className="mt-6 text-xs text-stone-400 italic">Source: CDC Early Intervention reviews & NIH developmental studies.</p>
+            <div className="mt-6 p-4 bg-stone-50 rounded-xl border border-stone-200">
+               <p className="text-sm text-stone-600 italic">"The earlier you intervene, the more effective the intervention is. Waiting often means missing a critical window of opportunity." — American Academy of Pediatrics</p>
+            </div>
           </div>
         </motion.section>
 

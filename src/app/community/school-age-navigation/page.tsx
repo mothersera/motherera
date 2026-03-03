@@ -61,26 +61,28 @@ export default function SchoolAgeNavigationPage() {
         >
           <h2 className="text-2xl font-serif font-bold text-stone-900 mb-6">Understanding IEPs & 504 Plans</h2>
           <div className="bg-white p-8 rounded-2xl border border-stone-100 shadow-sm space-y-4">
-            <p className="text-stone-700">An <strong>IEP (Individualized Education Program)</strong> is a legal document ensuring specialized instruction. A <strong>504 Plan</strong> provides accommodations for equal access.</p>
+            <p className="text-stone-700">An <strong>IEP (Individualized Education Program)</strong> is a legal document ensuring specialized instruction under the IDEA act. A <strong>504 Plan</strong> provides accommodations for equal access under civil rights law.</p>
             <div className="grid md:grid-cols-2 gap-4 mt-4">
               <div className="bg-stone-50 p-4 rounded-xl">
                 <h3 className="font-bold text-stone-800 mb-2">IEP Includes:</h3>
                 <ul className="text-sm text-stone-600 list-disc list-inside">
-                  <li>Specific goals (measurable)</li>
+                  <li>Specific, Measurable Goals (SMART)</li>
                   <li>Specialized instruction minutes</li>
                   <li>Accommodations & modifications</li>
+                  <li>Least Restrictive Environment (LRE) statement</li>
                 </ul>
               </div>
               <div className="bg-stone-50 p-4 rounded-xl">
-                <h3 className="font-bold text-stone-800 mb-2">Key Parent Rights:</h3>
+                <h3 className="font-bold text-stone-800 mb-2">Key Parent Rights (Procedural Safeguards):</h3>
                 <ul className="text-sm text-stone-600 list-disc list-inside">
-                  <li>Right to request evaluation</li>
-                  <li>Right to bring an advocate</li>
+                  <li>Right to request evaluation at any time</li>
+                  <li>Right to bring an advocate or expert</li>
                   <li>Right to disagree (Due Process)</li>
+                  <li>Right to review educational records</li>
                 </ul>
               </div>
             </div>
-            <p className="mt-4 text-xs text-stone-400 italic">Source: US Dept of Education / IDEA Guidelines.</p>
+            <p className="mt-4 text-xs text-stone-400 italic">Source: US Dept of Education / IDEA Guidelines (Sec. 300.320).</p>
           </div>
         </motion.section>
 
