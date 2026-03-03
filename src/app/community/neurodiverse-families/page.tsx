@@ -125,24 +125,45 @@ export default function NeurodiverseFamilyCommunityPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { title: "Early Diagnosis Support", desc: "For parents navigating assessment, therapy options, and first steps." },
-              { title: "School-Age Navigation", desc: "IEPs, classroom strategies, advocacy, and communication with teachers." },
-              { title: "Teenage & Transition Years", desc: "Identity, independence, and long-term planning." },
-              { title: "Sibling & Family Dynamics", desc: "Supporting the whole household equilibrium." },
-              { title: "Parent Regulation & Burnout", desc: "Tools for emotional resilience and sustainable caregiving." }
+              { 
+                title: "Early Diagnosis Support", 
+                desc: "For parents navigating assessment, therapy options, and first steps.",
+                href: "/community/early-diagnosis-support"
+              },
+              { 
+                title: "School-Age Navigation", 
+                desc: "IEPs, classroom strategies, advocacy, and communication with teachers.",
+                href: "/community/school-age-navigation"
+              },
+              { 
+                title: "Teenage & Transition Years", 
+                desc: "Identity, independence, and long-term planning.",
+                href: "/community/teenage-transition-years"
+              },
+              { 
+                title: "Sibling & Family Dynamics", 
+                desc: "Supporting the whole household equilibrium.",
+                href: "/community/sibling-family-dynamics"
+              },
+              { 
+                title: "Parent Regulation & Burnout", 
+                desc: "Tools for emotional resilience and sustainable caregiving.",
+                href: "/community/parent-regulation-burnout"
+              }
             ].map((item, i) => (
-              <motion.div 
-                key={i}
-                variants={fadeIn}
-                whileHover={{ y: -5 }}
-                className="bg-white p-8 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center mb-4 group-hover:bg-rose-50 transition-colors">
-                  <ArrowRight className="w-5 h-5 text-stone-400 group-hover:text-rose-500 transition-colors" />
-                </div>
-                <h3 className="text-lg font-bold text-stone-900 mb-2">{item.title}</h3>
-                <p className="text-stone-500 text-sm leading-relaxed">{item.desc}</p>
-              </motion.div>
+              <Link key={i} href={item.href}>
+                <motion.div 
+                  variants={fadeIn}
+                  whileHover={{ y: -5 }}
+                  className="bg-white p-8 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full"
+                >
+                  <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center mb-4 group-hover:bg-rose-50 transition-colors">
+                    <ArrowRight className="w-5 h-5 text-stone-400 group-hover:text-rose-500 transition-colors" />
+                  </div>
+                  <h3 className="text-lg font-bold text-stone-900 mb-2">{item.title}</h3>
+                  <p className="text-stone-500 text-sm leading-relaxed">{item.desc}</p>
+                </motion.div>
+              </Link>
             ))}
           </div>
         </motion.section>
