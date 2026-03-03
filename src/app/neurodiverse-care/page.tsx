@@ -316,9 +316,11 @@ export default function NeurodiverseCarePage() {
                <Button size="lg" className="rounded-full h-12 px-8 text-base bg-stone-900 hover:bg-stone-800 shadow-lg hover:shadow-xl transition-all">
                  Explore Support Programs
                </Button>
-               <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base border-stone-300 hover:bg-white hover:text-stone-900">
-                 Join Our Community
-               </Button>
+               <Link href="/community/neurodiverse-families">
+                 <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base border-stone-300 hover:bg-white hover:text-stone-900">
+                   Join Our Community
+                 </Button>
+               </Link>
              </div>
            </div>
         </motion.section>
