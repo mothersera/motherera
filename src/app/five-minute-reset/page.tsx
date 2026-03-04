@@ -312,71 +312,112 @@ export default function FiveMinuteResetPage() {
   const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col items-center relative overflow-hidden px-4 py-8">
+    <div className="min-h-screen bg-[#FDFCF8] flex flex-col items-center relative overflow-hidden px-4 py-8 selection:bg-rose-100 selection:text-rose-900 font-sans">
       {/* Background Ambience */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
-          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-rose-50/50 to-stone-50/50" 
+          animate={{ 
+            scale: [1, 1.2, 1], 
+            opacity: [0.3, 0.5, 0.3],
+            rotate: [0, 90, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-20%] left-[-10%] w-[80vw] h-[80vw] bg-rose-100/40 rounded-full blur-[120px] mix-blend-multiply" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1.2, 1, 1.2], 
+            opacity: [0.3, 0.5, 0.3],
+            rotate: [0, -90, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-20%] right-[-10%] w-[80vw] h-[80vw] bg-purple-100/30 rounded-full blur-[120px] mix-blend-multiply" 
         />
       </div>
 
       {/* Header */}
-      <div className="w-full max-w-5xl mx-auto flex justify-between items-center mb-8 relative z-20">
+      <div className="w-full max-w-6xl mx-auto flex justify-between items-center mb-12 relative z-20">
         <Link href="/emotional-well-being">
-          <Button variant="ghost" className="rounded-full text-stone-500 hover:text-stone-900 -ml-4">
+          <Button variant="ghost" className="rounded-full text-stone-500 hover:text-stone-900 hover:bg-white/50 -ml-4 transition-all">
             <ArrowLeft className="w-5 h-5 mr-2" /> Back
           </Button>
         </Link>
-        <h1 className="text-xl font-serif font-bold text-stone-800 hidden md:block">Five-Minute Reset</h1>
+        <div className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/40 backdrop-blur-md border border-white/40 shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+          <span className="text-xs font-bold uppercase tracking-widest text-stone-600">Sanctuary Mode</span>
+        </div>
         <div className="w-20"></div> {/* Spacer */}
       </div>
 
-      <div className="w-full max-w-5xl mx-auto grid lg:grid-cols-2 gap-12 items-start relative z-10">
+      <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-16 items-center relative z-10">
         
-        {/* Left Column: Timer */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="relative w-72 h-72 md:w-96 md:h-96 flex items-center justify-center mb-8">
+        {/* Left Column: Timer (5 cols) */}
+        <div className="lg:col-span-5 flex flex-col items-center justify-center">
+          <div className="relative w-[340px] h-[340px] md:w-[450px] md:h-[450px] flex items-center justify-center mb-10 group cursor-pointer" onClick={toggleTimer}>
+             {/* Glow Effect */}
+             <div className={cn(
+               "absolute inset-0 rounded-full blur-[60px] transition-all duration-1000",
+               isActive ? "bg-rose-200/40 scale-110" : "bg-stone-200/20 scale-100"
+             )} />
+             
+             {/* Glass Container */}
+             <div className="absolute inset-4 rounded-full bg-white/30 backdrop-blur-2xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)]" />
+
              {/* Circular Progress SVG */}
-             <svg className="absolute inset-0 w-full h-full rotate-[-90deg]" viewBox="0 0 260 260">
+             <svg className="absolute inset-0 w-full h-full rotate-[-90deg] p-8 drop-shadow-lg" viewBox="0 0 260 260">
+                {/* Track */}
                 <circle
                   cx="130"
                   cy="130"
                   r="120"
                   fill="none"
-                  stroke="#e7e5e4" // stone-200
-                  strokeWidth="8"
+                  stroke="rgba(255,255,255,0.4)" 
+                  strokeWidth="2"
                 />
+                {/* Progress */}
                 <motion.circle
                   cx="130"
                   cy="130"
                   r="120"
                   fill="none"
-                  stroke="#e11d48" // rose-600
-                  strokeWidth="8"
+                  stroke="url(#gradient)"
+                  strokeWidth="6"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   animate={{ strokeDashoffset }}
-                  transition={{ duration: 0.5, ease: "linear" }}
+                  transition={{ duration: 1, ease: "linear" }}
+                  className="filter drop-shadow-[0_0_10px_rgba(225,29,72,0.3)]"
                 />
+                <defs>
+                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fb7185" /> {/* rose-400 */}
+                    <stop offset="100%" stopColor="#e11d48" /> {/* rose-600 */}
+                  </linearGradient>
+                </defs>
              </svg>
              
              {/* Timer Display */}
-             <div className="text-center z-10">
-                <span className="text-6xl md:text-8xl font-sans font-light text-stone-800 tabular-nums block leading-none" aria-live="polite">
+             <div className="text-center z-10 relative">
+                <span className={cn(
+                  "text-7xl md:text-9xl font-serif font-light text-stone-800 tabular-nums block leading-none tracking-tighter transition-all duration-500",
+                  isActive ? "scale-105" : "scale-100 opacity-80"
+                )}>
                   {formatTime(timeLeft)}
                 </span>
-                {isActive && !isFinished && (
-                  <motion.p 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                    className="text-stone-400 text-xs font-bold uppercase tracking-widest mt-4"
-                  >
-                    Reseting...
-                  </motion.p>
-                )}
+                <div className="h-8 flex items-center justify-center mt-2">
+                  {isActive && !isFinished ? (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50/50 border border-rose-100/50"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                      <span className="text-rose-900/60 text-[10px] font-bold uppercase tracking-widest">Active</span>
+                    </motion.div>
+                  ) : (
+                    <span className="text-stone-400 text-xs font-medium uppercase tracking-widest">Tap to {timeLeft === 0 ? "Reset" : "Start"}</span>
+                  )}
+                </div>
              </div>
           </div>
           
@@ -384,24 +425,26 @@ export default function FiveMinuteResetPage() {
           <AnimatePresence>
             {isFinished && (
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute inset-0 z-50 flex items-center justify-center bg-white/90 backdrop-blur-md rounded-3xl"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-xl"
               >
-                <div className="text-center p-8">
+                <div className="text-center p-12 max-w-md">
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+                    transition={{ type: "spring", bounce: 0.5 }}
+                    className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg shadow-green-900/5"
                   >
-                    <CheckCircle2 className="w-10 h-10 text-green-600" />
+                    <CheckCircle2 className="w-12 h-12 text-green-600" />
                   </motion.div>
-                  <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">Complete — Well Done</h2>
-                  <p className="text-stone-600 mb-8">You showed up for yourself today. That matters.</p>
+                  <h2 className="text-4xl font-serif font-medium text-stone-900 mb-4">Well Done.</h2>
+                  <p className="text-stone-500 mb-10 text-lg leading-relaxed">You showed up for yourself today. Take this calmness with you.</p>
                   <div className="flex gap-4 justify-center">
-                    <Button onClick={resetTimer} variant="outline" className="rounded-full">Replay</Button>
+                    <Button onClick={resetTimer} variant="outline" className="rounded-full h-12 px-8 border-stone-200 hover:bg-stone-50">Replay</Button>
                     <Link href="/emotional-well-being">
-                      <Button className="rounded-full bg-stone-900 hover:bg-stone-800">Back to Well-Being</Button>
+                      <Button className="rounded-full h-12 px-8 bg-stone-900 hover:bg-stone-800 shadow-lg hover:shadow-xl transition-all">Done</Button>
                     </Link>
                   </div>
                 </div>
@@ -410,94 +453,78 @@ export default function FiveMinuteResetPage() {
           </AnimatePresence>
         </div>
 
-        {/* Right Column: Controls & Transcript */}
-        <div className="flex flex-col gap-8">
+        {/* Right Column: Controls & Transcript (7 cols) */}
+        <div className="lg:col-span-7 flex flex-col gap-10 h-full justify-center">
           
           {/* Activity Selector */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {ACTIVITIES.map((activity) => (
-              <button
-                key={activity.id}
-                onClick={() => changeActivity(activity.id)}
-                className={cn(
-                  "p-3 rounded-xl border text-left transition-all hover:scale-105",
-                  activeActivity === activity.id 
-                    ? "bg-stone-900 text-white border-stone-900 shadow-md" 
-                    : "bg-white text-stone-600 border-stone-200 hover:border-stone-300"
-                )}
-              >
-                <div className="text-2xl mb-1">{activity.icon}</div>
-                <div className="text-xs font-bold truncate">{activity.title}</div>
-              </button>
-            ))}
-          </div>
-
-          {/* Main Controls */}
-          <div className="flex gap-4 items-center justify-center lg:justify-start bg-white p-4 rounded-2xl shadow-sm border border-stone-100">
-             <Button
-                onClick={toggleTimer}
-                size="lg"
-                className="rounded-full w-16 h-16 bg-stone-900 hover:bg-stone-800 text-white shadow-lg transition-all active:scale-95"
-                disabled={isFinished}
-              >
-                {isActive ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 ml-1 fill-current" />}
-              </Button>
-              
-              <Button
-                onClick={resetTimer}
-                size="lg"
-                variant="outline"
-                className="rounded-full px-6 h-16 border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-stone-50 font-medium"
-              >
-                Reset
-              </Button>
-              
-              <div className="ml-auto flex items-center gap-4 px-4 border-l border-stone-100">
-                 {/* Voice Toggle */}
-                 <button 
-                   onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} 
-                   className={cn(
-                     "text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1",
-                     isVoiceEnabled ? "text-stone-900" : "text-stone-300 line-through"
-                   )}
-                   title="Toggle Voice Guidance"
-                 >
-                   Voice
-                 </button>
-
-                 <button onClick={() => setIsMuted(!isMuted)} className="text-stone-400 hover:text-stone-900 transition-colors">
-                   {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                 </button>
-              </div>
+          <div>
+            <h3 className="text-sm font-bold text-stone-400 uppercase tracking-widest mb-4 pl-1">Select Focus</h3>
+            <div className="flex flex-wrap gap-3">
+              {ACTIVITIES.map((activity) => (
+                <button
+                  key={activity.id}
+                  onClick={() => changeActivity(activity.id)}
+                  className={cn(
+                    "px-5 py-3 rounded-2xl border transition-all duration-300 flex items-center gap-3",
+                    activeActivity === activity.id 
+                      ? "bg-stone-900 text-white border-stone-900 shadow-lg scale-105" 
+                      : "bg-white/60 backdrop-blur-sm text-stone-600 border-white/60 hover:bg-white hover:border-stone-200 hover:scale-105"
+                  )}
+                >
+                  <span className="text-xl">{activity.icon}</span>
+                  <span className="text-sm font-bold">{activity.title}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Transcript / Guidance */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex-1 min-h-[300px] flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-stone-900 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                Guidance
-              </h3>
-              <button className="text-xs font-medium text-stone-400 hover:text-stone-900 flex items-center gap-1">
-                <Download className="w-3 h-3" /> Download Audio
-              </button>
-            </div>
-            
-            <div className="space-y-4 overflow-y-auto max-h-[400px] pr-2 scroll-smooth">
-              {TRANSCRIPTS[activeActivity].map((segment, i) => (
-                <div 
-                  key={i}
-                  className={cn(
-                    "p-4 rounded-xl transition-all duration-500",
-                    i === transcriptIndex 
-                      ? "bg-rose-50 text-stone-900 border border-rose-100 shadow-sm scale-[1.02]" 
-                      : "text-stone-400 hover:text-stone-600"
-                  )}
-                >
-                  <p className="leading-relaxed">{segment.text}</p>
+          <div className="relative min-h-[300px] flex flex-col justify-center">
+             {/* Decorative Quote Mark */}
+             <div className="absolute top-0 left-0 text-9xl font-serif text-rose-100/50 -translate-x-4 -translate-y-8 select-none">“</div>
+             
+             <div className="relative z-10 space-y-6">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={transcriptIndex}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="min-h-[120px]"
+                  >
+                    <p className="text-2xl md:text-3xl font-serif font-medium text-stone-800 leading-relaxed">
+                      {TRANSCRIPTS[activeActivity][transcriptIndex]?.text}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Audio Controls (Minimal) */}
+                <div className="flex items-center gap-6 pt-8 border-t border-stone-200/30">
+                  <button onClick={toggleTimer} className="group flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-full bg-stone-900 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      {isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
+                    </div>
+                    <span className="text-sm font-bold text-stone-900 uppercase tracking-widest">{isActive ? "Pause" : "Start"} Session</span>
+                  </button>
+
+                  <div className="h-8 w-px bg-stone-200/50 mx-2" />
+
+                  <button onClick={() => setIsVoiceEnabled(!isVoiceEnabled)} className={cn("flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors", isVoiceEnabled ? "text-stone-900" : "text-stone-300 line-through")}>
+                    <div className={cn("w-2 h-2 rounded-full", isVoiceEnabled ? "bg-green-500" : "bg-stone-300")} />
+                    Voice Guide
+                  </button>
+
+                  <button onClick={() => setIsMuted(!isMuted)} className={cn("flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors", !isMuted ? "text-stone-900" : "text-stone-300 line-through")}>
+                     {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                     Ambience
+                  </button>
+
+                  <button onClick={resetTimer} className="ml-auto text-stone-400 hover:text-rose-500 transition-colors">
+                    <RotateCcw className="w-5 h-5" />
+                  </button>
                 </div>
-              ))}
-            </div>
+             </div>
           </div>
 
         </div>
