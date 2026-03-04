@@ -11,13 +11,16 @@ export default withAuth(
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    if (isDashboardRoute && token?.role === "expert") {
-       // Experts should go to expert dashboard, but maybe they want to see mother dashboard too?
-       // Requirement says "Expert Dashboard (Basic) /expert/dashboard".
-       // Let's assume experts should stick to expert dashboard or allow access.
-       // For strict separation:
-       // return NextResponse.redirect(new URL("/expert/dashboard", req.url));
-       // For now, let's allow flexibility or just keep it simple.
+    // Neurodiversity Community Protection
+    if (req.nextUrl.pathname.startsWith("/community/neurodiversity")) {
+      const plan = token?.subscriptionPlan as string | undefined;
+      
+      // Basic users -> Redirect to pricing
+      if (!plan || plan === "basic") {
+        const url = new URL("/pricing", req.url);
+        url.searchParams.set("error", "premium_required");
+        return NextResponse.redirect(url);
+      }
     }
     
     return NextResponse.next();
@@ -30,5 +33,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/expert/:path*"],
+  matcher: ["/dashboard/:path*", "/expert/:path*", "/community/neurodiversity/:path*"],
 };

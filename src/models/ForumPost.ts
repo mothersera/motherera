@@ -5,7 +5,8 @@ export interface IForumPost extends Document {
   authorName: string;
   title: string;
   content: string;
-  category: 'Pregnancy' | 'Postpartum' | 'Child Nutrition' | 'Mental Wellness' | 'Single Parents' | 'General';
+  category: 'Pregnancy' | 'Postpartum' | 'Child Nutrition' | 'Mental Wellness' | 'Single Parents' | 'General' | 'Neurodiversity';
+  topic?: string;
   likes: string[]; // Array of userIds who liked
   isHidden: boolean; // For moderation
   createdAt: Date;
@@ -20,9 +21,10 @@ const ForumPostSchema: Schema<IForumPost> = new Schema(
     content: { type: String, required: true },
     category: { 
       type: String, 
-      enum: ['Pregnancy', 'Postpartum', 'Child Nutrition', 'Mental Wellness', 'Single Parents', 'General'],
+      enum: ['Pregnancy', 'Postpartum', 'Child Nutrition', 'Mental Wellness', 'Single Parents', 'General', 'Neurodiversity'],
       default: 'General'
     },
+    topic: { type: String }, // For sub-categories like "Early Diagnosis"
     likes: { type: [String], default: [] },
     isHidden: { type: Boolean, default: false },
   },

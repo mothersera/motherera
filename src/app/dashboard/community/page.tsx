@@ -21,7 +21,7 @@ interface Post {
   likes: string[];
 }
 
-const CATEGORIES = ['All', 'Pregnancy', 'Postpartum', 'Child Nutrition', 'Mental Wellness', 'Single Parents', 'General'];
+const CATEGORIES = ['All', 'Pregnancy', 'Postpartum', 'Child Nutrition', 'Mental Wellness', 'Single Parents', 'General', 'Neurodiversity'];
 
 const container = {
   hidden: { opacity: 0 },
@@ -94,6 +94,19 @@ function CommunityContent() {
     }
   };
 
+  const handleCategoryClick = (cat: string) => {
+    if (cat === 'Neurodiversity') {
+      const plan = session?.user?.subscriptionPlan;
+      if (!plan || plan === 'basic') {
+        router.push('/pricing?error=premium_required');
+        return;
+      }
+      router.push('/community/neurodiversity');
+      return;
+    }
+    router.push(`/dashboard/community?category=${encodeURIComponent(cat)}`);
+  };
+
   return (
     <div className="min-h-screen bg-stone-50/50">
       {/* Premium Header Background */}
@@ -152,15 +165,18 @@ function CommunityContent() {
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => router.push(`/dashboard/community?category=${encodeURIComponent(cat)}`)}
+                    onClick={() => handleCategoryClick(cat)}
                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-between group ${
                       currentCategory === cat 
                         ? "bg-stone-900 text-white shadow-md" 
-                        : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                        : cat === 'Neurodiversity' 
+                          ? "text-rose-600 font-bold bg-rose-50 hover:bg-rose-100" 
+                          : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
                     }`}
                   >
                     {cat}
-                    {currentCategory === cat && <Sparkles className="w-3 h-3 text-rose-300" />}
+                    {cat === 'Neurodiversity' && <Sparkles className="w-3 h-3 text-rose-500" />}
+                    {currentCategory === cat && cat !== 'Neurodiversity' && <Sparkles className="w-3 h-3 text-rose-300" />}
                   </button>
                 ))}
               </div>

@@ -5,6 +5,8 @@ import { Check, Heart, Brain, Users, Sparkles, Shield, ArrowRight, MessageCircle
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -22,6 +24,27 @@ const staggerContainer = {
 };
 
 export default function NeurodiverseFamilyCommunityPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  const handlePreviewAccess = () => {
+    const plan = session?.user?.subscriptionPlan;
+    if (plan === "premium" || plan === "specialized") {
+      router.push("/community/neurodiversity");
+    } else {
+      router.push("/pricing?error=premium_required");
+    }
+  };
+
+  const handleFullAccess = () => {
+    const plan = session?.user?.subscriptionPlan;
+    if (plan === "specialized") {
+      router.push("/community/neurodiversity");
+    } else {
+      router.push("/pricing?error=specialized_required");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-stone-50">
       {/* Hero Section */}
@@ -255,17 +278,25 @@ export default function NeurodiverseFamilyCommunityPage() {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white p-8 rounded-3xl border border-stone-200 hover:border-stone-300 transition-all">
               <span className="inline-block px-3 py-1 bg-stone-100 rounded-full text-xs font-bold text-stone-600 mb-4">Preview</span>
-              <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">Free 7-Day Preview</h3>
-              <p className="text-stone-500 mb-6 text-sm">Explore discussions and join one live session to see if it's right for you.</p>
-              <Button variant="outline" className="w-full rounded-full border-stone-300">Start Preview</Button>
+              <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">7-Day Preview (Premium Members)</h3>
+              <p className="text-stone-500 mb-6 text-sm">Explore community discussions and attend one live session to experience the Neurodiverse Family Community.</p>
+              <Button variant="outline" onClick={handlePreviewAccess} className="w-full rounded-full border-stone-300">Start Preview</Button>
             </div>
             
             <div className="bg-stone-900 p-8 rounded-3xl border border-stone-800 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/20 rounded-full blur-[40px] translate-x-1/2 -translate-y-1/2" />
               <span className="inline-block px-3 py-1 bg-rose-600 rounded-full text-xs font-bold text-white mb-4">Recommended</span>
-              <h3 className="text-2xl font-serif font-bold text-white mb-2">Full Membership</h3>
-              <p className="text-stone-400 mb-6 text-sm">Includes live sessions, full resource library, archives, and pathway guidance.</p>
-              <Button className="w-full rounded-full bg-white text-stone-900 hover:bg-stone-100">Request Access</Button>
+              <h3 className="text-2xl font-serif font-bold text-white mb-2">Full Membership (Specialized Members)</h3>
+              <p className="text-stone-400 mb-6 text-sm">
+                Includes: <br/>
+                • Full community discussions <br/>
+                • Live expert sessions <br/>
+                • Complete resource library <br/>
+                • Session archives <br/>
+                • Guided support pathways <br/>
+                • Neurodiversity expert frameworks
+              </p>
+              <Button onClick={handleFullAccess} className="w-full rounded-full bg-white text-stone-900 hover:bg-stone-100">Request Access</Button>
             </div>
           </div>
         </motion.section>

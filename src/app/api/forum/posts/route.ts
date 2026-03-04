@@ -17,10 +17,14 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get('category');
+    const topic = searchParams.get('topic');
     
     const query: any = { isHidden: false };
     if (category && category !== 'All') {
       query.category = category;
+    }
+    if (topic) {
+      query.topic = topic;
     }
 
     // Fetch posts
@@ -54,7 +58,7 @@ export async function POST(req: Request) {
   await dbConnect();
 
   try {
-    const { title, content, category } = await req.json();
+    const { title, content, category, topic } = await req.json();
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
@@ -66,6 +70,7 @@ export async function POST(req: Request) {
       title,
       content,
       category: category || 'General',
+      topic: topic || undefined,
     });
 
     const { authorId, __v, ...safePost } = newPost.toObject();
