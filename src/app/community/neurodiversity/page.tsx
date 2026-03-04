@@ -32,10 +32,10 @@ const TOPICS = [
 ];
 
 const RESOURCES = [
-  { title: "Advanced IEP Negotiation Framework", type: "PDF", locked: true },
-  { title: "Teen Transition Planning Toolkit", type: "PDF", locked: true },
-  { title: "Expert Recorded Session: Dr. Smith", type: "Video", locked: true },
-  { title: "Sensory Regulation Guide", type: "PDF", locked: false }, // One free resource
+  { title: "Advanced IEP Navigation", type: "Page", locked: false, href: "/community/library/advanced-iep-navigation" },
+  { title: "Teen Transition Planning", type: "Page", locked: false, href: "/community/library/teen-transition-planning" },
+  { title: "Sensory Regulation", type: "Page", locked: false, href: "/community/library/sensory-regulation" },
+  { title: "Expert Recorded Session: Dr. Smith", type: "Video", locked: true, href: "#" },
 ];
 
 export default function NeurodiversityPage() {
@@ -147,24 +147,25 @@ export default function NeurodiversityPage() {
                 </h3>
                 <div className="space-y-3">
                   {RESOURCES.map((res, i) => (
-                    <div 
-                      key={i} 
-                      className={`p-3 rounded-xl border ${
-                        res.locked && !isSpecialized 
-                          ? "border-stone-700 bg-stone-800/50 opacity-70 cursor-not-allowed" 
-                          : "border-stone-700 bg-stone-800 hover:bg-stone-700 cursor-pointer"
-                      } transition-colors flex items-center justify-between group`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {res.type === "Video" ? <Video className="w-4 h-4 text-stone-400" /> : <GraduationCap className="w-4 h-4 text-stone-400" />}
-                        <span className="text-sm font-medium truncate max-w-[120px]">{res.title}</span>
+                    <Link key={i} href={res.href || "#"}>
+                      <div 
+                        className={`p-3 rounded-xl border ${
+                          res.locked && !isSpecialized 
+                            ? "border-stone-700 bg-stone-800/50 opacity-70 cursor-not-allowed" 
+                            : "border-stone-700 bg-stone-800 hover:bg-stone-700 cursor-pointer"
+                        } transition-colors flex items-center justify-between group`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {res.type === "Video" ? <Video className="w-4 h-4 text-stone-400" /> : <BookOpen className="w-4 h-4 text-stone-400" />}
+                          <span className="text-sm font-medium truncate max-w-[180px]">{res.title}</span>
+                        </div>
+                        {res.locked && !isSpecialized ? (
+                          <Lock className="w-3 h-3 text-rose-500" />
+                        ) : (
+                          <div className="w-2 h-2 rounded-full bg-green-500" />
+                        )}
                       </div>
-                      {res.locked && !isSpecialized ? (
-                        <Lock className="w-3 h-3 text-rose-500" />
-                      ) : (
-                        <div className="w-2 h-2 rounded-full bg-green-500" />
-                      )}
-                    </div>
+                    </Link>
                   ))}
                 </div>
                 {!isSpecialized && (
