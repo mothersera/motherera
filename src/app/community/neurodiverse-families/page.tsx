@@ -278,7 +278,7 @@ export default function NeurodiverseFamilyCommunityPage() {
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white p-8 rounded-3xl border border-stone-200 hover:border-stone-300 transition-all">
               <span className="inline-block px-3 py-1 bg-stone-100 rounded-full text-xs font-bold text-stone-600 mb-4">Preview</span>
-              <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">7-Day Preview (Premium Members)</h3>
+              <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">Preview (Premium Members)</h3>
               <p className="text-stone-500 mb-6 text-sm">Explore community discussions and attend one live session to experience the Neurodiverse Family Community.</p>
               <Button variant="outline" onClick={handlePreviewAccess} className="w-full rounded-full border-stone-300">Start Preview</Button>
             </div>
