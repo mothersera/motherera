@@ -30,30 +30,32 @@ function BroadcastHeader({ isAdmin, onEndStream }: { isAdmin: boolean; onEndStre
   const participantCount = useParticipantCount();
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 md:p-6 bg-gradient-to-b from-black/80 to-transparent transition-all duration-300 pointer-events-none">
-      <div className="flex items-center gap-4 pointer-events-auto">
-        <div className="flex items-center gap-2 bg-red-600/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg shadow-red-900/20">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
-          </span>
-          <span className="text-[10px] md:text-xs font-bold text-white tracking-widest uppercase">LIVE</span>
+    <div className="absolute top-0 left-0 right-0 z-50 flex items-start justify-between p-4 bg-gradient-to-b from-black/90 via-black/50 to-transparent transition-all duration-300 pointer-events-none h-32">
+      <div className="flex flex-col gap-2 pointer-events-auto">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-rose-600/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg shadow-rose-900/30 border border-rose-500/20">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            <span className="text-[10px] font-bold text-white tracking-widest uppercase">LIVE</span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full text-white/90 text-[10px] font-medium">
+            <Users className="w-3 h-3" />
+            <span>{participantCount}</span>
+          </div>
         </div>
-        <h1 className="text-lg md:text-xl font-serif font-bold text-white hidden md:block drop-shadow-md">
+        <h1 className="text-lg font-serif font-bold text-white drop-shadow-md tracking-tight ml-1">
           MotherEra Live
         </h1>
       </div>
       
       <div className="flex items-center gap-3 pointer-events-auto">
-        <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-full text-white/90 text-xs md:text-sm font-medium transition-colors hover:bg-black/60">
-          <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
-          <span>{participantCount} Watching</span>
-        </div>
         {isAdmin && (
            <Button 
              variant="destructive" 
              size="sm" 
-             className="bg-red-600 hover:bg-red-700 text-white border-none shadow-lg shadow-red-900/20"
+             className="bg-rose-600 hover:bg-rose-700 text-white border-none shadow-lg shadow-rose-900/20 rounded-full h-8 text-xs font-medium px-4"
              onClick={onEndStream}
            >
              End Stream
@@ -91,37 +93,41 @@ function ChatPanel() {
   };
 
   return (
-    <div className="flex flex-col h-[40vh] lg:h-full bg-white lg:border-l border-stone-100 w-full lg:w-96 flex-shrink-0 shadow-xl z-20">
-      <div className="p-4 border-b border-stone-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+    <div className="flex flex-col h-[50vh] lg:h-full bg-[#FDFCF8] lg:border-l border-stone-200/50 w-full lg:w-96 flex-shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] lg:shadow-none z-20 rounded-t-[2rem] lg:rounded-none overflow-hidden relative">
+      {/* Mobile Handle */}
+      <div className="w-12 h-1.5 bg-stone-200 rounded-full mx-auto mt-3 mb-1 lg:hidden opacity-50" />
+      
+      <div className="px-6 py-3 border-b border-stone-100 bg-[#FDFCF8]/80 backdrop-blur-xl sticky top-0 z-10 flex justify-between items-center">
         <h3 className="font-serif font-bold text-stone-900 flex items-center gap-2">
           Live Chat
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.4)]"></span>
         </h3>
+        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Top Messages</span>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-stone-50/30 scroll-smooth">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
         {messages.map((msg, i) => (
           <div 
             key={i} 
             className={cn(
               "flex flex-col max-w-[85%] animate-in fade-in slide-in-from-bottom-2 duration-300",
               msg.user === "You" ? "self-end items-end" : "self-start items-start",
-              msg.isSystem && "self-center items-center max-w-full w-full"
+              msg.isSystem && "self-center items-center max-w-full w-full my-4"
             )}
           >
             {!msg.isSystem && (
-              <span className="text-[10px] font-semibold text-stone-400 mb-1 px-1">
-                {msg.user} • {msg.time}
+              <span className="text-[10px] font-bold text-stone-400 mb-1 px-2 tracking-wide">
+                {msg.user}
               </span>
             )}
             
             <div className={cn(
-              "text-sm px-3.5 py-2.5 shadow-sm",
+              "text-sm px-4 py-3 shadow-sm leading-relaxed",
               msg.user === "You" 
-                ? "bg-stone-900 text-white rounded-2xl rounded-tr-sm" 
+                ? "bg-stone-900 text-white rounded-[1.2rem] rounded-tr-sm" 
                 : msg.isSystem 
-                  ? "bg-stone-100 text-stone-500 text-xs py-1 px-3 rounded-full border border-stone-200"
-                  : "bg-white text-stone-800 border border-stone-100 rounded-2xl rounded-tl-sm"
+                  ? "bg-stone-100/80 text-stone-500 text-xs py-1.5 px-4 rounded-full border border-stone-200 text-center mx-auto"
+                  : "bg-white text-stone-800 border border-stone-100 rounded-[1.2rem] rounded-tl-sm"
             )}>
               {msg.text}
             </div>
@@ -130,34 +136,34 @@ function ChatPanel() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 border-t border-stone-100 bg-white">
-        <form onSubmit={handleSend} className="relative flex items-center gap-2">
-          <div className="relative flex-1">
+      <div className="p-4 bg-[#FDFCF8] pb-safe-area">
+        <form onSubmit={handleSend} className="relative flex items-center gap-3">
+          <div className="relative flex-1 group">
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Say something..."
-              className="w-full text-sm bg-stone-50 border border-stone-200 rounded-full pl-4 pr-10 py-3 focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900 outline-none transition-all placeholder:text-stone-400"
+              placeholder="Join the conversation..."
+              className="w-full text-sm bg-white border border-stone-200 rounded-full pl-5 pr-12 py-3.5 focus:ring-2 focus:ring-stone-900/5 focus:border-stone-900 outline-none transition-all placeholder:text-stone-400 shadow-sm"
             />
             <button 
               type="button"
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-600 transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-stone-400 hover:text-rose-500 transition-colors bg-transparent hover:bg-rose-50 rounded-full"
             >
-              <Smile className="w-4 h-4" />
+              <Smile className="w-5 h-5" />
             </button>
           </div>
           <button
             type="submit"
             disabled={!message.trim()}
-            className="p-3 bg-stone-900 text-white rounded-full hover:bg-stone-800 disabled:opacity-50 disabled:hover:bg-stone-900 transition-all shadow-md hover:shadow-lg hover:scale-105 active:scale-95 flex-shrink-0"
+            className="p-3.5 bg-stone-900 text-white rounded-full hover:bg-stone-800 disabled:opacity-50 disabled:hover:bg-stone-900 transition-all shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 flex-shrink-0"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-5 h-5 ml-0.5" />
           </button>
         </form>
-        <div className="mt-3 flex justify-center">
-           <button className="text-xs text-rose-500 font-medium flex items-center gap-1 hover:bg-rose-50 px-3 py-1 rounded-full transition-colors">
-             <Heart className="w-3 h-3 fill-rose-500" /> Send Love
+        <div className="mt-3 flex justify-center pb-2">
+           <button className="text-[10px] font-bold text-rose-500 uppercase tracking-widest flex items-center gap-2 hover:bg-rose-50 px-4 py-2 rounded-full transition-all border border-rose-100 hover:border-rose-200 shadow-sm">
+             <Heart className="w-3.5 h-3.5 fill-rose-500" /> Send Love
            </button>
         </div>
       </div>
@@ -167,28 +173,29 @@ function ChatPanel() {
 
 function BroadcastView({ isAdmin, onEndStream }: { isAdmin: boolean; onEndStream?: () => void }) {
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-64px)] bg-black overflow-hidden">
-      <div className="flex-1 flex flex-col relative h-full bg-stone-950">
+    <div className="flex flex-col lg:flex-row h-[100dvh] bg-stone-950 overflow-hidden font-sans">
+      <div className="flex-1 flex flex-col relative h-full">
         <BroadcastHeader isAdmin={isAdmin} onEndStream={onEndStream} />
         
-        <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-          <div className="w-full h-full relative">
+        <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
+          <div className="w-full h-full relative flex items-center justify-center">
             <StreamTheme>
               <SpeakerLayout participantsBarPosition="bottom" />
               {isAdmin && (
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 bg-black/60 backdrop-blur-xl rounded-full p-1.5 border border-white/10 shadow-2xl transition-transform hover:scale-105">
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 bg-black/40 backdrop-blur-xl rounded-full p-2 border border-white/10 shadow-2xl transition-transform hover:scale-105">
                   <CallControls onLeave={onEndStream} />
                 </div>
               )}
               {!isAdmin && (
-                 // Hide controls for viewers or provide simplified controls if needed (e.g. just leave)
+                 // Hide controls for viewers
                  <div className="hidden"></div>
               )}
             </StreamTheme>
           </div>
           
-          {/* Subtle gradient overlay at bottom for better text visibility if needed */}
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/80 to-transparent pointer-events-none z-10" />
+          {/* Cinematic Gradient Overlays */}
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-10" />
+          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-10" />
         </div>
       </div>
       
