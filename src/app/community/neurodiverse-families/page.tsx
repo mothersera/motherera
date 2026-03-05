@@ -27,7 +27,7 @@ export default function NeurodiverseFamilyCommunityPage() {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const handlePreviewAccess = () => {
+  const handleAccess = () => {
     const plan = session?.user?.subscriptionPlan;
     if (plan === "premium" || plan === "specialized") {
       router.push("/community/neurodiversity");
@@ -36,13 +36,8 @@ export default function NeurodiverseFamilyCommunityPage() {
     }
   };
 
-  const handleFullAccess = () => {
-    const plan = session?.user?.subscriptionPlan;
-    if (plan === "specialized") {
-      router.push("/community/neurodiversity");
-    } else {
-      router.push("/pricing?error=specialized_required");
-    }
+  const handleHowItWorks = () => {
+    router.push("/community/neurodiversity/how-it-works");
   };
 
   return (
@@ -74,10 +69,10 @@ export default function NeurodiverseFamilyCommunityPage() {
               You do not have to navigate diagnosis, schooling, regulation, or burnout alone. This is a structured, moderated space designed for clarity and strength.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button size="lg" className="rounded-full h-14 px-10 text-base bg-stone-900 hover:bg-stone-800 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+              <Button size="lg" onClick={handleAccess} className="rounded-full h-14 px-10 text-base bg-stone-900 hover:bg-stone-800 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
                 Request Community Access
               </Button>
-              <Button size="lg" variant="ghost" className="rounded-full h-14 px-10 text-base text-stone-600 hover:bg-white/50 hover:text-stone-900 border border-transparent hover:border-stone-200 transition-all">
+              <Button size="lg" variant="ghost" onClick={handleHowItWorks} className="rounded-full h-14 px-10 text-base text-stone-600 hover:bg-white/50 hover:text-stone-900 border border-transparent hover:border-stone-200 transition-all">
                 Explore How It Works
               </Button>
             </div>
@@ -264,10 +259,10 @@ export default function NeurodiverseFamilyCommunityPage() {
           
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white/50 backdrop-blur-xl p-10 rounded-[2.5rem] border border-stone-200 hover:border-stone-300 transition-all shadow-sm group">
-              <span className="inline-block px-4 py-1 bg-stone-100 rounded-full text-xs font-bold text-stone-600 mb-6 tracking-wide uppercase">Preview</span>
-              <h3 className="text-3xl font-serif font-medium text-stone-900 mb-4">Preview</h3>
-              <p className="text-stone-500 mb-8 text-lg leading-relaxed">Explore community discussions and attend one live session to experience the Neurodiverse Family Community.</p>
-              <Button variant="outline" onClick={handlePreviewAccess} className="w-full h-14 rounded-full border-stone-300 text-stone-600 hover:bg-stone-50 hover:text-stone-900 text-lg">Start Preview</Button>
+              <span className="inline-block px-4 py-1 bg-stone-100 rounded-full text-xs font-bold text-stone-600 mb-6 tracking-wide uppercase">Community Access</span>
+              <h3 className="text-3xl font-serif font-medium text-stone-900 mb-4">Request Access</h3>
+              <p className="text-stone-500 mb-8 text-lg leading-relaxed">Join the discussion, connect with other parents, and access our curated resources.</p>
+              <Button variant="outline" onClick={handleAccess} className="w-full h-14 rounded-full border-stone-300 text-stone-600 hover:bg-stone-50 hover:text-stone-900 text-lg">Join Community</Button>
             </div>
             
             <div className="bg-gradient-to-br from-stone-900 to-stone-800 p-10 rounded-[2.5rem] border border-stone-700 text-white relative overflow-hidden group shadow-2xl">
@@ -277,7 +272,7 @@ export default function NeurodiverseFamilyCommunityPage() {
               <p className="text-stone-400 mb-8 text-lg leading-relaxed">
                 Unlock the full ecosystem of support, including all expert sessions, archives, and specialized pathways.
               </p>
-              <Button onClick={handleFullAccess} className="w-full h-14 rounded-full bg-white text-stone-900 hover:bg-stone-100 text-lg font-medium shadow-xl">Request Access</Button>
+              <Button onClick={handleAccess} className="w-full h-14 rounded-full bg-white text-stone-900 hover:bg-stone-100 text-lg font-medium shadow-xl">Request Access</Button>
             </div>
           </div>
         </motion.section>
@@ -291,7 +286,7 @@ export default function NeurodiverseFamilyCommunityPage() {
           className="text-center py-20"
         >
            <h2 className="text-4xl md:text-6xl font-serif font-medium text-stone-900 mb-8">You Are Not Alone.</h2>
-           <Button size="lg" className="rounded-full h-16 px-12 text-xl bg-stone-900 hover:bg-stone-800 text-white shadow-2xl hover:-translate-y-1 transition-all duration-300">
+           <Button size="lg" onClick={handleAccess} className="rounded-full h-16 px-12 text-xl bg-stone-900 hover:bg-stone-800 text-white shadow-2xl hover:-translate-y-1 transition-all duration-300">
              Join the Community
            </Button>
         </motion.section>
