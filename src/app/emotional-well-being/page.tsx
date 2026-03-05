@@ -376,9 +376,6 @@ export default function EmotionalWellBeingPage() {
                Emotional well-being is not indulgence — it is strategic alignment. When you invest in your identity, you strengthen every relationship and responsibility connected to you.
              </p>
              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-               <Button size="lg" className="rounded-full h-12 px-8 text-base bg-stone-900 hover:bg-stone-800 shadow-lg hover:shadow-xl transition-all">
-                 Explore Emotional Support
-               </Button>
                <Button 
                  size="lg" 
                  variant="outline" 
