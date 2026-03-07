@@ -368,9 +368,6 @@ export default function PartnershipWellnessPage() {
                    Explore Relationship Resources
                  </Button>
                </Link>
-               <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base border-stone-300 hover:bg-white hover:text-stone-900">
-                 Join a Partnership Circle
-               </Button>
              </div>
            </div>
         </motion.section>
