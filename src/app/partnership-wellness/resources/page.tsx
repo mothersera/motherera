@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Heart, Brain, Users, Sparkles, Clock, AlertTriangle, Shield, ArrowRight, Sun, Leaf, Battery, Zap, Activity, Link as LinkIcon, MessageCircle, Moon, Scale, DollarSign, Baby, Coffee, PenTool, Book, Smile, ShieldCheck, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
@@ -21,7 +22,115 @@ const staggerContainer = {
   }
 };
 
+const CHECK_IN_QUESTIONS = [
+  {
+    id: 1,
+    text: "Do we feel heard by each other recently?",
+    explanation: "Feeling heard creates emotional safety. When partners feel understood, conflict de-escalates and intimacy grows.",
+    options: [
+      { label: "Always", value: 3 },
+      { label: "Often", value: 2 },
+      { label: "Sometimes", value: 1 },
+      { label: "Rarely", value: 0 },
+    ]
+  },
+  {
+    id: 2,
+    text: "Are parenting responsibilities balanced fairly?",
+    explanation: "Perceived fairness prevents resentment. It's not about 50/50, but about both partners feeling the load is shared sustainably.",
+    options: [
+      { label: "Always", value: 3 },
+      { label: "Often", value: 2 },
+      { label: "Sometimes", value: 1 },
+      { label: "Rarely", value: 0 },
+    ]
+  },
+  {
+    id: 3,
+    text: "Are we making intentional time for connection?",
+    explanation: "The 'couple bubble' protects the relationship. Without dedicated time, you become roommates managing a logistics center.",
+    options: [
+      { label: "Always", value: 3 },
+      { label: "Often", value: 2 },
+      { label: "Sometimes", value: 1 },
+      { label: "Rarely", value: 0 },
+    ]
+  },
+  {
+    id: 4,
+    text: "Do we resolve disagreements respectfully?",
+    explanation: "Conflict is inevitable; contempt is not. Respectful repair after a fight is the single biggest predictor of relationship longevity.",
+    options: [
+      { label: "Always", value: 3 },
+      { label: "Often", value: 2 },
+      { label: "Sometimes", value: 1 },
+      { label: "Rarely", value: 0 },
+    ]
+  }
+];
+
+const getCheckInResult = (score: number) => {
+  if (score >= 9) return {
+    category: "Stable Relationship",
+    description: "Your partnership currently has strong communication, support, and emotional alignment.",
+    color: "text-emerald-600",
+    bgColor: "bg-emerald-500",
+    lightBg: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    guidance: [
+      "Maintain weekly check-ins to stay aligned.",
+      "Continue appreciation practices to foster positivity.",
+      "Protect couple time to deepen your bond."
+    ]
+  };
+  if (score >= 5) return {
+    category: "Relationship Under Stress",
+    description: "Some areas of the relationship may need attention and intentional effort.",
+    color: "text-amber-600",
+    bgColor: "bg-amber-500",
+    lightBg: "bg-amber-50",
+    borderColor: "border-amber-200",
+    guidance: [
+      "Schedule weekly communication time.",
+      "Redistribute responsibilities fairly.",
+      "Address recurring conflicts calmly."
+    ]
+  };
+  return {
+    category: "Needs Attention",
+    description: "The relationship may be experiencing significant stress or disconnection.",
+    color: "text-rose-600",
+    bgColor: "bg-rose-500",
+    lightBg: "bg-rose-50",
+    borderColor: "border-rose-200",
+    guidance: [
+      "Begin intentional communication rituals.",
+      "Reduce blame language during conflicts.",
+      "Consider relationship counseling if needed."
+    ]
+  };
+};
+
 export default function RelationshipResourcesPage() {
+  const [checkInAnswers, setCheckInAnswers] = useState<Record<number, number>>({});
+  const [showCheckInResult, setShowCheckInResult] = useState(false);
+
+  const handleCheckInSelect = (questionId: number, value: number) => {
+    setCheckInAnswers(prev => ({ ...prev, [questionId]: value }));
+  };
+
+  const calculateCheckInScore = () => {
+    return Object.values(checkInAnswers).reduce((a, b) => a + b, 0);
+  };
+
+  const resetCheckIn = () => {
+    setCheckInAnswers({});
+    setShowCheckInResult(false);
+  };
+
+  const currentResult = showCheckInResult ? getCheckInResult(calculateCheckInScore()) : null;
+  const allQuestionsAnswered = CHECK_IN_QUESTIONS.every(q => checkInAnswers[q.id] !== undefined);
+
   return (
     <div className="flex flex-col min-h-screen bg-[#FDFCF8] selection:bg-rose-100 selection:text-rose-900 font-sans">
       {/* Ambient Background */}
@@ -99,39 +208,119 @@ export default function RelationshipResourcesPage() {
           </div>
         </motion.section>
 
-        {/* SECTION 3: RELATIONSHIP HEALTH CHECK */}
+        {/* SECTION 3: RELATIONSHIP HEALTH CHECK (INTERACTIVE) */}
         <motion.section 
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={fadeIn}
-          className="bg-stone-900 rounded-[2.5rem] p-10 md:p-16 text-white text-center relative overflow-hidden"
+          className="bg-white rounded-[2.5rem] p-8 md:p-16 border border-stone-100 shadow-sm relative overflow-hidden"
         >
-          <div className="absolute top-0 left-0 w-96 h-96 bg-rose-500/20 rounded-full blur-[100px]" />
-          <div className="relative z-10 max-w-3xl mx-auto">
-            <h2 className="text-3xl font-serif font-medium mb-8">Relationship Check-In</h2>
-            <p className="text-stone-300 mb-10 text-lg">
-              Regular reflection prevents drift. Ask yourselves these questions weekly to stay aligned.
-            </p>
-            <div className="grid md:grid-cols-2 gap-6 text-left">
-              {[
-                "Do we feel heard by each other recently?",
-                "Are parenting responsibilities balanced fairly?",
-                "Are we making time for connection?",
-                "Do we resolve disagreements respectfully?"
-              ].map((q, i) => (
-                <div key={i} className="bg-white/10 p-6 rounded-2xl border border-white/10 flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0 text-rose-300 font-bold text-sm">{i+1}</div>
-                  <span className="text-stone-200 font-light">{q}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-10 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-8 text-sm text-stone-400">
-              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400" /> Stable Relationship</span>
-              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-400" /> Relationship Under Stress</span>
-              <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-rose-400" /> Needs Attention</span>
-            </div>
-          </div>
+           {/* Ambient background inside the card */}
+           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-rose-50/50 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+           
+           <div className="relative z-10 max-w-4xl mx-auto">
+             <div className="text-center mb-12">
+               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-100 text-rose-600 text-xs font-bold uppercase tracking-widest mb-4">
+                 <Activity className="w-3 h-3" />
+                 <span>Self Assessment</span>
+               </div>
+               <h2 className="text-3xl md:text-4xl font-serif font-medium text-stone-900 mb-4">Relationship Health Check-In</h2>
+               <p className="text-stone-600 text-lg max-w-2xl mx-auto">
+                 Reflect on your partnership dynamics. Honest answers help identify areas for growth.
+               </p>
+             </div>
+
+             {!showCheckInResult ? (
+               <div className="space-y-8">
+                 <div className="grid md:grid-cols-2 gap-6">
+                   {CHECK_IN_QUESTIONS.map((q) => (
+                     <div key={q.id} className="bg-stone-50 p-6 rounded-2xl border border-stone-100 hover:border-rose-100 transition-colors">
+                       <h3 className="font-serif font-medium text-stone-900 text-lg mb-2">{q.text}</h3>
+                       <p className="text-stone-500 text-xs mb-4 leading-relaxed">{q.explanation}</p>
+                       <div className="grid grid-cols-2 gap-2">
+                         {q.options.map((opt) => (
+                           <button
+                             key={opt.label}
+                             onClick={() => handleCheckInSelect(q.id, opt.value)}
+                             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                               checkInAnswers[q.id] === opt.value
+                                 ? "bg-stone-900 text-white shadow-md transform scale-105"
+                                 : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-100 hover:border-stone-300"
+                             }`}
+                           >
+                             {opt.label}
+                           </button>
+                         ))}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+                 
+                 <div className="text-center pt-4">
+                   <Button 
+                     onClick={() => setShowCheckInResult(true)}
+                     disabled={!allQuestionsAnswered}
+                     className="rounded-full h-12 px-8 text-base bg-stone-900 hover:bg-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                   >
+                     See My Relationship Result
+                   </Button>
+                   {!allQuestionsAnswered && (
+                     <p className="text-stone-400 text-xs mt-3">Please answer all questions to see your result.</p>
+                   )}
+                 </div>
+               </div>
+             ) : (
+               <motion.div 
+                 initial={{ opacity: 0, scale: 0.95 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 className={`rounded-3xl p-8 md:p-12 border ${currentResult?.borderColor} ${currentResult?.lightBg} relative overflow-hidden text-center`}
+               >
+                 <div className={`w-16 h-16 rounded-full ${currentResult?.bgColor} flex items-center justify-center mx-auto mb-6 text-white shadow-lg`}>
+                   {calculateCheckInScore() >= 9 ? <Heart className="w-8 h-8" /> : calculateCheckInScore() >= 5 ? <Activity className="w-8 h-8" /> : <AlertTriangle className="w-8 h-8" />}
+                 </div>
+                 
+                 <h3 className={`text-2xl md:text-3xl font-serif font-bold ${currentResult?.color} mb-2`}>
+                   {currentResult?.category}
+                 </h3>
+                 <p className="text-stone-500 font-medium mb-6">Score: {calculateCheckInScore()}/12</p>
+                 
+                 <p className="text-stone-700 text-lg leading-relaxed max-w-2xl mx-auto mb-10">
+                   {currentResult?.description}
+                 </p>
+                 
+                 <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 mb-10 max-w-3xl mx-auto border border-white/50">
+                   <h4 className="font-bold text-stone-900 mb-6 uppercase tracking-widest text-xs">Recommended Actions</h4>
+                   <div className="grid md:grid-cols-3 gap-6 text-left">
+                     {currentResult?.guidance.map((tip, i) => (
+                       <div key={i} className="flex gap-3 items-start">
+                         <div className={`w-6 h-6 rounded-full ${currentResult?.bgColor} flex items-center justify-center shrink-0 text-white text-xs font-bold mt-0.5`}>{i+1}</div>
+                         <p className="text-stone-700 text-sm">{tip}</p>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+
+                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                   <Button 
+                     onClick={resetCheckIn}
+                     variant="outline" 
+                     className="rounded-full h-12 px-8 border-stone-300 text-stone-600 hover:bg-stone-50"
+                   >
+                     Retake Check-In
+                   </Button>
+                   <Button className="rounded-full h-12 px-8 bg-stone-900 hover:bg-stone-800 text-white shadow-lg hover:shadow-xl transition-all">
+                     Join a Partnership Circle
+                   </Button>
+                 </div>
+                 <div className="mt-4">
+                    <Link href="/partnership-wellness/resources">
+                        <Button variant="link" className="text-stone-500 hover:text-stone-900">Explore Relationship Resources</Button>
+                    </Link>
+                 </div>
+               </motion.div>
+             )}
+           </div>
         </motion.section>
 
         {/* SECTION 4: COMMON CHALLENGES */}
