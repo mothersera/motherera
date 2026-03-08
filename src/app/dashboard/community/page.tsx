@@ -21,7 +21,7 @@ interface Post {
   likes: string[];
 }
 
-const CATEGORIES = ['All', 'Pregnancy', 'Postpartum', 'Child Nutrition', 'Mental Wellness', 'Single Parents', 'General', 'Neurodiversity'];
+const CATEGORIES = ['All', 'Pregnancy', 'Postpartum', 'Child Nutrition', 'Mental Wellness', 'Single Parents', 'Partnership & Relationships', 'General', 'Neurodiversity'];
 
 const container = {
   hidden: { opacity: 0 },
@@ -104,6 +104,13 @@ function CommunityContent() {
       router.push('/community/neurodiversity');
       return;
     }
+    if (cat === 'Partnership & Relationships') {
+      const plan = session?.user?.subscriptionPlan;
+      if (!plan || plan === 'basic') {
+        router.push('/pricing?error=premium_required_partnership');
+        return;
+      }
+    }
     router.push(`/dashboard/community?category=${encodeURIComponent(cat)}`);
   };
 
@@ -169,14 +176,14 @@ function CommunityContent() {
                     className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center justify-between group ${
                       currentCategory === cat 
                         ? "bg-stone-900 text-white shadow-md" 
-                        : cat === 'Neurodiversity' 
+                        : (cat === 'Neurodiversity' || cat === 'Partnership & Relationships')
                           ? "text-rose-600 font-bold bg-rose-50 hover:bg-rose-100" 
                           : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
                     }`}
                   >
                     {cat}
-                    {cat === 'Neurodiversity' && <Sparkles className="w-3 h-3 text-rose-500" />}
-                    {currentCategory === cat && cat !== 'Neurodiversity' && <Sparkles className="w-3 h-3 text-rose-300" />}
+                    {(cat === 'Neurodiversity' || cat === 'Partnership & Relationships') && <Sparkles className="w-3 h-3 text-rose-500" />}
+                    {currentCategory === cat && cat !== 'Neurodiversity' && cat !== 'Partnership & Relationships' && <Sparkles className="w-3 h-3 text-rose-300" />}
                   </button>
                 ))}
               </div>

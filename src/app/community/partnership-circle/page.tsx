@@ -222,6 +222,10 @@ export default function PartnershipCirclePage() {
     }, 3000);
   };
 
+  const handleOpenCommunity = () => {
+    router.push('/dashboard/community?category=Partnership%20%26%20Relationships');
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 font-sans selection:bg-rose-100 selection:text-rose-900">
       
@@ -279,57 +283,32 @@ export default function PartnershipCirclePage() {
           ))}
         </motion.section>
 
-        {/* SECTION 3: COMMUNITY DISCUSSION ROOMS */}
+        {/* SECTION 3: COMMUNITY DISCUSSION ROOMS - REMOVED, NOW A GATEWAY TO MAIN COMMUNITY */}
         <motion.section 
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeIn}
+          className="text-center"
         >
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <h2 className="text-3xl font-serif font-medium text-stone-900 mb-2">Community Discussions</h2>
-              <p className="text-stone-500">Connect with other parents facing similar challenges.</p>
-            </div>
-            {/* Mock "New Post" button */}
-            <Button className="hidden md:flex rounded-full bg-stone-900 text-white hover:bg-stone-800">
-              Start a Discussion
+          <div className="bg-white rounded-[3rem] p-10 md:p-16 border border-stone-100 shadow-sm">
+            <h2 className="text-3xl font-serif font-medium text-stone-900 mb-4">Join the Conversation</h2>
+            <p className="text-stone-600 mb-8 max-w-2xl mx-auto">
+              Our relationship discussions have moved to the main community hub. Connect with other parents in the dedicated "Partnership & Relationships" space.
+            </p>
+            <Button 
+              onClick={handleOpenCommunity}
+              size="lg" 
+              className="rounded-full h-14 px-8 text-lg bg-stone-900 hover:bg-stone-800 text-white shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all"
+            >
+              Open Relationship Community
             </Button>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {DISCUSSION_ROOMS.map((room) => (
-              <Link href={`/community/discussions?category=${room.id}`} key={room.id} className="block group">
-                <Card className="h-full border-stone-100 hover:border-rose-200 hover:shadow-md transition-all duration-300 rounded-3xl overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${room.color}`}>
-                      <room.icon className="w-6 h-6" />
-                    </div>
-                    <CardTitle className="text-xl font-serif text-stone-900 group-hover:text-rose-600 transition-colors">
-                      {room.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-stone-600 text-base mb-6">
-                      {room.desc}
-                    </CardDescription>
-                    <div className="flex items-center gap-2 text-stone-400 text-xs font-medium">
-                      <div className="flex -space-x-2">
-                        {[1,2,3].map(i => (
-                          <div key={i} className="w-6 h-6 rounded-full bg-stone-200 border-2 border-white" />
-                        ))}
-                      </div>
-                      <span>{room.activeUsers} active members</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
           </div>
         </motion.section>
 
         {/* SECTION 4: RESOURCE LIBRARY */}
         <motion.section 
+          id="resource-library"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
@@ -619,31 +598,42 @@ export default function PartnershipCirclePage() {
           </div>
         </motion.section>
 
-        {/* SECTION 9: FINAL CTA */}
+        {/* SECTION 9: FINAL CLOSING SECTION */}
         <motion.section 
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           variants={fadeIn}
-          className="bg-stone-900 rounded-[3rem] p-12 md:p-24 text-center text-white relative overflow-hidden"
+          className="bg-stone-50 rounded-[3rem] p-12 md:p-24 text-center text-stone-900 border border-stone-100"
         >
-           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
-           <div className="absolute bottom-0 right-0 w-96 h-96 bg-rose-500/20 rounded-full blur-[120px]" />
-           
            <div className="relative z-10 max-w-3xl mx-auto">
-             <h2 className="text-4xl md:text-6xl font-serif font-medium mb-8">
-               Prioritize Your Partnership
+             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+               <Heart className="w-8 h-8 text-rose-500" />
+             </div>
+             <h2 className="text-3xl md:text-5xl font-serif font-medium mb-6">
+               Strong Partnerships Build Strong Families
              </h2>
-             <p className="text-lg text-stone-300 mb-12 leading-relaxed">
-               The best gift you can give your children is a healthy, loving relationship between their parents. 
-               Start your journey of connection today.
+             <p className="text-lg text-stone-600 mb-10 leading-relaxed">
+               Maintaining a healthy relationship during parenting isn't always easy. Connection grows through small moments of reflection, honest communication, and shared support. We're here to walk this path with you.
              </p>
-             <Button 
-               size="lg" 
-               className="rounded-full h-16 px-12 text-xl bg-white text-stone-900 hover:bg-rose-50 hover:scale-105 transition-all duration-300 shadow-xl"
-             >
-               Join the Partnership Circle
-             </Button>
+             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+               <Button 
+                 onClick={() => {
+                   const element = document.getElementById('resource-library');
+                   element?.scrollIntoView({ behavior: 'smooth' });
+                 }}
+                 variant="outline"
+                 className="rounded-full h-12 px-8 border-stone-300 hover:bg-white hover:text-stone-900"
+               >
+                 Explore Resources
+               </Button>
+               <Button 
+                 onClick={handleOpenCommunity}
+                 className="rounded-full h-12 px-8 bg-stone-900 hover:bg-stone-800 text-white shadow-lg"
+               >
+                 Join Community Discussions
+               </Button>
+             </div>
            </div>
         </motion.section>
 
