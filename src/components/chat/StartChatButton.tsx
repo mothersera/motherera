@@ -51,14 +51,15 @@ export function StartChatButton({ targetUserId, targetUserName, targetUserAvatar
 
   return (
     <Button 
-      variant="ghost" 
-      size="icon" 
+      variant={className?.includes("bg-rose-600") ? "default" : "ghost"}
+      size={className?.includes("h-10") ? "default" : "icon"} 
       className={className || "h-8 w-8 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-full"}
       onClick={handleStartChat}
       disabled={loading}
-      title="Message User"
+      title={targetUserName ? `Message ${targetUserName}` : "Message User"}
     >
       <MessageCircle className="w-4 h-4" />
+      {className?.includes("h-10") && <span className="ml-2">Message</span>}
     </Button>
   );
 }

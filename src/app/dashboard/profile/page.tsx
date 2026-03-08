@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, User, Mail, Baby, Utensils, Camera, ArrowLeft, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { StartChatButton } from "@/components/chat/StartChatButton";
 
 export default function ProfilePage() {
   const { data: session, update, status } = useSession();
@@ -16,6 +17,11 @@ export default function ProfilePage() {
   const [isFetching, setIsFetching] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   
+  // Get profile ID from URL query param if viewing another user
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const viewUserId = searchParams?.get('id');
+  const isViewingOther = !!viewUserId && viewUserId !== session?.user?.id;
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -29,33 +35,38 @@ export default function ProfilePage() {
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const res = await fetch('/api/user/profile');
+        const url = isViewingOther ? `/api/user/profile?id=${viewUserId}` : '/api/user/profile';
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setFormData({
-            name: data.name || session?.user?.name || '',
-            email: data.email || session?.user?.email || '',
+            name: data.name || '',
+            email: data.email || '',
             motherhoodStage: data.motherhoodStage || 'pregnancy',
             dietaryPreference: data.dietaryPreference || 'veg',
-            image: data.image || session?.user?.image || ''
+            image: data.image || ''
           });
         } else {
-          // Fallback to session data
-          setFormData(prev => ({
+          // If viewing self and fetch fails, fallback to session data
+          if (!isViewingOther) {
+            setFormData(prev => ({
+              ...prev,
+              name: session?.user?.name || '',
+              email: session?.user?.email || '',
+              image: session?.user?.image || ''
+            }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+        if (!isViewingOther) {
+            setFormData(prev => ({
             ...prev,
             name: session?.user?.name || '',
             email: session?.user?.email || '',
             image: session?.user?.image || ''
-          }));
+            }));
         }
-      } catch (err) {
-        console.error("Failed to fetch profile", err);
-        setFormData(prev => ({
-          ...prev,
-          name: session?.user?.name || '',
-          email: session?.user?.email || '',
-          image: session?.user?.image || ''
-        }));
       } finally {
         setIsFetching(false);
       }
@@ -66,7 +77,7 @@ export default function ProfilePage() {
     } else if (status !== 'loading') {
        setIsFetching(false);
     }
-  }, [session, status]);
+  }, [session, status, isViewingOther, viewUserId]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -196,7 +207,15 @@ export default function ProfilePage() {
                 </div>
                 <div className="text-center md:text-left">
                   <h1 className="text-2xl font-bold text-stone-900">{formData.name || 'Your Profile'}</h1>
-                  <p className="text-stone-500">{formData.email}</p>
+                  <p className="text-stone-500 mb-2">{formData.email}</p>
+                  {isViewingOther && viewUserId && (
+                    <StartChatButton 
+                        targetUserId={viewUserId} 
+                        targetUserName={formData.name} 
+                        targetUserAvatar={formData.image}
+                        className="h-10 px-4 flex items-center gap-2 text-white bg-rose-600 hover:bg-rose-700 rounded-full shadow-md"
+                    />
+                  )}
                 </div>
               </div>
             </CardContent>
