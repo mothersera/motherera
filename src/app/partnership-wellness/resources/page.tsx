@@ -309,9 +309,11 @@ export default function RelationshipResourcesPage() {
                    >
                      Retake Check-In
                    </Button>
-                   <Button className="rounded-full h-12 px-8 bg-stone-900 hover:bg-stone-800 text-white shadow-lg hover:shadow-xl transition-all">
-                     Join a Partnership Circle
-                   </Button>
+                   <Link href="/community/partnership-circle">
+                     <Button className="rounded-full h-12 px-8 bg-stone-900 hover:bg-stone-800 text-white shadow-lg hover:shadow-xl transition-all">
+                       Join a Partnership Circle
+                     </Button>
+                   </Link>
                  </div>
                  <div className="mt-4">
                     <Link href="/partnership-wellness/resources">
@@ -662,9 +664,11 @@ export default function RelationshipResourcesPage() {
            <p className="text-lg text-stone-600 mb-12 max-w-2xl mx-auto">
              Your relationship is the soil in which your family grows. Keep it healthy.
            </p>
-           <Button size="lg" className="rounded-full h-16 px-12 text-xl bg-stone-900 hover:bg-stone-800 text-white shadow-2xl hover:-translate-y-1 transition-all duration-300">
-             Join a Partnership Circle
-           </Button>
+           <Link href="/community/partnership-circle">
+             <Button size="lg" className="rounded-full h-16 px-12 text-xl bg-stone-900 hover:bg-stone-800 text-white shadow-2xl hover:-translate-y-1 transition-all duration-300">
+               Join a Partnership Circle
+             </Button>
+           </Link>
         </motion.section>
 
       </div>
