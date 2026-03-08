@@ -254,8 +254,8 @@ function CommunityContent() {
                       <Card className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-white rounded-2xl overflow-hidden group relative ring-1 ring-stone-100">
                         <CardHeader className="pb-4 pt-6 px-6 md:px-8">
                           <div className="flex justify-between items-start mb-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-purple-100 flex items-center justify-center text-rose-600 font-bold text-sm overflow-hidden border border-rose-100">
+                            <Link href={`/dashboard/profile?id=${post.authorId}`} className="flex items-center gap-3 group/author">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-purple-100 flex items-center justify-center text-rose-600 font-bold text-sm overflow-hidden border border-rose-100 group-hover/author:border-rose-300 transition-colors">
                                 {post.authorImage ? (
                                   <img src={post.authorImage} alt={post.authorName} className="w-full h-full object-cover" />
                                 ) : (
@@ -263,10 +263,10 @@ function CommunityContent() {
                                 )}
                               </div>
                               <div>
-                                <div className="text-sm font-bold text-stone-900">{post.authorName || 'Anonymous Mom'}</div>
+                                <div className="text-sm font-bold text-stone-900 group-hover/author:text-rose-600 transition-colors">{post.authorName || 'Anonymous Mom'}</div>
                                 <div className="text-xs text-stone-400">{new Date(post.createdAt).toLocaleDateString()}</div>
                               </div>
-                            </div>
+                            </Link>
                             <div className="flex items-center gap-2">
                               <StartChatButton targetUserId={post.authorId} targetUserName={post.authorName} targetUserAvatar={post.authorImage} />
                               <span className="inline-flex px-3 py-1 bg-stone-50 text-stone-600 text-xs font-medium rounded-full border border-stone-100">

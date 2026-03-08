@@ -47,7 +47,14 @@ export function StartChatButton({ targetUserId, targetUserName, targetUserAvatar
   };
 
   // Don't render if it's the current user
-  if (session?.user?.id === targetUserId) return null;
+  if (session?.user?.id === targetUserId) {
+      console.log("StartChatButton: Hiding button because target is self", targetUserId);
+      return (
+        <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-full opacity-20" title="You cannot message yourself">
+            <MessageCircle className="w-4 h-4 text-stone-400" />
+        </Button>
+      );
+  }
 
   return (
     <Button 
