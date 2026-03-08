@@ -268,9 +268,14 @@ function CommunityContent() {
                               </div>
                             </Link>
                             <div className="flex items-center gap-2">
-                              {/* Only show StartChatButton if it's NOT the current user's post */}
+                              {/* Message Button - Only show if not self-post */}
                               {session?.user?.id !== post.authorId && (
-                                <StartChatButton targetUserId={post.authorId} targetUserName={post.authorName} targetUserAvatar={post.authorImage} />
+                                <StartChatButton 
+                                  targetUserId={post.authorId} 
+                                  targetUserName={post.authorName} 
+                                  targetUserAvatar={post.authorImage}
+                                  className="h-8 w-8 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors" 
+                                />
                               )}
                               <span className="inline-flex px-3 py-1 bg-stone-50 text-stone-600 text-xs font-medium rounded-full border border-stone-100">
                                 {post.category}
