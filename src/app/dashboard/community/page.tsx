@@ -268,7 +268,10 @@ function CommunityContent() {
                               </div>
                             </Link>
                             <div className="flex items-center gap-2">
-                              <StartChatButton targetUserId={post.authorId} targetUserName={post.authorName} targetUserAvatar={post.authorImage} />
+                              {/* Only show StartChatButton if it's NOT the current user's post */}
+                              {session?.user?.id !== post.authorId && (
+                                <StartChatButton targetUserId={post.authorId} targetUserName={post.authorName} targetUserAvatar={post.authorImage} />
+                              )}
                               <span className="inline-flex px-3 py-1 bg-stone-50 text-stone-600 text-xs font-medium rounded-full border border-stone-100">
                                 {post.category}
                               </span>
