@@ -4,10 +4,11 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Plus, MessageSquare, Heart, Loader2, Trash2, Search, TrendingUp, ShieldCheck, Sparkles } from "lucide-react";
+import { Plus, MessageSquare, Heart, Loader2, Trash2, Search, TrendingUp, ShieldCheck, Sparkles, MessageCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import { StartChatButton } from "@/components/chat/StartChatButton";
 
 interface Post {
   _id: string;
@@ -267,6 +268,7 @@ function CommunityContent() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
+                              <StartChatButton targetUserId={post.authorId} targetUserName={post.authorName} targetUserAvatar={post.authorImage} />
                               <span className="inline-flex px-3 py-1 bg-stone-50 text-stone-600 text-xs font-medium rounded-full border border-stone-100">
                                 {post.category}
                               </span>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User as UserIcon } from "lucide-react";
+import { Menu, X, User as UserIcon, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { CartIcon } from "@/components/cart/CartIcon";
 
@@ -38,6 +38,10 @@ export default function Navbar() {
           </Link>
           {session ? (
             <>
+              <Link href="/dashboard/messages" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <MessageCircle className="w-4 h-4" />
+                Messages
+              </Link>
               <Link href="/broadcast" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Broadcast
               </Link>
@@ -110,6 +114,10 @@ export default function Navbar() {
             </Link>
             {session ? (
               <>
+                <Link href="/dashboard/messages" className="text-base font-medium text-muted-foreground hover:text-foreground flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
+                  <MessageCircle className="w-5 h-5" />
+                  Messages
+                </Link>
                 <Link href="/broadcast" className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
                   Broadcast
                 </Link>
