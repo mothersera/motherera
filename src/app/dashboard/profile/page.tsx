@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,16 +10,16 @@ import { Loader2, User, Mail, Baby, Utensils, Camera, ArrowLeft, ShoppingBag } f
 import Link from "next/link";
 import { StartChatButton } from "@/components/chat/StartChatButton";
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { data: session, update, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   
   // Get profile ID from URL query param if viewing another user
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const viewUserId = searchParams?.get('id');
+  const viewUserId = searchParams.get('id');
   const isViewingOther = !!viewUserId && viewUserId !== session?.user?.id;
 
   const [formData, setFormData] = useState({
@@ -78,6 +78,13 @@ export default function ProfilePage() {
        setIsFetching(false);
     }
   }, [session, status, isViewingOther, viewUserId]);
+
+  // Handle re-fetching when URL changes
+  useEffect(() => {
+    // This effect ensures we refetch if the ID in the URL changes
+    // The main fetch logic is in the other useEffect, but adding searchParams as a dep there is tricky
+    // because it's an object. Relying on viewUserId (string) is better.
+  }, [viewUserId]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,20 +197,24 @@ export default function ProfilePage() {
                       formData.name ? formData.name.charAt(0).toUpperCase() : <User className="w-10 h-10" />
                     )}
                   </div>
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-stone-100 hover:bg-stone-50 transition-colors"
-                  >
-                    <Camera className="w-4 h-4 text-stone-600" />
-                  </button>
+                  {!isViewingOther && (
+                    <>
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-md border border-stone-100 hover:bg-stone-50 transition-colors"
+                      >
+                        <Camera className="w-4 h-4 text-stone-600" />
+                      </button>
+                    </>
+                  )}
                 </div>
                 <div className="text-center md:text-left">
                   <h1 className="text-2xl font-bold text-stone-900">{formData.name || 'Your Profile'}</h1>
@@ -221,117 +232,137 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          <form onSubmit={onSubmit}>
-            <Card className="border-none shadow-md">
-              <CardHeader className="border-b border-stone-100 bg-white/50">
-                <CardTitle className="text-xl font-bold text-stone-800">Edit Profile</CardTitle>
-                <CardDescription>Update your personal details and preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8 space-y-8">
-                {message && (
-                  <div className={`p-4 rounded-xl flex items-center gap-3 text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-                    {message.type === 'success' ? '✨' : '⚠️'} {message.text}
-                  </div>
-                )}
-
-                {/* Account Info Section */}
-                <div className="space-y-6">
-                  <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
-                    <User className="w-4 h-4 text-rose-500" /> Account Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-stone-700">Full Name</label>
-                      <Input 
-                        value={formData.name} 
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        required
-                        className="bg-stone-50 border-stone-200 focus:border-rose-500 focus:ring-rose-500"
-                        placeholder="Enter your name"
-                      />
+          {/* Only show edit form if viewing own profile */}
+          {!isViewingOther && (
+            <form onSubmit={onSubmit}>
+              <Card className="border-none shadow-md">
+                <CardHeader className="border-b border-stone-100 bg-white/50">
+                  <CardTitle className="text-xl font-bold text-stone-800">Edit Profile</CardTitle>
+                  <CardDescription>Update your personal details and preferences</CardDescription>
+                </CardHeader>
+                <CardContent className="p-8 space-y-8">
+                  {message && (
+                    <div className={`p-4 rounded-xl flex items-center gap-3 text-sm font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                      {message.type === 'success' ? '✨' : '⚠️'} {message.text}
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-stone-700">Email Address</label>
-                      <div className="relative">
+                  )}
+
+                  {/* Account Info Section */}
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
+                      <User className="w-4 h-4 text-rose-500" /> Account Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-stone-700">Full Name</label>
                         <Input 
-                          value={formData.email} 
-                          disabled 
-                          className="bg-stone-100 border-stone-200 pl-10 text-stone-500" 
+                          value={formData.name} 
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          required
+                          className="bg-stone-50 border-stone-200 focus:border-rose-500 focus:ring-rose-500"
+                          placeholder="Enter your name"
                         />
-                        <Mail className="absolute left-3 top-2.5 w-4 h-4 text-stone-400" />
                       </div>
-                      <p className="text-xs text-stone-400">Email cannot be changed</p>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-stone-700">Email Address</label>
+                        <div className="relative">
+                          <Input 
+                            value={formData.email} 
+                            disabled 
+                            className="bg-stone-100 border-stone-200 pl-10 text-stone-500" 
+                          />
+                          <Mail className="absolute left-3 top-2.5 w-4 h-4 text-stone-400" />
+                        </div>
+                        <p className="text-xs text-stone-400">Email cannot be changed</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="h-px bg-stone-100" />
+                  <div className="h-px bg-stone-100" />
 
-                {/* Preferences Section */}
-                <div className="space-y-6">
-                  <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
-                    <Baby className="w-4 h-4 text-rose-500" /> Your Journey
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-stone-700">Current Stage</label>
-                      <div className="relative">
-                        <select 
-                          className="flex h-10 w-full rounded-md border border-stone-200 bg-stone-50 px-3 py-2 pl-10 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
-                          value={formData.motherhoodStage}
-                          onChange={(e) => setFormData({...formData, motherhoodStage: e.target.value})}
-                        >
-                          <option value="pregnancy">Pregnancy</option>
-                          <option value="postpartum">Postpartum</option>
-                          <option value="child_0_5">Child (0-5 Years)</option>
-                          <option value="toddler">Toddler Care</option>
-                        </select>
-                        <Baby className="absolute left-3 top-2.5 w-4 h-4 text-stone-500 pointer-events-none" />
+                  {/* Preferences Section */}
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wider flex items-center gap-2">
+                      <Baby className="w-4 h-4 text-rose-500" /> Your Journey
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-stone-700">Current Stage</label>
+                        <div className="relative">
+                          <select 
+                            className="flex h-10 w-full rounded-md border border-stone-200 bg-stone-50 px-3 py-2 pl-10 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                            value={formData.motherhoodStage}
+                            onChange={(e) => setFormData({...formData, motherhoodStage: e.target.value})}
+                          >
+                            <option value="pregnancy">Pregnancy</option>
+                            <option value="postpartum">Postpartum</option>
+                            <option value="child_0_5">Child (0-5 Years)</option>
+                            <option value="toddler">Toddler Care</option>
+                          </select>
+                          <Baby className="absolute left-3 top-2.5 w-4 h-4 text-stone-500 pointer-events-none" />
+                        </div>
+                        <p className="text-xs text-stone-500">We'll customize your dashboard based on this.</p>
                       </div>
-                      <p className="text-xs text-stone-500">We'll customize your dashboard based on this.</p>
-                    </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-stone-700">Dietary Preference</label>
-                      <div className="relative">
-                        <select 
-                          className="flex h-10 w-full rounded-md border border-stone-200 bg-stone-50 px-3 py-2 pl-10 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
-                          value={formData.dietaryPreference}
-                          onChange={(e) => setFormData({...formData, dietaryPreference: e.target.value})}
-                        >
-                          <option value="veg">Vegetarian</option>
-                          <option value="non-veg">Non-Vegetarian</option>
-                          <option value="vegan">Vegan</option>
-                          <option value="egg">Eggetarian</option>
-                          <option value="keto">Keto</option>
-                        </select>
-                        <Utensils className="absolute left-3 top-2.5 w-4 h-4 text-stone-500 pointer-events-none" />
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-stone-700">Dietary Preference</label>
+                        <div className="relative">
+                          <select 
+                            className="flex h-10 w-full rounded-md border border-stone-200 bg-stone-50 px-3 py-2 pl-10 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                            value={formData.dietaryPreference}
+                            onChange={(e) => setFormData({...formData, dietaryPreference: e.target.value})}
+                          >
+                            <option value="veg">Vegetarian</option>
+                            <option value="non-veg">Non-Vegetarian</option>
+                            <option value="vegan">Vegan</option>
+                            <option value="egg">Eggetarian</option>
+                            <option value="keto">Keto</option>
+                          </select>
+                          <Utensils className="absolute left-3 top-2.5 w-4 h-4 text-stone-500 pointer-events-none" />
+                        </div>
+                        <p className="text-xs text-stone-500">For personalized nutrition plans.</p>
                       </div>
-                      <p className="text-xs text-stone-500">For personalized nutrition plans.</p>
                     </div>
                   </div>
-                </div>
 
-                <div className="pt-4 flex items-center justify-end gap-4">
-                  <Link href="/dashboard">
-                    <Button type="button" variant="outline" className="border-stone-200 hover:bg-stone-50">
-                      Cancel
+                  <div className="pt-4 flex items-center justify-end gap-4">
+                    <Link href="/dashboard">
+                      <Button type="button" variant="outline" className="border-stone-200 hover:bg-stone-50">
+                        Cancel
+                      </Button>
+                    </Link>
+                    <Button 
+                      type="submit" 
+                      disabled={isLoading}
+                      className="bg-rose-600 hover:bg-rose-700 text-white min-w-[140px]"
+                    >
+                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {isLoading ? 'Saving...' : 'Save Changes'}
                     </Button>
-                  </Link>
-                  <Button 
-                    type="submit" 
-                    disabled={isLoading}
-                    className="bg-rose-600 hover:bg-rose-700 text-white min-w-[140px]"
-                  >
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {isLoading ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                </div>
-              </CardContent>
+                  </div>
+                </CardContent>
+              </Card>
+            </form>
+          )}
+          
+          {/* If viewing other, maybe show something else or just the header */}
+          {isViewingOther && (
+            <Card className="border-none shadow-md">
+                <CardContent className="p-8 text-center text-stone-500">
+                    <p>You are viewing {formData.name}'s profile.</p>
+                </CardContent>
             </Card>
-          </form>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-rose-500" /></div>}>
+      <ProfileContent />
+    </Suspense>
   );
 }
