@@ -138,12 +138,12 @@ export const sendMessage = async (chatId: string, senderId: string, text: string
 export const subscribeToUserChats = (userId: string, callback: (chats: Chat[]) => void) => {
   const q = query(
     collection(db, "chats"),
-    where("participants", "array-contains", userId),
-    orderBy("lastMessageTime", "desc")
+    where("participants", "array-contains", userId)
+    // Removed orderBy to avoid missing index issues. We sort in JS.
   );
 
   return onSnapshot(q, async (snapshot) => {
-    const chats = await Promise.all(snapshot.docs.map(async (docSnapshot) => {
+    const chatsPromises = snapshot.docs.map(async (docSnapshot) => {
       const data = docSnapshot.data();
       const otherUserId = data.participants.find((id: string) => id !== userId);
       
@@ -151,13 +151,31 @@ export const subscribeToUserChats = (userId: string, callback: (chats: Chat[]) =
       let otherUserData = null;
       if (otherUserId) {
         try {
-          const userDoc = await getDoc(doc(db, "users", otherUserId));
-          if (userDoc.exists()) {
-            otherUserData = { id: userDoc.id, ...userDoc.data() };
+          // 1. Try fetching from our MongoDB API first (since that's where users are)
+          const res = await fetch(`/api/users/${otherUserId}`);
+          if (res.ok) {
+            const userData = await res.json();
+            otherUserData = { 
+                id: otherUserId, 
+                name: userData.name, 
+                avatar: userData.image, 
+                email: userData.email 
+            };
+          } else {
+            // 2. Fallback to Firestore users collection if API fails (legacy/backup)
+            const userDoc = await getDoc(doc(db, "users", otherUserId));
+            if (userDoc.exists()) {
+              otherUserData = { id: userDoc.id, ...userDoc.data() };
+            }
           }
         } catch (e) {
           console.error("Error fetching user data", e);
         }
+      }
+
+      // If still no user data, provide a fallback
+      if (!otherUserData) {
+          otherUserData = { id: otherUserId, name: "User", avatar: null };
       }
 
       return {
@@ -165,8 +183,17 @@ export const subscribeToUserChats = (userId: string, callback: (chats: Chat[]) =
         ...data,
         otherUser: otherUserData
       } as Chat;
-    }));
+    });
     
+    const chats = await Promise.all(chatsPromises);
+    
+    // Sort by lastMessageTime descending (client-side sort)
+    chats.sort((a, b) => {
+        const timeA = a.lastMessageTime?.seconds || 0;
+        const timeB = b.lastMessageTime?.seconds || 0;
+        return timeB - timeA;
+    });
+
     callback(chats);
   });
 };
