@@ -32,30 +32,39 @@ function MessagesContent() {
 
   // Handle direct message link from profile
   useEffect(() => {
-    if (!firebaseUser || !targetUserId || loading) return;
+    // Wait for auth to be ready
+    if (loading || !firebaseUser || !targetUserId) return;
 
-    const initChat = async () => {
-        try {
-            // Check if we already have this chat in our list
-            const existingChat = chats.find(c => 
-                c.participants.includes(targetUserId) && c.participants.includes(firebaseUser.uid)
-            );
+    const initializeChat = async () => {
+      try {
+        console.log("Initializing chat with target:", targetUserId);
+        
+        // 1. Check if we already have the chat loaded in 'chats'
+        const existingChat = chats.find(c => 
+            c.participants.includes(targetUserId) && 
+            c.participants.includes(firebaseUser.uid)
+        );
 
-            if (existingChat) {
-                setSelectedChat(existingChat);
-            } else {
-                // Create new chat
-                const newChat = await getOrCreateChat(firebaseUser.uid, targetUserId);
-                // We need to fetch the other user details to display correctly
-                // For now, we'll let the subscription update handle the full chat object
-                // But we can set a temporary selected chat if needed, or wait for chats update
-            }
-        } catch (error) {
-            console.error("Error initializing chat:", error);
+        if (existingChat) {
+            console.log("Found existing chat in state, selecting:", existingChat.id);
+            setSelectedChat(existingChat);
+            return;
         }
+
+        // 2. If not found in state, try to fetch/create it from backend
+        // Only do this if we haven't already selected a chat (prevent loops)
+        if (!selectedChat) {
+            console.log("Chat not in state, creating/fetching from backend...");
+            await getOrCreateChat(firebaseUser.uid, targetUserId);
+            // We rely on the subscription to update 'chats' and trigger this effect again to select it
+        }
+
+      } catch (error) {
+        console.error("Error in chat initialization:", error);
+      }
     };
 
-    initChat();
+    initializeChat();
   }, [firebaseUser, targetUserId, loading, chats]); 
   // Added chats to dependency to select it once it appears in the list
 
