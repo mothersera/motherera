@@ -55,8 +55,53 @@ function MessagesContent() {
         // Only do this if we haven't already selected a chat (prevent loops)
         if (!selectedChat) {
             console.log("Chat not in state, creating/fetching from backend...");
-            await getOrCreateChat(firebaseUser.uid, targetUserId);
-            // We rely on the subscription to update 'chats' and trigger this effect again to select it
+            const newChat = await getOrCreateChat(firebaseUser.uid, targetUserId);
+            
+            // If getOrCreateChat returns a chat, select it immediately
+            // We might need to fetch user details if they are missing
+            if (newChat) {
+                console.log("Chat created/fetched, selecting immediately:", newChat);
+                
+                // If we don't have otherUser, we should try to fetch it or create a placeholder
+                if (!newChat.otherUser) {
+                    try {
+                        // Fetch user details from our API
+                        const res = await fetch(`/api/users/${targetUserId}`);
+                        if (res.ok) {
+                            const userData = await res.json();
+                            newChat.otherUser = {
+                                id: targetUserId,
+                                name: userData.name,
+                                avatar: userData.image,
+                                email: userData.email
+                            };
+                        } else {
+                            // Fallback if API fails
+                            newChat.otherUser = {
+                                id: targetUserId,
+                                name: "User",
+                                email: ""
+                            };
+                        }
+                    } catch (err) {
+                        console.error("Failed to fetch target user details:", err);
+                        // Fallback
+                        newChat.otherUser = {
+                            id: targetUserId,
+                            name: "User",
+                            email: ""
+                        };
+                    }
+                }
+                
+                setSelectedChat(newChat);
+                
+                // Add to chats list if not present (optimistic update)
+                setChats(prev => {
+                    if (prev.find(c => c.id === newChat.id)) return prev;
+                    return [newChat, ...prev];
+                });
+            }
         }
 
       } catch (error) {

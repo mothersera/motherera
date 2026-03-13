@@ -31,35 +31,37 @@ export interface Message {
 }
 
 // Create or get existing chat
-export const getOrCreateChat = async (currentUserId: string, otherUserId: string) => {
-  // Check if chat exists
+export async function getOrCreateChat(currentUserId: string, otherUserId: string): Promise<Chat> {
+  const chatsRef = collection(db, "chats");
+
+  // Query for existing chat
   const q = query(
-    collection(db, "chats"), 
+    chatsRef,
     where("participants", "array-contains", currentUserId)
   );
-  
-  const snapshot = await getDocs(q);
-  let existingChat = null;
 
-  snapshot.docs.forEach(doc => {
+  const querySnapshot = await getDocs(q);
+  const existingChat = querySnapshot.docs.find(doc => {
     const data = doc.data();
-    if (data.participants.includes(otherUserId)) {
-      existingChat = { id: doc.id, ...data };
-    }
+    return data.participants.includes(otherUserId);
   });
 
-  if (existingChat) return existingChat;
+  if (existingChat) {
+    return { id: existingChat.id, ...existingChat.data() } as Chat;
+  }
 
   // Create new chat
-  const chatRef = await addDoc(collection(db, "chats"), {
+  const newChatData = {
     participants: [currentUserId, otherUserId],
     createdAt: serverTimestamp(),
     lastMessage: "",
-    lastMessageTime: serverTimestamp()
-  });
+    lastMessageTime: serverTimestamp(),
+    unreadCount: { [currentUserId]: 0, [otherUserId]: 0 }
+  };
 
-  return { id: chatRef.id, participants: [currentUserId, otherUserId] };
-};
+  const docRef = await addDoc(chatsRef, newChatData);
+  return { id: docRef.id, ...newChatData, createdAt: { seconds: Date.now() / 1000 } } as unknown as Chat;
+}
 
 export const blockUser = async (currentUserId: string, blockedUserId: string) => {
   await addDoc(collection(db, "blocked"), {
