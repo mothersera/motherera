@@ -35,6 +35,9 @@ function MessagesContent() {
     // Wait for auth to be ready
     if (loading || !firebaseUser || !targetUserId) return;
 
+    // Avoid infinite re-selection if we already have the correct chat selected
+    if (selectedChat?.otherUser?.id === targetUserId) return;
+
     const initializeChat = async () => {
       try {
         console.log("Initializing chat with target:", targetUserId);
@@ -52,9 +55,9 @@ function MessagesContent() {
         }
 
         // 2. If not found in state, try to fetch/create it from backend
-        // Only do this if we haven't already selected a chat (prevent loops)
-        if (!selectedChat) {
-            console.log("Chat not in state, creating/fetching from backend...");
+        console.log("Chat not in state, creating/fetching from backend...");
+        
+        try {
             const newChat = await getOrCreateChat(firebaseUser.uid, targetUserId);
             
             // If getOrCreateChat returns a chat, select it immediately
@@ -102,6 +105,11 @@ function MessagesContent() {
                     return [newChat, ...prev];
                 });
             }
+        } catch (error: any) {
+            console.error("Error creating chat in Firebase:", error);
+            if (error.code === 'permission-denied') {
+                alert("You do not have permission to start this chat. Please contact support.");
+            }
         }
 
       } catch (error) {
@@ -110,7 +118,7 @@ function MessagesContent() {
     };
 
     initializeChat();
-  }, [firebaseUser, targetUserId, loading, chats]); 
+  }, [firebaseUser, targetUserId, loading, chats, selectedChat]); // Added selectedChat to deps to prevent re-running if already selected 
   // Added chats to dependency to select it once it appears in the list
 
   // Subscribe to chats
