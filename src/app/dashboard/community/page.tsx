@@ -249,12 +249,24 @@ function CommunityContent() {
                 className="space-y-6"
               >
                 {posts.map((post) => (
-                  <Link key={post._id} href={`/dashboard/community/${post._id}`}>
-                    <motion.div variants={item}>
-                      <Card className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-white rounded-2xl overflow-hidden group relative ring-1 ring-stone-100">
+                  <motion.div key={post._id} variants={item}>
+                      <Card 
+                        className="border-none shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-white rounded-2xl overflow-hidden group relative ring-1 ring-stone-100"
+                        onClick={(e) => {
+                          // Prevent navigation if clicking on interactive elements
+                          if ((e.target as HTMLElement).closest('a') || (e.target as HTMLElement).closest('button')) {
+                            return;
+                          }
+                          router.push(`/dashboard/community/${post._id}`);
+                        }}
+                      >
                         <CardHeader className="pb-4 pt-6 px-6 md:px-8">
                           <div className="flex justify-between items-start mb-4">
-                            <Link href={`/dashboard/profile?id=${post.authorId}`} className="flex items-center gap-3 group/author">
+                            <Link 
+                              href={`/dashboard/profile/${post.authorId}`} 
+                              className="flex items-center gap-3 group/author z-10 relative"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-100 to-purple-100 flex items-center justify-center text-rose-600 font-bold text-sm overflow-hidden border border-rose-100 group-hover/author:border-rose-300 transition-colors">
                                 {post.authorImage ? (
                                   <img src={post.authorImage} alt={post.authorName} className="w-full h-full object-cover" />
@@ -267,15 +279,17 @@ function CommunityContent() {
                                 <div className="text-xs text-stone-400">{new Date(post.createdAt).toLocaleDateString()}</div>
                               </div>
                             </Link>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 z-10 relative">
                               {/* Message Button - Only show if not self-post */}
                               {session?.user?.id !== post.authorId && (
-                                <StartChatButton 
-                                  targetUserId={post.authorId} 
-                                  targetUserName={post.authorName} 
-                                  targetUserAvatar={post.authorImage}
-                                  className="h-8 w-8 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors" 
-                                />
+                                <div onClick={(e) => e.stopPropagation()}>
+                                  <StartChatButton 
+                                    targetUserId={post.authorId} 
+                                    targetUserName={post.authorName} 
+                                    targetUserAvatar={post.authorImage}
+                                    className="h-8 w-8 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors" 
+                                  />
+                                </div>
                               )}
                               <span className="inline-flex px-3 py-1 bg-stone-50 text-stone-600 text-xs font-medium rounded-full border border-stone-100">
                                 {post.category}
@@ -316,8 +330,7 @@ function CommunityContent() {
                           </div>
                         </CardFooter>
                       </Card>
-                    </motion.div>
-                  </Link>
+                  </motion.div>
                 ))}
               </motion.div>
             )}
