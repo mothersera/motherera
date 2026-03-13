@@ -25,27 +25,37 @@ export function StartChatButton({ targetUserId, targetUserName, targetUserAvatar
     e.preventDefault();
     e.stopPropagation();
 
+    console.log("StartChatButton clicked:", { targetUserId, firebaseUser: firebaseUser?.uid, sessionUser: session?.user?.id });
+
     if (!session || session.user.subscriptionPlan === 'basic') {
+      console.log("Redirecting to pricing: Plan is basic or no session");
       router.push('/pricing?reason=messaging');
       return;
     }
 
-    if (!firebaseUser) return;
+    // We don't necessarily need firebaseUser loaded to redirect, 
+    // the messages page handles waiting for auth.
+    // But we do need to know we aren't messaging ourselves.
+    if (session.user.id === targetUserId) {
+        console.log("Cannot message self");
+        return; 
+    }
     
-    // Check if target is same as current user
-    if (firebaseUser.uid === targetUserId || session.user.id === targetUserId) return; 
+    // Check firebaseUser if available, but don't block just for redirect if session is ok
+    if (firebaseUser && firebaseUser.uid === targetUserId) {
+         console.log("Cannot message self (firebase check)");
+         return;
+    }
 
     setLoading(true);
     try {
-      // Instead of creating chat here, redirect to messages page with userId
-      // This allows the messages page to handle the chat creation/selection logic
-      // and ensures the UI updates correctly
+      console.log(`Redirecting to: /dashboard/messages?userId=${targetUserId}`);
       router.push(`/dashboard/messages?userId=${targetUserId}`);
     } catch (error) {
-      console.error("Error starting chat:", error);
-    } finally {
+      console.error("Error redirecting to chat:", error);
       setLoading(false);
-    }
+    } 
+    // Note: We don't set loading false immediately if successful because the page is navigating away
   };
 
   // Don't render if it's the current user
