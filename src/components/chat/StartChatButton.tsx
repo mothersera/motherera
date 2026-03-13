@@ -37,8 +37,10 @@ export function StartChatButton({ targetUserId, targetUserName, targetUserAvatar
 
     setLoading(true);
     try {
-      await getOrCreateChat(firebaseUser.uid, targetUserId);
-      router.push('/dashboard/messages');
+      // Instead of creating chat here, redirect to messages page with userId
+      // This allows the messages page to handle the chat creation/selection logic
+      // and ensures the UI updates correctly
+      router.push(`/dashboard/messages?userId=${targetUserId}`);
     } catch (error) {
       console.error("Error starting chat:", error);
     } finally {

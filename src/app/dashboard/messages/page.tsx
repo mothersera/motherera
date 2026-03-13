@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useFirebase } from "@/components/providers/FirebaseProvider";
-import { Chat, subscribeToUserChats, subscribeToChatMessages, sendMessage, Message, reportUser, blockUser } from "@/lib/chat";
+import { Chat, subscribeToUserChats, subscribeToChatMessages, sendMessage, Message, reportUser, blockUser, getOrCreateChat } from "@/lib/chat";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, MoreVertical, ShieldAlert, Ban, Info } from "lucide-react";
+import { Send, MoreVertical, ShieldAlert, Ban, Info, Loader2 } from "lucide-react";
 
-export default function MessagesPage() {
+function MessagesContent() {
   const { firebaseUser, loading } = useFirebase();
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetUserId = searchParams.get('userId');
+
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -26,6 +29,35 @@ export default function MessagesPage() {
       router.push('/pricing?reason=messaging');
     }
   }, [session, status, router]);
+
+  // Handle direct message link from profile
+  useEffect(() => {
+    if (!firebaseUser || !targetUserId || loading) return;
+
+    const initChat = async () => {
+        try {
+            // Check if we already have this chat in our list
+            const existingChat = chats.find(c => 
+                c.participants.includes(targetUserId) && c.participants.includes(firebaseUser.uid)
+            );
+
+            if (existingChat) {
+                setSelectedChat(existingChat);
+            } else {
+                // Create new chat
+                const newChat = await getOrCreateChat(firebaseUser.uid, targetUserId);
+                // We need to fetch the other user details to display correctly
+                // For now, we'll let the subscription update handle the full chat object
+                // But we can set a temporary selected chat if needed, or wait for chats update
+            }
+        } catch (error) {
+            console.error("Error initializing chat:", error);
+        }
+    };
+
+    initChat();
+  }, [firebaseUser, targetUserId, loading, chats]); 
+  // Added chats to dependency to select it once it appears in the list
 
   // Subscribe to chats
   useEffect(() => {
@@ -88,8 +120,8 @@ export default function MessagesPage() {
 
   if (loading || status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500" />
+      <div className="h-[calc(100vh-100px)] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
       </div>
     );
   }
@@ -233,5 +265,13 @@ export default function MessagesPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div className="h-[calc(100vh-100px)] flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-rose-500" /></div>}>
+      <MessagesContent />
+    </Suspense>
   );
 }
