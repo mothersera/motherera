@@ -42,10 +42,13 @@ function MessagesContent() {
       try {
         console.log("Initializing chat with target:", targetUserId);
         
-        // 1. Check if we already have the chat loaded in 'chats'
+        // 1. Calculate the participantKey for this pair
+        const participantKey = [firebaseUser.uid, targetUserId].sort().join("_");
+        
+        // 2. Check if we already have the chat loaded in 'chats' by key OR participants
         const existingChat = chats.find(c => 
-            c.participants.includes(targetUserId) && 
-            c.participants.includes(firebaseUser.uid)
+            (c.participantKey === participantKey) || 
+            (c.participants.includes(targetUserId) && c.participants.includes(firebaseUser.uid))
         );
 
         if (existingChat) {
@@ -54,7 +57,7 @@ function MessagesContent() {
             return;
         }
 
-        // 2. If not found in state, try to fetch/create it from backend
+        // 3. If not found in state, try to fetch/create it from backend
         console.log("Chat not in state, creating/fetching from backend...");
         
         try {

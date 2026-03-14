@@ -17,6 +17,7 @@ import { db } from "@/lib/firebase";
 export interface Chat {
   id: string;
   participants: string[];
+  participantKey?: string;
   lastMessage: string;
   lastMessageTime: any;
   createdAt: any;
@@ -33,26 +34,29 @@ export interface Message {
 // Create or get existing chat
 export async function getOrCreateChat(currentUserId: string, otherUserId: string): Promise<Chat> {
   const chatsRef = collection(db, "chats");
+  
+  // Deterministic key to prevent duplicates
+  // Sort IDs to ensure key is always "ID1_ID2" regardless of who initiates
+  const participantKey = [currentUserId, otherUserId].sort().join("_");
 
-  // Query for existing chat
+  // Query by the deterministic key
+  // This is much more efficient and reliable than array-contains
   const q = query(
     chatsRef,
-    where("participants", "array-contains", currentUserId)
+    where("participantKey", "==", participantKey)
   );
 
   const querySnapshot = await getDocs(q);
-  const existingChat = querySnapshot.docs.find(doc => {
-    const data = doc.data();
-    return data.participants.includes(otherUserId);
-  });
-
-  if (existingChat) {
+  
+  if (!querySnapshot.empty) {
+    const existingChat = querySnapshot.docs[0];
     return { id: existingChat.id, ...existingChat.data() } as Chat;
   }
 
   // Create new chat
   const newChatData = {
     participants: [currentUserId, otherUserId],
+    participantKey, // Store the key for future lookups
     createdAt: serverTimestamp(),
     lastMessage: "",
     lastMessageTime: serverTimestamp(),
