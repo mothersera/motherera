@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { 
-  signInWithCustomToken, 
+  signInAnonymously, 
   signOut, 
   User, 
   onAuthStateChanged 
@@ -52,44 +52,27 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // 3. If session exists, check if we are already signed in to Firebase with the correct user
-    // The uid from custom token should match session.user.id (or email if id is missing)
-    const sessionUid = session.user.id || session.user.email;
-    
-    if (auth.currentUser?.uid === sessionUid) {
+    // 3. If session exists, check if we are already signed in
+    if (auth.currentUser) {
       setFirebaseUser(auth.currentUser);
       setLoading(false);
       return;
     }
 
-    // 4. If not signed in or user mismatch, fetch custom token
-    const syncFirebase = async () => {
+    // 4. If not signed in, sign in anonymously
+    const signIn = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/auth/firebase-token", { 
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
-        
-        if (!res.ok) {
-          console.error("Failed to fetch Firebase token");
-          setLoading(false);
-          return;
-        }
-        
-        const data = await res.json();
-        if (data.token) {
-          const userCredential = await signInWithCustomToken(auth, data.token);
-          setFirebaseUser(userCredential.user);
-        }
+        const userCredential = await signInAnonymously(auth);
+        setFirebaseUser(userCredential.user);
       } catch (error) {
-        console.error("Firebase sync error:", error);
+        console.error("Firebase auth error:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    syncFirebase();
+    signIn();
   }, [session, status]);
 
   // Listen for auth state changes to keep state in sync

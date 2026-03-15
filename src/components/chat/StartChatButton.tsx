@@ -2,8 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
-import { useFirebase } from "@/components/providers/FirebaseProvider";
-import { getOrCreateChat } from "@/lib/chat";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -16,7 +14,6 @@ interface StartChatButtonProps {
 }
 
 export function StartChatButton({ targetUserId, targetUserName, targetUserAvatar, className }: StartChatButtonProps) {
-  const { firebaseUser } = useFirebase();
   const { data: session } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -25,7 +22,7 @@ export function StartChatButton({ targetUserId, targetUserName, targetUserAvatar
     e.preventDefault();
     e.stopPropagation();
 
-    console.log("StartChatButton clicked:", { targetUserId, firebaseUser: firebaseUser?.uid, sessionUser: session?.user?.id });
+    console.log("StartChatButton clicked:", { targetUserId, sessionUser: session?.user?.id });
 
     if (!session || session.user.subscriptionPlan === 'basic') {
       console.log("Redirecting to pricing: Plan is basic or no session");
@@ -41,12 +38,6 @@ export function StartChatButton({ targetUserId, targetUserName, targetUserAvatar
         return; 
     }
     
-    // Check firebaseUser if available, but don't block just for redirect if session is ok
-    if (firebaseUser && firebaseUser.uid === targetUserId) {
-         console.log("Cannot message self (firebase check)");
-         return;
-    }
-
     setLoading(true);
     try {
       console.log(`Redirecting to: /dashboard/messages?userId=${targetUserId}`);

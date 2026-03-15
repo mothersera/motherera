@@ -2,13 +2,21 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useFirebase } from "@/components/providers/FirebaseProvider";
-import { Chat, subscribeToUserChats, subscribeToChatMessages, sendMessage, Message, reportUser, blockUser, getOrCreateChat } from "@/lib/chat";
+import { 
+  Conversation, 
+  Message, 
+  getOrCreateConversation, 
+  subscribeToConversations, 
+  subscribeToMessages, 
+  sendMessage 
+} from "@/lib/chatService";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, MoreVertical, ShieldAlert, Ban, Info, Loader2 } from "lucide-react";
+import { Send, ShieldAlert, Ban, Info, Loader2 } from "lucide-react";
+import { reportUser, blockUser } from "@/lib/chat"; // Keep these utils if needed, or move to chatService
 
 function MessagesContent() {
   const { firebaseUser, loading } = useFirebase();
@@ -17,169 +25,134 @@ function MessagesContent() {
   const searchParams = useSearchParams();
   const targetUserId = searchParams.get('userId');
 
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Check plan
+  // 1. Check plan
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.subscriptionPlan === 'basic') {
       router.push('/pricing?reason=messaging');
     }
   }, [session, status, router]);
 
-  // Handle direct message link from profile
+  // 2. Subscribe to user's conversation list
   useEffect(() => {
-    // Wait for auth to be ready
-    if (loading || !firebaseUser || !targetUserId) return;
+    if (!session?.user?.id) return;
+    
+    // Subscribe using the new service
+    const unsubscribe = subscribeToConversations(session.user.id, (updatedConversations) => {
+      setConversations(updatedConversations);
+      
+      // If we have a selected conversation, keep it updated with the latest data (e.g. lastMessage)
+      if (selectedConversation) {
+        const updated = updatedConversations.find(c => c.id === selectedConversation.id);
+        if (updated) setSelectedConversation(updated);
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [session?.user?.id, selectedConversation?.id]);
 
-    // Avoid infinite re-selection if we already have the correct chat selected
-    if (selectedChat?.otherUser?.id === targetUserId) return;
+  // 3. Handle direct message link from profile (auto-create/select)
+  useEffect(() => {
+    const currentUserId = session?.user?.id;
+    if (loading || !currentUserId || !targetUserId) return;
 
-    const initializeChat = async () => {
+    // Prevent re-running if already selected
+    if (selectedConversation?.otherUser?.id === targetUserId) return;
+
+    const initChat = async () => {
       try {
-        console.log("Initializing chat with target:", targetUserId);
+        console.log("Initializing chat with:", targetUserId);
         
-        // 1. Calculate the participantKey for this pair
-        const participantKey = [firebaseUser.uid, targetUserId].sort().join("_");
-        
-        // 2. Check if we already have the chat loaded in 'chats' by key OR participants
-        const existingChat = chats.find(c => 
-            (c.participantKey === participantKey) || 
-            (c.participants.includes(targetUserId) && c.participants.includes(firebaseUser.uid))
+        // Optimistic check: is it already in our list?
+        const existing = conversations.find(c => 
+            c.participants.includes(targetUserId) && 
+            c.participants.includes(currentUserId)
         );
 
-        if (existingChat) {
-            console.log("Found existing chat in state, selecting:", existingChat.id);
-            setSelectedChat(existingChat);
+        if (existing) {
+            console.log("Found existing conversation, selecting:", existing.id);
+            setSelectedConversation(existing);
             return;
         }
 
-        // 3. If not found in state, try to fetch/create it from backend
-        console.log("Chat not in state, creating/fetching from backend...");
+        // If not in list, create/fetch from backend
+        console.log("Creating/Fetching conversation...");
+        const newConv = await getOrCreateConversation(currentUserId, targetUserId);
         
-        try {
-            const newChat = await getOrCreateChat(firebaseUser.uid, targetUserId);
-            
-            // If getOrCreateChat returns a chat, select it immediately
-            // We might need to fetch user details if they are missing
-            if (newChat) {
-                console.log("Chat created/fetched, selecting immediately:", newChat);
-                
-                // If we don't have otherUser, we should try to fetch it or create a placeholder
-                if (!newChat.otherUser) {
-                    try {
-                        // Fetch user details from our API
-                        const res = await fetch(`/api/users/${targetUserId}`);
-                        if (res.ok) {
-                            const userData = await res.json();
-                            newChat.otherUser = {
-                                id: targetUserId,
-                                name: userData.name,
-                                avatar: userData.image,
-                                email: userData.email
-                            };
-                        } else {
-                            // Fallback if API fails
-                            newChat.otherUser = {
-                                id: targetUserId,
-                                name: "User",
-                                email: ""
-                            };
-                        }
-                    } catch (err) {
-                        console.error("Failed to fetch target user details:", err);
-                        // Fallback
-                        newChat.otherUser = {
-                            id: targetUserId,
-                            name: "User",
-                            email: ""
-                        };
-                    }
-                }
-                
-                setSelectedChat(newChat);
-                
-                // Add to chats list if not present (optimistic update)
-                setChats(prev => {
-                    if (prev.find(c => c.id === newChat.id)) return prev;
-                    return [newChat, ...prev];
-                });
-            }
-        } catch (error: any) {
-            console.error("Error creating chat in Firebase:", error);
-            if (error.code === 'permission-denied') {
-                alert("You do not have permission to start this chat. Please contact support.");
-            }
+        // Fetch other user details if missing (for immediate UI display)
+        if (!newConv.otherUser) {
+           try {
+             const res = await fetch(`/api/users/${targetUserId}`);
+             if (res.ok) {
+                const userData = await res.json();
+                newConv.otherUser = {
+                    id: targetUserId,
+                    name: userData.name || "User",
+                    avatar: userData.image || ""
+                };
+             }
+           } catch(e) { console.error(e); }
         }
 
+        setSelectedConversation(newConv);
       } catch (error) {
-        console.error("Error in chat initialization:", error);
+        console.error("Error initializing chat:", error);
       }
     };
 
-    initializeChat();
-  }, [firebaseUser, targetUserId, loading, chats, selectedChat]); // Added selectedChat to deps to prevent re-running if already selected 
-  // Added chats to dependency to select it once it appears in the list
+    initChat();
+  }, [session?.user?.id, targetUserId, loading, conversations]);
 
-  // Subscribe to chats
+  // 4. Subscribe to messages for the selected conversation
   useEffect(() => {
-    if (!firebaseUser) return;
-    const unsubscribe = subscribeToUserChats(firebaseUser.uid, (updatedChats) => {
-      setChats(updatedChats);
-    });
-    return () => unsubscribe();
-  }, [firebaseUser]);
-
-  // Subscribe to messages when chat selected
-  useEffect(() => {
-    if (!selectedChat) return;
-    const unsubscribe = subscribeToChatMessages(selectedChat.id, (msgs) => {
+    if (!selectedConversation) return;
+    
+    const unsubscribe = subscribeToMessages(selectedConversation.id, (msgs) => {
       setMessages(msgs);
     });
+    
     return () => unsubscribe();
-  }, [selectedChat]);
+  }, [selectedConversation?.id]);
 
-  // Auto scroll
+  // 5. Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedChat || !firebaseUser || !newMessage.trim()) return;
+    if (!selectedConversation || !session?.user?.id || !newMessage.trim()) return;
     
     try {
-      await sendMessage(selectedChat.id, firebaseUser.uid, newMessage);
+      await sendMessage(selectedConversation.id, session.user.id, newMessage);
       setNewMessage("");
     } catch (error: any) {
-      alert(error.message || "Failed to send message");
+      alert("Failed to send message: " + error.message);
     }
   };
 
   const handleReportUser = async () => {
-    if (!selectedChat || !firebaseUser) return;
-    const reason = window.prompt("Please provide a reason for reporting this user:");
-    if (reason) {
-      const otherUserId = selectedChat.otherUser?.id || selectedChat.participants.find(id => id !== firebaseUser.uid);
-      if (otherUserId) {
-        await reportUser(firebaseUser.uid, otherUserId, reason);
-        alert("User reported. Thank you for keeping the community safe.");
-      }
-    }
+     if (!selectedConversation || !session?.user?.id) return;
+     const reason = window.prompt("Reason for reporting:");
+     if (reason && selectedConversation.otherUser?.id) {
+         await reportUser(session.user.id, selectedConversation.otherUser.id, reason);
+         alert("User reported.");
+     }
   };
 
   const handleBlockUser = async () => {
-    if (!selectedChat || !firebaseUser) return;
-    if (confirm("Are you sure you want to block this user? They will not be able to message you.")) {
-       const otherUserId = selectedChat.otherUser?.id || selectedChat.participants.find(id => id !== firebaseUser.uid);
-       if (otherUserId) {
-         await blockUser(firebaseUser.uid, otherUserId);
-         alert("User blocked.");
-         setSelectedChat(null); // Close chat
-       }
+    if (!selectedConversation || !session?.user?.id) return;
+    if (confirm("Block this user?")) {
+        if (selectedConversation.otherUser?.id) {
+            await blockUser(session.user.id, selectedConversation.otherUser.id);
+            alert("User blocked.");
+            setSelectedConversation(null);
+        }
     }
   };
 
@@ -194,43 +167,41 @@ function MessagesContent() {
   return (
     <div className="container mx-auto px-4 py-8 h-[calc(100vh-100px)]">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
-        {/* Chat List */}
+        {/* Conversation List */}
         <Card className="col-span-1 h-full overflow-hidden flex flex-col rounded-3xl border-stone-200 shadow-sm">
-           {/* Header */}
            <div className="p-6 border-b border-stone-100 bg-white">
              <h2 className="font-serif text-2xl text-stone-900">Messages</h2>
            </div>
-           {/* List */}
            <div className="flex-1 overflow-y-auto bg-white">
-             {chats.length === 0 ? (
+             {conversations.length === 0 ? (
                 <div className="p-8 text-center text-stone-400">
                     <p>No conversations yet.</p>
                 </div>
              ) : (
-                chats.map(chat => (
+                conversations.map(conv => (
                 <div 
-                    key={chat.id} 
-                    onClick={() => setSelectedChat(chat)}
-                    className={`p-4 border-b border-stone-50 cursor-pointer hover:bg-stone-50 transition-colors ${selectedChat?.id === chat.id ? 'bg-stone-50 border-l-4 border-l-rose-500' : 'border-l-4 border-l-transparent'}`}
+                    key={conv.id} 
+                    onClick={() => setSelectedConversation(conv)}
+                    className={`p-4 border-b border-stone-50 cursor-pointer hover:bg-stone-50 transition-colors ${selectedConversation?.id === conv.id ? 'bg-stone-50 border-l-4 border-l-rose-500' : 'border-l-4 border-l-transparent'}`}
                 >
                     <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-stone-200 overflow-hidden shrink-0">
-                        {chat.otherUser?.avatar ? (
-                        <img src={chat.otherUser.avatar} alt={chat.otherUser.name} className="w-full h-full object-cover" />
+                        {conv.otherUser?.avatar ? (
+                        <img src={conv.otherUser.avatar} alt={conv.otherUser.name} className="w-full h-full object-cover" />
                         ) : (
                         <div className="w-full h-full flex items-center justify-center text-stone-500 font-bold text-lg bg-stone-100">
-                            {chat.otherUser?.name?.[0] || "?"}
+                            {conv.otherUser?.name?.[0] || "?"}
                         </div>
                         )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline mb-1">
-                            <h3 className="font-bold text-stone-900 truncate">{chat.otherUser?.name || "Unknown User"}</h3>
+                            <h3 className="font-bold text-stone-900 truncate">{conv.otherUser?.name || "Unknown User"}</h3>
                             <span className="text-[10px] text-stone-400 uppercase tracking-wider">
-                                {chat.lastMessageTime?.seconds ? new Date(chat.lastMessageTime.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                                {conv.updatedAt?.seconds ? new Date(conv.updatedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
                             </span>
                         </div>
-                        <p className="text-sm text-stone-500 truncate font-medium">{chat.lastMessage || "Start a conversation"}</p>
+                        <p className="text-sm text-stone-500 truncate font-medium">{conv.lastMessage || "Start a conversation"}</p>
                     </div>
                     </div>
                 </div>
@@ -241,22 +212,22 @@ function MessagesContent() {
 
         {/* Chat Window */}
         <Card className="col-span-1 md:col-span-2 h-full flex flex-col overflow-hidden rounded-3xl border-stone-200 shadow-sm">
-          {selectedChat ? (
+          {selectedConversation ? (
             <>
               {/* Header */}
               <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-white z-10 shadow-sm">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-full bg-stone-200 overflow-hidden">
-                     {selectedChat.otherUser?.avatar ? (
-                       <img src={selectedChat.otherUser.avatar} alt={selectedChat.otherUser.name} className="w-full h-full object-cover" />
+                     {selectedConversation.otherUser?.avatar ? (
+                       <img src={selectedConversation.otherUser.avatar} alt={selectedConversation.otherUser.name} className="w-full h-full object-cover" />
                      ) : (
                        <div className="w-full h-full flex items-center justify-center text-stone-500 font-bold bg-stone-100">
-                         {selectedChat.otherUser?.name?.[0] || "?"}
+                         {selectedConversation.otherUser?.name?.[0] || "?"}
                        </div>
                      )}
                    </div>
                    <div>
-                     <h3 className="font-bold text-stone-900">{selectedChat.otherUser?.name}</h3>
+                     <h3 className="font-bold text-stone-900">{selectedConversation.otherUser?.name}</h3>
                      <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                         <p className="text-xs text-stone-500 font-medium">Online</p>
@@ -287,7 +258,7 @@ function MessagesContent() {
                 </div>
                 
                 {messages.map(msg => {
-                  const isMe = msg.senderId === firebaseUser?.uid;
+                  const isMe = msg.senderId === session?.user?.id;
                   return (
                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[70%] p-4 rounded-2xl text-sm shadow-sm leading-relaxed ${

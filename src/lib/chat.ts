@@ -165,13 +165,7 @@ export const subscribeToUserChats = (userId: string, callback: (chats: Chat[]) =
                 avatar: userData.image, 
                 email: userData.email 
             };
-          } else {
-            // 2. Fallback to Firestore users collection if API fails (legacy/backup)
-            const userDoc = await getDoc(doc(db, "users", otherUserId));
-            if (userDoc.exists()) {
-              otherUserData = { id: userDoc.id, ...userDoc.data() };
-            }
-          }
+          } 
         } catch (e) {
           console.error("Error fetching user data", e);
         }
