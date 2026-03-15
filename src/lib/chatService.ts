@@ -47,10 +47,20 @@ export async function getOrCreateConversation(currentUserId: string, targetUserI
   if (!currentUserId || !targetUserId) throw new Error("Invalid user IDs");
   if (!db) throw new Error("Firestore not initialized");
 
-  // Deterministic key: always sorted "ID1_ID2"
+  // 1. Check if conversation already exists by key OR by ID (since we now use key as ID)
+  // This step is somewhat redundant if we use setDoc/getDoc on the key directly,
+  // but good for legacy checks.
   const participantKey = [currentUserId, targetUserId].sort().join("_");
+  
+  // Try to fetch by ID directly first (most efficient)
+  const docRef = doc(db, "conversations", participantKey);
+  const docSnap = await getDoc(docRef);
 
-  // 1. Check if conversation already exists by key
+  if (docSnap.exists()) {
+     return { id: docSnap.id, ...docSnap.data() } as Conversation;
+  }
+
+  // Fallback: Check if there's any legacy conversation with this key but different ID
   const q = query(
     collection(db, "conversations"),
     where("participantKey", "==", participantKey),
@@ -77,18 +87,83 @@ export async function getOrCreateConversation(currentUserId: string, targetUserI
     lastMessageTime: null
   };
 
-  // We use addDoc to let Firestore generate the ID, or we could use setDoc with the key as ID
-  // Using addDoc is standard, but querying by key is what ensures uniqueness.
-  const docRef = await addDoc(collection(db, "conversations"), newConversationData);
-  
-  // Return the new object (with optimistic timestamps for immediate UI use)
-  return {
-    id: docRef.id,
-    ...newConversationData,
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
-    lastMessageTime: null
-  } as Conversation;
+  // Check one last time before creating to prevent race conditions
+  // We can use the participantKey as the Document ID to force uniqueness at the database level!
+  // This is the most robust way to prevent duplicates.
+  try {
+    const docRef = doc(db, "conversations", participantKey);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+       return { id: docSnap.id, ...docSnap.data() } as Conversation;
+    }
+
+    await setDoc(docRef, newConversationData);
+    
+    return {
+      id: participantKey,
+      ...newConversationData,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      lastMessageTime: null
+    } as Conversation;
+  } catch (error) {
+    console.error("Error creating conversation:", error);
+    throw error;
+  }
+}
+
+/**
+ * Temporary utility to clean up duplicate conversations.
+ * Should be called once or periodically to fix bad data.
+ */
+export async function cleanupDuplicateConversations(userId: string) {
+    if (!db) return;
+    
+    // Get all conversations for this user
+    const q = query(collection(db, "conversations"), where("participants", "array-contains", userId));
+    const snapshot = await getDocs(q);
+    
+    const conversations = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+    
+    // Group by participantKey
+    const groups: { [key: string]: any[] } = {};
+    
+    conversations.forEach(conv => {
+        // If legacy conversation without key, generate it
+        const key = conv.participantKey || conv.participants.sort().join("_");
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(conv);
+    });
+    
+    // Find groups with duplicates
+    for (const key in groups) {
+        if (groups[key].length > 1) {
+            console.log(`Found duplicates for ${key}:`, groups[key].length);
+            
+            // Sort by createdAt/updatedAt to keep the oldest or most active?
+            // Let's keep the one with the most recent update (most likely active)
+            // OR keep the one that matches the key format if we are migrating.
+            
+            // Sort by updatedAt descending
+            groups[key].sort((a, b) => {
+                const timeA = a.updatedAt?.seconds || 0;
+                const timeB = b.updatedAt?.seconds || 0;
+                return timeB - timeA;
+            });
+            
+            const keeper = groups[key][0];
+            const toDelete = groups[key].slice(1);
+            
+            console.log(`Keeping ${keeper.id}, deleting ${toDelete.length} others`);
+            
+            // Delete duplicates
+            const { deleteDoc, doc } = await import("firebase/firestore");
+            for (const dup of toDelete) {
+                await deleteDoc(doc(db, "conversations", dup.id));
+            }
+        }
+    }
 }
 
 /**

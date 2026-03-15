@@ -8,7 +8,8 @@ import {
   getOrCreateConversation, 
   subscribeToConversations, 
   subscribeToMessages, 
-  sendMessage 
+  sendMessage,
+  cleanupDuplicateConversations
 } from "@/lib/chatService";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -42,6 +43,9 @@ function MessagesContent() {
   useEffect(() => {
     if (!session?.user?.id) return;
     
+    // Cleanup duplicates on load (can be removed later)
+    cleanupDuplicateConversations(session.user.id).catch(console.error);
+
     // Subscribe using the new service
     const unsubscribe = subscribeToConversations(session.user.id, (updatedConversations) => {
       setConversations(updatedConversations);
