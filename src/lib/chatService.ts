@@ -12,7 +12,9 @@ import {
   getDoc,
   limit,
   Timestamp,
-  setDoc
+  setDoc,
+  arrayUnion,
+  arrayRemove
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -23,6 +25,8 @@ export interface Conversation {
   participantKey: string;
   lastMessage: string;
   lastMessageTime: Timestamp | null;
+  lastSenderId?: string; // Track who sent the last message
+  typingUsers?: string[]; // Array of user IDs currently typing
   createdAt: Timestamp;
   updatedAt: Timestamp;
   otherUser?: {
@@ -30,6 +34,7 @@ export interface Conversation {
     name: string;
     avatar: string;
   };
+  unreadCount?: number; // Calculated on client or stored
 }
 
 export interface Message {
@@ -84,7 +89,8 @@ export async function getOrCreateConversation(currentUserId: string, targetUserI
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     lastMessage: "",
-    lastMessageTime: null
+    lastMessageTime: null,
+    typingUsers: []
   };
 
   // Check one last time before creating to prevent race conditions
@@ -187,8 +193,42 @@ export async function sendMessage(conversationId: string, senderId: string, text
   await updateDoc(conversationRef, {
     lastMessage: text,
     lastMessageTime: serverTimestamp(),
+    lastSenderId: senderId,
     updatedAt: serverTimestamp()
   });
+}
+
+/**
+ * Updates the typing status of a user in a conversation.
+ */
+export async function setTypingStatus(conversationId: string, userId: string, isTyping: boolean) {
+  if (!db || !conversationId || !userId) return;
+  
+  const conversationRef = doc(db, "conversations", conversationId);
+  try {
+    await updateDoc(conversationRef, {
+      typingUsers: isTyping ? arrayUnion(userId) : arrayRemove(userId)
+    });
+  } catch (error) {
+    console.error("Error updating typing status:", error);
+  }
+}
+
+/**
+ * Marks a conversation as read by the current user.
+ * Stores the read receipt in a subcollection.
+ */
+export async function markAsRead(conversationId: string, userId: string) {
+  if (!db || !conversationId || !userId) return;
+  
+  const receiptRef = doc(db, "conversations", conversationId, "readReceipts", userId);
+  try {
+    await setDoc(receiptRef, {
+      lastReadAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error("Error marking as read:", error);
+  }
 }
 
 /**
@@ -226,10 +266,28 @@ export function subscribeToConversations(userId: string, callback: (conversation
         }
       }
 
+      // Calculate unread status locally for now (simplified)
+      // For a robust system, we would query the readReceipts subcollection here.
+      // A quick check: if I am not the last sender, and there is a last message, it might be unread.
+      let unreadCount = 0;
+      if (data.lastSenderId && data.lastSenderId !== userId) {
+          // We'll fetch the actual read receipt to be accurate
+          try {
+              const receiptRef = doc(db, "conversations", docSnapshot.id, "readReceipts", userId);
+              const receiptSnap = await getDoc(receiptRef);
+              const lastReadAt = receiptSnap.exists() ? receiptSnap.data().lastReadAt : null;
+              
+              if (!lastReadAt || (data.lastMessageTime && data.lastMessageTime.toMillis() > lastReadAt.toMillis())) {
+                  unreadCount = 1; // Simplified: just flag as unread (1) rather than counting all messages
+              }
+          } catch(e) { console.error(e) }
+      }
+
       return {
         id: docSnapshot.id,
         ...data,
-        otherUser
+        otherUser,
+        unreadCount
       } as Conversation;
     }));
 

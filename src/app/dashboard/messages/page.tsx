@@ -9,14 +9,16 @@ import {
   subscribeToConversations, 
   subscribeToMessages, 
   sendMessage,
-  cleanupDuplicateConversations
+  cleanupDuplicateConversations,
+  setTypingStatus,
+  markAsRead
 } from "@/lib/chatService";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, ShieldAlert, Ban, Info, Loader2 } from "lucide-react";
+import { Send, ShieldAlert, Ban, Info, Loader2, Search, X } from "lucide-react";
 import { reportUser, blockUser } from "@/lib/chat"; // Keep these utils if needed, or move to chatService
 
 function MessagesContent() {
@@ -31,6 +33,12 @@ function MessagesContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Check plan
   useEffect(() => {
@@ -50,7 +58,7 @@ function MessagesContent() {
     const unsubscribe = subscribeToConversations(session.user.id, (updatedConversations) => {
       setConversations(updatedConversations);
       
-      // If we have a selected conversation, keep it updated with the latest data (e.g. lastMessage)
+      // If we have a selected conversation, keep it updated with the latest data
       if (selectedConversation) {
         const updated = updatedConversations.find(c => c.id === selectedConversation.id);
         if (updated) setSelectedConversation(updated);
@@ -112,18 +120,69 @@ function MessagesContent() {
     initChat();
   }, [session?.user?.id, targetUserId, loading, conversations]);
 
-  // 4. Subscribe to messages for the selected conversation
+  // 4. Subscribe to messages and mark as read
   useEffect(() => {
-    if (!selectedConversation) return;
+    if (!selectedConversation || !session?.user?.id) return;
     
+    // Mark as read
+    markAsRead(selectedConversation.id, session.user.id);
+
     const unsubscribe = subscribeToMessages(selectedConversation.id, (msgs) => {
       setMessages(msgs);
     });
     
     return () => unsubscribe();
-  }, [selectedConversation?.id]);
+  }, [selectedConversation?.id, session?.user?.id]);
 
-  // 5. Auto scroll
+  // 5. Typing Indicator Logic
+  useEffect(() => {
+    if (!selectedConversation || !session?.user?.id || !newMessage.trim()) {
+        if (selectedConversation && session?.user?.id) {
+            setTypingStatus(selectedConversation.id, session.user.id, false);
+        }
+        return;
+    }
+    
+    setTypingStatus(selectedConversation.id, session.user.id, true);
+    
+    const timeout = setTimeout(() => {
+        setTypingStatus(selectedConversation.id, session.user.id, false);
+    }, 3000);
+    
+    return () => clearTimeout(timeout);
+  }, [newMessage, selectedConversation?.id, session?.user?.id]);
+
+  // 6. User Search Debounce
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [searchQuery]);
+
+  // 7. Auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -135,8 +194,23 @@ function MessagesContent() {
     try {
       await sendMessage(selectedConversation.id, session.user.id, newMessage);
       setNewMessage("");
+      // Reset typing status immediately
+      setTypingStatus(selectedConversation.id, session.user.id, false);
     } catch (error: any) {
       alert("Failed to send message: " + error.message);
+    }
+  };
+
+  const startSearchChat = async (userId: string) => {
+    if (!session?.user?.id) return;
+    setSearchQuery("");
+    setSearchResults([]);
+    
+    try {
+      const newConv = await getOrCreateConversation(session.user.id, userId);
+      setSelectedConversation(newConv);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -168,14 +242,62 @@ function MessagesContent() {
     );
   }
 
+  const otherUserIsTyping = selectedConversation?.typingUsers?.some(uid => uid !== session?.user?.id);
+
   return (
     <div className="container mx-auto px-4 py-8 h-[calc(100vh-100px)]">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
         {/* Conversation List */}
         <Card className="col-span-1 h-full overflow-hidden flex flex-col rounded-3xl border-stone-200 shadow-sm">
            <div className="p-6 border-b border-stone-100 bg-white">
-             <h2 className="font-serif text-2xl text-stone-900">Messages</h2>
+             <h2 className="font-serif text-2xl text-stone-900 mb-4">Messages</h2>
+             
+             {/* User Search Bar */}
+             <div className="relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                  <Input 
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search users..."
+                    className="pl-9 pr-8 rounded-full bg-stone-50 border-stone-100 focus:ring-rose-200 h-10"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <X className="w-4 h-4 text-stone-400" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Search Results Dropdown */}
+                {searchQuery.length >= 2 && (
+                  <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 max-h-60 overflow-y-auto p-2">
+                    {isSearching ? (
+                      <div className="p-4 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-rose-500" /></div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-4 text-center text-stone-500 text-sm">No users found.</div>
+                    ) : (
+                      searchResults.map(user => (
+                        <div 
+                          key={user.id} 
+                          onClick={() => startSearchChat(user.id)}
+                          className="flex items-center gap-3 p-2 hover:bg-stone-50 rounded-xl cursor-pointer transition-colors"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-stone-100 overflow-hidden shrink-0">
+                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center font-bold text-stone-400">{user.name?.[0]}</div>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-stone-900 truncate">{user.name}</p>
+                            <p className="text-xs text-stone-500 truncate">{user.email}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+             </div>
            </div>
+
            <div className="flex-1 overflow-y-auto bg-white">
              {conversations.length === 0 ? (
                 <div className="p-8 text-center text-stone-400">
@@ -186,7 +308,7 @@ function MessagesContent() {
                 <div 
                     key={conv.id} 
                     onClick={() => setSelectedConversation(conv)}
-                    className={`p-4 border-b border-stone-50 cursor-pointer hover:bg-stone-50 transition-colors ${selectedConversation?.id === conv.id ? 'bg-stone-50 border-l-4 border-l-rose-500' : 'border-l-4 border-l-transparent'}`}
+                    className={`p-4 border-b border-stone-50 cursor-pointer hover:bg-stone-50 transition-colors relative ${selectedConversation?.id === conv.id ? 'bg-stone-50 border-l-4 border-l-rose-500' : 'border-l-4 border-l-transparent'}`}
                 >
                     <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-stone-200 overflow-hidden shrink-0">
@@ -205,7 +327,16 @@ function MessagesContent() {
                                 {conv.updatedAt?.seconds ? new Date(conv.updatedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
                             </span>
                         </div>
-                        <p className="text-sm text-stone-500 truncate font-medium">{conv.lastMessage || "Start a conversation"}</p>
+                        <div className="flex justify-between items-center gap-2">
+                          <p className={`text-sm truncate font-medium ${conv.unreadCount ? 'text-rose-600 font-bold' : 'text-stone-500'}`}>
+                            {conv.typingUsers?.some(uid => uid !== session?.user?.id) ? "Typing..." : (conv.lastMessage || "Start a conversation")}
+                          </p>
+                          {conv.unreadCount !== undefined && conv.unreadCount > 0 && (
+                            <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold shrink-0">
+                                {conv.unreadCount}
+                            </div>
+                          )}
+                        </div>
                     </div>
                     </div>
                 </div>
@@ -275,6 +406,15 @@ function MessagesContent() {
                     </div>
                   );
                 })}
+                {otherUserIsTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-white border border-stone-100 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 items-center">
+                      <div className="w-1.5 h-1.5 bg-stone-300 rounded-full animate-bounce"></div>
+                      <div className="w-1.5 h-1.5 bg-stone-300 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                      <div className="w-1.5 h-1.5 bg-stone-300 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
