@@ -58,15 +58,13 @@ function MessagesContent() {
     const unsubscribe = subscribeToConversations(session.user.id, (updatedConversations) => {
       setConversations(updatedConversations);
       
-      // If we have a selected conversation, keep it updated with the latest data
-      if (selectedConversation) {
-        const updated = updatedConversations.find(c => c.id === selectedConversation.id);
-        if (updated) setSelectedConversation(updated);
-      }
+      // Removed the logic that updates selectedConversation here.
+      // Updating selectedConversation based on the list subscription causes race conditions and loops.
+      // The selectedConversation should be stable and only change on user interaction.
     });
     
     return () => unsubscribe();
-  }, [session?.user?.id, selectedConversation?.id]);
+  }, [session?.user?.id]); // Removed selectedConversation dependency
 
   // 3. Handle direct message link from profile (auto-create/select)
   useEffect(() => {
@@ -118,12 +116,14 @@ function MessagesContent() {
     };
 
     initChat();
-  }, [session?.user?.id, targetUserId, loading, conversations]);
+  }, [session?.user?.id, targetUserId, loading]); // Removed conversations dependency to prevent loop
 
   // 4. Subscribe to messages and mark as read
   useEffect(() => {
     if (!selectedConversation || !session?.user?.id) return;
     
+    console.log("Subscribing to messages for:", selectedConversation.id);
+
     // Mark as read
     markAsRead(selectedConversation.id, session.user.id);
 
@@ -132,7 +132,7 @@ function MessagesContent() {
     });
     
     return () => unsubscribe();
-  }, [selectedConversation?.id, session?.user?.id]);
+  }, [selectedConversation?.id]); // Only re-run if ID changes, not other fields
 
   // 5. Typing Indicator Logic
   useEffect(() => {
