@@ -27,6 +27,7 @@ export interface Conversation {
   lastMessageTime: Timestamp | null;
   lastSenderId?: string; // Track who sent the last message
   typingUsers?: string[]; // Array of user IDs currently typing
+  hiddenFor?: string[]; // Array of user IDs who have deleted this conversation
   createdAt: Timestamp;
   updatedAt: Timestamp;
   otherUser?: {
@@ -190,12 +191,34 @@ export async function sendMessage(conversationId: string, senderId: string, text
   });
 
   // 2. Update parent conversation with last message
+  // Also remove the current user from hiddenFor if they are sending a message
+  // And remove the other user from hiddenFor so they see the new message
+  const chatDoc = await getDoc(conversationRef);
+  const participants = chatDoc.data()?.participants || [];
+  
   await updateDoc(conversationRef, {
     lastMessage: text,
     lastMessageTime: serverTimestamp(),
     lastSenderId: senderId,
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
+    hiddenFor: [] // Unhide for everyone when a new message is sent
   });
+}
+
+/**
+ * Hides a conversation for a specific user (soft delete).
+ */
+export async function hideConversation(conversationId: string, userId: string) {
+  if (!db || !conversationId || !userId) return;
+  
+  const conversationRef = doc(db, "conversations", conversationId);
+  try {
+    await updateDoc(conversationRef, {
+      hiddenFor: arrayUnion(userId)
+    });
+  } catch (error) {
+    console.error("Error hiding conversation:", error);
+  }
 }
 
 /**
@@ -245,6 +268,12 @@ export function subscribeToConversations(userId: string, callback: (conversation
   return onSnapshot(q, async (snapshot) => {
     const conversations = await Promise.all(snapshot.docs.map(async (docSnapshot) => {
       const data = docSnapshot.data();
+      
+      // Skip if hidden for this user
+      if (data.hiddenFor && data.hiddenFor.includes(userId)) {
+          return null;
+      }
+
       const otherUserId = data.participants.find((id: string) => id !== userId);
       
       let otherUser = { id: otherUserId, name: "User", avatar: "" };
@@ -291,14 +320,17 @@ export function subscribeToConversations(userId: string, callback: (conversation
       } as Conversation;
     }));
 
+    // Filter out nulls (hidden conversations)
+    const validConversations = conversations.filter((c): c is Conversation => c !== null);
+
     // Sort by updatedAt desc
-    conversations.sort((a, b) => {
+    validConversations.sort((a, b) => {
       const timeA = a.updatedAt?.toMillis?.() || 0;
       const timeB = b.updatedAt?.toMillis?.() || 0;
       return timeB - timeA;
     });
 
-    callback(conversations);
+    callback(validConversations);
   });
 }
 

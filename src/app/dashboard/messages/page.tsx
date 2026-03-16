@@ -11,15 +11,106 @@ import {
   sendMessage,
   cleanupDuplicateConversations,
   setTypingStatus,
-  markAsRead
+  markAsRead,
+  hideConversation
 } from "@/lib/chatService";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, ShieldAlert, Ban, Info, Loader2, Search, X } from "lucide-react";
+import { Send, ShieldAlert, Ban, Info, Loader2, Search, X, Trash2 } from "lucide-react";
 import { reportUser, blockUser } from "@/lib/chat"; // Keep these utils if needed, or move to chatService
+import { useSwipeable } from "react-swipeable";
+
+function SwipeableConversationItem({ 
+  conversation, 
+  isSelected, 
+  onSelect, 
+  onDelete,
+  currentUserId 
+}: { 
+  conversation: Conversation, 
+  isSelected: boolean, 
+  onSelect: () => void, 
+  onDelete: () => void,
+  currentUserId: string
+}) {
+  const [swiped, setSwiped] = useState(false);
+
+  const handlers = useSwipeable({
+    onSwipedLeft: () => setSwiped(true),
+    onSwipedRight: () => setSwiped(false),
+    trackMouse: true
+  });
+
+  return (
+    <div className="relative overflow-hidden group">
+        {/* Background Action (Delete) */}
+        <div className="absolute inset-0 flex justify-end items-center bg-red-500 text-white pr-4">
+            <Trash2 className="w-5 h-5" />
+        </div>
+
+        {/* Swipeable Content */}
+        <div 
+            {...handlers}
+            onClick={() => {
+                if (swiped) {
+                    setSwiped(false);
+                } else {
+                    onSelect();
+                }
+            }}
+            className={`relative p-4 border-b border-stone-50 cursor-pointer transition-transform duration-300 ease-out bg-white ${
+                isSelected ? 'bg-stone-50 border-l-4 border-l-rose-500' : 'border-l-4 border-l-transparent'
+            }`}
+            style={{ transform: swiped ? 'translateX(-80px)' : 'translateX(0)' }}
+        >
+            <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-stone-200 overflow-hidden shrink-0">
+                    {conversation.otherUser?.avatar ? (
+                    <img src={conversation.otherUser.avatar} alt={conversation.otherUser.name} className="w-full h-full object-cover" />
+                    ) : (
+                    <div className="w-full h-full flex items-center justify-center text-stone-500 font-bold text-lg bg-stone-100">
+                        {conversation.otherUser?.name?.[0] || "?"}
+                    </div>
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-1">
+                        <h3 className="font-bold text-stone-900 truncate">{conversation.otherUser?.name || "Unknown User"}</h3>
+                        <span className="text-[10px] text-stone-400 uppercase tracking-wider">
+                            {conversation.updatedAt?.seconds ? new Date(conversation.updatedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                        </span>
+                    </div>
+                    <div className="flex justify-between items-center gap-2">
+                        <p className={`text-sm truncate font-medium ${conversation.unreadCount ? 'text-rose-600 font-bold' : 'text-stone-500'}`}>
+                        {conversation.typingUsers?.some(uid => uid !== currentUserId) ? "Typing..." : (conversation.lastMessage || "Start a conversation")}
+                        </p>
+                        {conversation.unreadCount !== undefined && conversation.unreadCount > 0 && (
+                        <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold shrink-0">
+                            {conversation.unreadCount}
+                        </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Delete Button (Overlay for click) */}
+        {swiped && (
+            <button 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete();
+                }}
+                className="absolute right-0 top-0 bottom-0 w-[80px] z-10 flex items-center justify-center"
+            >
+            </button>
+        )}
+    </div>
+  );
+}
 
 function MessagesContent() {
   const { firebaseUser, loading } = useFirebase();
@@ -234,6 +325,16 @@ function MessagesContent() {
     }
   };
 
+  const handleDeleteConversation = async (conversationId: string) => {
+    if (!session?.user?.id) return;
+    if (confirm("Delete this conversation? It will be hidden from your list until a new message is sent.")) {
+        await hideConversation(conversationId, session.user.id);
+        if (selectedConversation?.id === conversationId) {
+            setSelectedConversation(null);
+        }
+    }
+  };
+
   if (loading || status === 'loading') {
     return (
       <div className="h-[calc(100vh-100px)] flex items-center justify-center">
@@ -305,41 +406,14 @@ function MessagesContent() {
                 </div>
              ) : (
                 conversations.map(conv => (
-                <div 
-                    key={conv.id} 
-                    onClick={() => setSelectedConversation(conv)}
-                    className={`p-4 border-b border-stone-50 cursor-pointer hover:bg-stone-50 transition-colors relative ${selectedConversation?.id === conv.id ? 'bg-stone-50 border-l-4 border-l-rose-500' : 'border-l-4 border-l-transparent'}`}
-                >
-                    <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-stone-200 overflow-hidden shrink-0">
-                        {conv.otherUser?.avatar ? (
-                        <img src={conv.otherUser.avatar} alt={conv.otherUser.name} className="w-full h-full object-cover" />
-                        ) : (
-                        <div className="w-full h-full flex items-center justify-center text-stone-500 font-bold text-lg bg-stone-100">
-                            {conv.otherUser?.name?.[0] || "?"}
-                        </div>
-                        )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline mb-1">
-                            <h3 className="font-bold text-stone-900 truncate">{conv.otherUser?.name || "Unknown User"}</h3>
-                            <span className="text-[10px] text-stone-400 uppercase tracking-wider">
-                                {conv.updatedAt?.seconds ? new Date(conv.updatedAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
-                            </span>
-                        </div>
-                        <div className="flex justify-between items-center gap-2">
-                          <p className={`text-sm truncate font-medium ${conv.unreadCount ? 'text-rose-600 font-bold' : 'text-stone-500'}`}>
-                            {conv.typingUsers?.some(uid => uid !== session?.user?.id) ? "Typing..." : (conv.lastMessage || "Start a conversation")}
-                          </p>
-                          {conv.unreadCount !== undefined && conv.unreadCount > 0 && (
-                            <div className="w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold shrink-0">
-                                {conv.unreadCount}
-                            </div>
-                          )}
-                        </div>
-                    </div>
-                    </div>
-                </div>
+                  <SwipeableConversationItem 
+                    key={conv.id}
+                    conversation={conv}
+                    isSelected={selectedConversation?.id === conv.id}
+                    onSelect={() => setSelectedConversation(conv)}
+                    onDelete={() => handleDeleteConversation(conv.id)}
+                    currentUserId={session?.user?.id || ""}
+                  />
                 ))
              )}
            </div>
