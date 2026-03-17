@@ -364,21 +364,21 @@ function MessagesContent() {
       <div className="flex md:grid md:grid-cols-3 gap-0 md:gap-6 h-full relative overflow-hidden md:overflow-visible">
         {/* Conversation List */}
         <Card className={`w-full md:col-span-1 h-full overflow-hidden flex flex-col rounded-none md:rounded-3xl border-0 md:border md:border-stone-200 shadow-none md:shadow-sm absolute md:relative transition-transform duration-300 ${selectedConversation ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}`}>
-           <div className="p-6 border-b border-stone-100 bg-white">
-             <h2 className="font-serif text-2xl text-stone-900 mb-4">Messages</h2>
+           <div className="p-6 border-b border-stone-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+             <h2 className="font-serif text-2xl text-stone-900 mb-4 tracking-tight">Messages</h2>
              
              {/* User Search Bar */}
-             <div className="relative">
+             <div className="relative group">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 group-focus-within:text-rose-500 transition-colors" />
                   <Input 
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Search users..."
-                    className="pl-9 pr-8 rounded-full bg-stone-50 border-stone-100 focus:ring-rose-200 h-10"
+                    className="pl-9 pr-8 rounded-full bg-stone-50 border-stone-100 focus:ring-2 focus:ring-rose-100 focus:border-rose-300 h-10 transition-all shadow-sm"
                   />
                   {searchQuery && (
-                    <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 hover:bg-stone-100 rounded-full p-0.5 transition-colors">
                       <X className="w-4 h-4 text-stone-400" />
                     </button>
                   )}
@@ -434,34 +434,34 @@ function MessagesContent() {
         </Card>
 
         {/* Chat Window */}
-        <Card className={`w-full md:col-span-2 h-full flex flex-col overflow-hidden rounded-none md:rounded-3xl border-0 md:border md:border-stone-200 shadow-none md:shadow-sm absolute md:relative transition-transform duration-300 ${selectedConversation ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} bg-stone-50/30`}>
+        <Card className={`w-full md:col-span-2 h-full flex flex-col overflow-hidden rounded-none md:rounded-3xl border-0 md:border md:border-stone-200 shadow-none md:shadow-sm absolute md:relative transition-transform duration-300 ${selectedConversation ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} bg-stone-50/50`}>
           {selectedConversation ? (
             <>
               {/* Header */}
-              <div className="p-3 md:p-4 border-b border-stone-100 flex justify-between items-center bg-white z-10 shadow-sm sticky top-0">
+              <div className="p-3 md:p-4 border-b border-stone-100 flex justify-between items-center bg-white/90 backdrop-blur-md z-10 shadow-sm sticky top-0">
                 <div className="flex items-center gap-2 md:gap-3">
                    <Button 
                      variant="ghost" 
                      size="icon" 
-                     className="md:hidden -ml-2 text-stone-500 hover:text-stone-900"
+                     className="md:hidden -ml-2 text-stone-500 hover:text-stone-900 rounded-full hover:bg-stone-100"
                      onClick={() => setSelectedConversation(null)}
                    >
                      <ArrowLeft className="w-5 h-5" />
                    </Button>
-                   <div className="w-10 h-10 rounded-full bg-stone-200 overflow-hidden shrink-0">
+                   <div className="w-10 h-10 md:w-11 md:h-11 rounded-full bg-stone-100 overflow-hidden shrink-0 border border-stone-200">
                      {selectedConversation.otherUser?.avatar ? (
                        <img src={selectedConversation.otherUser.avatar} alt={selectedConversation.otherUser.name} className="w-full h-full object-cover" />
                      ) : (
-                       <div className="w-full h-full flex items-center justify-center text-stone-500 font-bold bg-stone-100">
+                       <div className="w-full h-full flex items-center justify-center text-stone-400 font-bold bg-stone-100 text-lg">
                          {selectedConversation.otherUser?.name?.[0] || "?"}
                        </div>
                      )}
                    </div>
                    <div>
-                     <h3 className="font-bold text-stone-900">{selectedConversation.otherUser?.name}</h3>
-                     <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        <p className="text-xs text-stone-500 font-medium">Online</p>
+                     <h3 className="font-bold text-stone-900 leading-tight">{selectedConversation.otherUser?.name}</h3>
+                     <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.4)]"></span>
+                        <p className="text-[10px] md:text-xs text-stone-500 font-medium">Online</p>
                      </div>
                    </div>
                 </div>
@@ -490,23 +490,26 @@ function MessagesContent() {
                 {messages.map(msg => {
                   const isMe = msg.senderId === session?.user?.id;
                   return (
-                    <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[70%] p-4 rounded-2xl text-sm shadow-sm leading-relaxed ${
+                    <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} group`}>
+                      <div className={`max-w-[75%] md:max-w-[70%] p-3 md:p-4 text-sm shadow-sm leading-relaxed relative ${
                         isMe 
-                          ? 'bg-stone-900 text-white rounded-tr-none' 
-                          : 'bg-white text-stone-800 border border-stone-100 rounded-tl-none'
+                          ? 'bg-stone-900 text-white rounded-2xl rounded-tr-sm' 
+                          : 'bg-white text-stone-800 border border-stone-100 rounded-2xl rounded-tl-sm'
                       }`}>
                         {msg.text}
+                        <div className={`text-[10px] mt-1 opacity-70 ${isMe ? 'text-stone-300' : 'text-stone-400'}`}>
+                          {msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}
+                        </div>
                       </div>
                     </div>
                   );
                 })}
                 {otherUserIsTyping && (
                   <div className="flex justify-start">
-                    <div className="bg-white border border-stone-100 p-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 items-center">
-                      <div className="w-1.5 h-1.5 bg-stone-300 rounded-full animate-bounce"></div>
-                      <div className="w-1.5 h-1.5 bg-stone-300 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-                      <div className="w-1.5 h-1.5 bg-stone-300 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                    <div className="bg-white border border-stone-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex gap-1 items-center">
+                      <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce"></div>
+                      <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                      <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
                     </div>
                   </div>
                 )}
@@ -530,10 +533,10 @@ function MessagesContent() {
             </>
           ) : (
             <div className="flex-1 hidden md:flex flex-col items-center justify-center text-stone-400 bg-stone-50/30">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-100">
-                <Send className="w-8 h-8 text-rose-300 ml-1" />
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-100">
+                <Send className="w-10 h-10 text-rose-200 ml-1" />
               </div>
-              <h3 className="text-xl font-serif text-stone-900 mb-2">Your Messages</h3>
+              <h3 className="text-2xl font-serif text-stone-900 mb-2 font-medium">Your Messages</h3>
               <p className="max-w-xs text-center text-stone-500">Select a conversation from the left to start messaging other parents.</p>
             </div>
           )}
