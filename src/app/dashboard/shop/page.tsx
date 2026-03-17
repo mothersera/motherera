@@ -162,7 +162,7 @@ export default function ShopPage() {
                       </p>
                       <div className="mt-auto pt-4 flex items-center justify-between">
                         <span className="text-lg font-bold text-stone-900">
-                          {convertAndFormat(parseFloat(product.variants[0]?.price?.amount || "0"))}
+                          {convertAndFormat(parseFloat(product.price || product.variants[0]?.price?.amount || "0"))}
                         </span>
                         <div className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
                           <span>In Stock</span>

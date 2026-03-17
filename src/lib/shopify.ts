@@ -140,6 +140,10 @@ export async function fetchProducts(category?: string, stage?: string): Promise<
               edges {
                 node {
                   id
+                  price {
+                    amount
+                    currencyCode
+                  }
                 }
               }
             }
@@ -184,7 +188,12 @@ export async function fetchProducts(category?: string, stage?: string): Promise<
       recommendedStage: mapTagsToStage(node.tags),
       variantId: node.variants.edges[0]?.node.id,
       options: [], // For fetchProducts, we don't fetch full options/variants to keep it light
-      variants: [] // For fetchProducts, we don't fetch full options/variants to keep it light
+      variants: node.variants.edges.map(({ node: v }: any) => ({
+        id: v.id,
+        title: "Default",
+        price: v.price,
+        selectedOptions: []
+      }))
     }));
 
     // Filter by Category
