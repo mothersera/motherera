@@ -19,7 +19,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, ShieldAlert, Ban, Info, Loader2, Search, X, Trash2 } from "lucide-react";
+import { Send, ShieldAlert, Ban, Info, Loader2, Search, X, Trash2, ArrowLeft } from "lucide-react";
 import { reportUser, blockUser } from "@/lib/chat"; // Keep these utils if needed, or move to chatService
 import { useSwipeable } from "react-swipeable";
 
@@ -157,10 +157,24 @@ function MessagesContent() {
     return () => unsubscribe();
   }, [session?.user?.id]); // Removed selectedConversation dependency
 
-  // 3. Handle direct message link from profile (auto-create/select)
+  // 3. Handle direct message link from profile or URL params
   useEffect(() => {
     const currentUserId = session?.user?.id;
-    if (loading || !currentUserId || !targetUserId) return;
+    
+    // Also check if we have a chatId in URL (e.g. from notifications or direct link)
+    const chatIdParam = searchParams.get('chat');
+    
+    if (loading || !currentUserId) return;
+    
+    // If we have a specific chat ID, try to select it
+    if (chatIdParam && conversations.length > 0) {
+        const found = conversations.find(c => c.id === chatIdParam);
+        if (found && selectedConversation?.id !== found.id) {
+            setSelectedConversation(found);
+        }
+    }
+
+    if (!targetUserId) return;
 
     // Prevent re-running if already selected
     if (selectedConversation?.otherUser?.id === targetUserId) return;
@@ -346,10 +360,10 @@ function MessagesContent() {
   const otherUserIsTyping = selectedConversation?.typingUsers?.some(uid => uid !== session?.user?.id);
 
   return (
-    <div className="container mx-auto px-4 py-8 h-[calc(100vh-100px)]">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+    <div className="container mx-auto px-0 md:px-4 py-0 md:py-8 h-[calc(100vh-64px)] md:h-[calc(100vh-100px)]">
+      <div className="flex md:grid md:grid-cols-3 gap-0 md:gap-6 h-full relative overflow-hidden md:overflow-visible">
         {/* Conversation List */}
-        <Card className="col-span-1 h-full overflow-hidden flex flex-col rounded-3xl border-stone-200 shadow-sm">
+        <Card className={`w-full md:col-span-1 h-full overflow-hidden flex flex-col rounded-none md:rounded-3xl border-0 md:border md:border-stone-200 shadow-none md:shadow-sm absolute md:relative transition-transform duration-300 ${selectedConversation ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}`}>
            <div className="p-6 border-b border-stone-100 bg-white">
              <h2 className="font-serif text-2xl text-stone-900 mb-4">Messages</h2>
              
@@ -420,13 +434,21 @@ function MessagesContent() {
         </Card>
 
         {/* Chat Window */}
-        <Card className="col-span-1 md:col-span-2 h-full flex flex-col overflow-hidden rounded-3xl border-stone-200 shadow-sm">
+        <Card className={`w-full md:col-span-2 h-full flex flex-col overflow-hidden rounded-none md:rounded-3xl border-0 md:border md:border-stone-200 shadow-none md:shadow-sm absolute md:relative transition-transform duration-300 ${selectedConversation ? 'translate-x-0' : 'translate-x-full md:translate-x-0'} bg-stone-50/30`}>
           {selectedConversation ? (
             <>
               {/* Header */}
-              <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-white z-10 shadow-sm">
-                <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-full bg-stone-200 overflow-hidden">
+              <div className="p-3 md:p-4 border-b border-stone-100 flex justify-between items-center bg-white z-10 shadow-sm sticky top-0">
+                <div className="flex items-center gap-2 md:gap-3">
+                   <Button 
+                     variant="ghost" 
+                     size="icon" 
+                     className="md:hidden -ml-2 text-stone-500 hover:text-stone-900"
+                     onClick={() => setSelectedConversation(null)}
+                   >
+                     <ArrowLeft className="w-5 h-5" />
+                   </Button>
+                   <div className="w-10 h-10 rounded-full bg-stone-200 overflow-hidden shrink-0">
                      {selectedConversation.otherUser?.avatar ? (
                        <img src={selectedConversation.otherUser.avatar} alt={selectedConversation.otherUser.name} className="w-full h-full object-cover" />
                      ) : (
@@ -443,25 +465,24 @@ function MessagesContent() {
                      </div>
                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" className="text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-full" title="Report User" onClick={handleReportUser}>
-                        <ShieldAlert className="w-5 h-5" />
+                <div className="flex gap-1 md:gap-2">
+                    <Button variant="ghost" size="icon" className="text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-full h-8 w-8 md:h-10 md:w-10" title="Report User" onClick={handleReportUser}>
+                        <ShieldAlert className="w-4 h-4 md:w-5 md:h-5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="text-stone-400 hover:text-stone-900 rounded-full" onClick={handleBlockUser} title="Block User">
-                        <Ban className="w-5 h-5" />
+                    <Button variant="ghost" size="icon" className="text-stone-400 hover:text-stone-900 rounded-full h-8 w-8 md:h-10 md:w-10" onClick={handleBlockUser} title="Block User">
+                        <Ban className="w-4 h-4 md:w-5 md:h-5" />
                     </Button>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-stone-50/50">
-                <div className="flex justify-center">
-                    <div className="bg-amber-50 border border-amber-100 text-amber-800 text-xs px-4 py-3 rounded-xl max-w-md text-center shadow-sm flex gap-2 items-start">
-                        <Info className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 bg-stone-50/50">
+                <div className="flex justify-center mb-2 md:mb-4">
+                    <div className="bg-amber-50 border border-amber-100 text-amber-800 text-[10px] md:text-xs px-3 py-2 md:px-4 md:py-3 rounded-xl max-w-md text-center shadow-sm flex gap-1.5 md:gap-2 items-start">
+                        <Info className="w-3 h-3 md:w-4 md:h-4 shrink-0 mt-0.5" />
                         <p>
-                            MotherEra messaging is intended for supportive conversations between members. 
-                            Do not share personal contact details, financial information, or sensitive data. 
-                            If you experience inappropriate behavior, please report the user.
+                            MotherEra messaging is intended for supportive conversations. 
+                            Do not share personal contact details or sensitive data.
                         </p>
                     </div>
                 </div>
@@ -493,22 +514,22 @@ function MessagesContent() {
               </div>
 
               {/* Input */}
-              <div className="p-4 bg-white border-t border-stone-100">
-                <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
+              <div className="p-3 md:p-4 bg-white border-t border-stone-100 mt-auto">
+                <form onSubmit={handleSendMessage} className="flex gap-2 md:gap-3 items-center">
                   <Input 
                     value={newMessage}
                     onChange={e => setNewMessage(e.target.value)}
                     placeholder="Type a supportive message..."
-                    className="flex-1 rounded-full bg-stone-50 border-stone-200 h-12 px-6 focus:ring-rose-200 focus:border-rose-300 transition-all"
+                    className="flex-1 rounded-full bg-stone-50 border-stone-200 h-10 md:h-12 px-4 md:px-6 focus:ring-rose-200 focus:border-rose-300 transition-all text-sm"
                   />
-                  <Button type="submit" size="icon" className="rounded-full bg-rose-500 hover:bg-rose-600 h-12 w-12 shrink-0 shadow-lg hover:shadow-xl transition-all" disabled={!newMessage.trim()}>
-                    <Send className="w-5 h-5 text-white ml-0.5" />
+                  <Button type="submit" size="icon" className="rounded-full bg-rose-500 hover:bg-rose-600 h-10 w-10 md:h-12 md:w-12 shrink-0 shadow-lg hover:shadow-xl transition-all" disabled={!newMessage.trim()}>
+                    <Send className="w-4 h-4 md:w-5 md:h-5 text-white ml-0.5" />
                   </Button>
                 </form>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-stone-400 bg-stone-50/30">
+            <div className="flex-1 hidden md:flex flex-col items-center justify-center text-stone-400 bg-stone-50/30">
               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-stone-100">
                 <Send className="w-8 h-8 text-rose-300 ml-1" />
               </div>
