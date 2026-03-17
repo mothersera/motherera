@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display, Geist } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/components/providers/SessionProvider";
 import { FirebaseProvider } from "@/components/providers/FirebaseProvider";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import Navbar from "../components/layout/Navbar";
+import { CurrencyProvider } from "@/components/providers/CurrencyProvider";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
@@ -26,17 +30,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn("font-sans", geist.variable)}>
       <body className={`${inter.variable} ${playfair.variable} font-sans bg-stone-50 text-stone-900 antialiased`}>
         <SessionProvider>
           <FirebaseProvider>
-            <CartProvider>
-              <Navbar />
-              <CartDrawer />
-              <main className="min-h-screen">
-                {children}
-              </main>
-            </CartProvider>
+            <CurrencyProvider>
+              <CartProvider>
+                <Navbar />
+                <CartDrawer />
+                <main className="min-h-screen">
+                  {children}
+                </main>
+              </CartProvider>
+            </CurrencyProvider>
           </FirebaseProvider>
         </SessionProvider>
       </body>

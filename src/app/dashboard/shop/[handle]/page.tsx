@@ -10,6 +10,7 @@ import { Loader2, ArrowLeft, ShieldCheck, Truck, Star, Heart, ShoppingBag } from
 import { fetchProductByHandle, Product } from "@/lib/shopify";
 import { useSession } from "next-auth/react";
 import { useCart } from "@/context/CartContext";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
 
 export default function ProductDetailPage() {
   const { handle } = useParams();
@@ -17,6 +18,7 @@ export default function ProductDetailPage() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const { addToCart, openCart } = useCart();
+  const { convertAndFormat } = useCurrency();
   
   // Force scroll to top on mount and route change
   useEffect(() => {
@@ -230,10 +232,12 @@ export default function ProductDetailPage() {
               </div>
               <div className="flex items-end gap-3 md:gap-4 mb-6 md:mb-8">
                 <span className="text-3xl md:text-4xl font-bold text-stone-900">
-                  ₹{currentVariant?.price?.amount || product.price}
+                  {convertAndFormat(parseFloat(currentVariant?.price?.amount || product.price))}
                 </span>
                 {product.compareAtPrice && Number(product.compareAtPrice) > Number(currentVariant?.price?.amount || product.price) && (
-                  <span className="text-lg md:text-xl text-stone-400 line-through mb-1">₹{product.compareAtPrice}</span>
+                  <span className="text-lg md:text-xl text-stone-400 line-through mb-1">
+                    {convertAndFormat(parseFloat(product.compareAtPrice))}
+                  </span>
                 )}
               </div>
             </div>
@@ -286,10 +290,10 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
                 <div className="text-sm text-stone-500 hidden md:block">
-                  Total: <span className="font-bold text-stone-900">₹{(parseFloat(currentVariant?.price?.amount || product.price) * quantity).toFixed(2)}</span>
+                  Total: <span className="font-bold text-stone-900">{convertAndFormat((parseFloat(currentVariant?.price?.amount || product.price) * quantity))}</span>
                 </div>
                 <div className="text-sm text-stone-500 md:hidden ml-auto">
-                   <span className="font-bold text-stone-900 text-lg">₹{(parseFloat(currentVariant?.price?.amount || product.price) * quantity).toFixed(2)}</span>
+                   <span className="font-bold text-stone-900 text-lg">{convertAndFormat((parseFloat(currentVariant?.price?.amount || product.price) * quantity))}</span>
                 </div>
               </div>
 

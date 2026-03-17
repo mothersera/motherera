@@ -11,7 +11,7 @@ export interface Product {
   compareAtPrice?: string | null;
   currency: string;
   images: { src: string; alt: string }[];
-  category: 'Baby Care' | 'Feeding' | 'Sleep' | 'Hygiene & Safety' | 'Mother Wellness';
+  category: string;
   tags: string[];
   recommendedStage?: string[]; // pregnancy, postpartum, newborn, toddler
   variantId?: string; // Default/First variant ID

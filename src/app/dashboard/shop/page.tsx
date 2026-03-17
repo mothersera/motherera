@@ -10,11 +10,14 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Loader2, ShoppingBag, Filter, Heart, Sparkles, Search, ArrowLeft } from "lucide-react";
 import { fetchProducts, Product } from "@/lib/shopify";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCurrency } from "@/components/providers/CurrencyProvider";
+import { CurrencySelector } from "@/components/shop/CurrencySelector";
 
 const CATEGORIES = ['All', 'Baby Care', 'Feeding', 'Sleep', 'Hygiene & Safety', 'Mother Wellness'];
 
 export default function ShopPage() {
   const { data: session } = useSession();
+  const { convertAndFormat } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -98,7 +101,7 @@ export default function ShopPage() {
                 className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${
                   activeCategory === cat 
                     ? "bg-stone-900 text-white shadow-lg shadow-stone-200 scale-105" 
-                    : "bg-white text-stone-500 border border-stone-200 hover:border-stone-300 hover:bg-stone-50"
+                    : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 hover:border-stone-300"
                 }`}
               >
                 {cat}
@@ -106,110 +109,82 @@ export default function ShopPage() {
             ))}
           </div>
           
-          <div className="flex items-center gap-2 text-sm text-stone-500">
-            <span>Showing {filteredProducts.length} products</span>
-          </div>
+          <CurrencySelector />
         </div>
 
         {/* Product Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="bg-white rounded-[2rem] h-[420px] animate-pulse border border-stone-100" />
-            ))}
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-32 bg-white rounded-[2rem] border border-stone-100 border-dashed">
-            <div className="w-20 h-20 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShoppingBag className="w-10 h-10 text-stone-300" />
-            </div>
-            <h3 className="text-2xl font-serif font-bold text-stone-900 mb-2">No products found</h3>
-            <p className="text-stone-500">We couldn't find what you're looking for.</p>
-            <Button 
-              variant="link" 
-              onClick={() => {setActiveCategory('All'); setSearchQuery('');}}
-              className="text-rose-600 mt-2"
-            >
-              Clear all filters
-            </Button>
-          </div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredProducts.map((product) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <AnimatePresence mode="popLayout">
+            {isLoading ? (
+              // Skeletons
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-stone-200 h-64 rounded-2xl mb-4" />
+                  <div className="bg-stone-200 h-4 w-3/4 rounded mb-2" />
+                  <div className="bg-stone-200 h-4 w-1/2 rounded" />
+                </div>
+              ))
+            ) : (
+              filteredProducts.map((product) => (
                 <motion.div
                   key={product.id}
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <Link href={`/dashboard/shop/${product.handle}`} className="group h-full block">
-                    <Card className="h-full border-none shadow-sm hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-500 rounded-2xl md:rounded-[2rem] overflow-hidden bg-white flex flex-col relative group">
-                      <div className="relative aspect-[4/5] overflow-hidden bg-stone-100">
-                        {product.recommendedStage?.some(s => userStage.includes(s)) && (
-                          <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 bg-white/90 backdrop-blur-md text-stone-900 text-[8px] md:text-[10px] font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full uppercase tracking-wide shadow-sm flex items-center gap-1 md:gap-1.5 border border-white/50">
-                            <Sparkles className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-500" /> 
-                            <span>For You</span>
-                          </div>
-                        )}
-
-                        {product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price) && (
-                          <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-rose-500 text-white text-[8px] md:text-[10px] font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full uppercase tracking-wide shadow-sm">
-                            Sale
-                          </div>
-                        )}
-
-                        {product.images[0] && (
-                          <Image
-                            src={product.images[0].src}
-                            alt={product.images[0].alt}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                          />
-                        )}
-                        
-                        {/* Quick View Overlay (Desktop) */}
-                        <div className="absolute inset-x-4 bottom-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 opacity-0 group-hover:opacity-100 hidden lg:block">
-                          <Button className="w-full rounded-full bg-white/90 backdrop-blur text-stone-900 hover:bg-stone-900 hover:text-white shadow-lg border border-white/50 transition-all duration-300">
-                            View Details
-                          </Button>
+                  <Card className="group border-stone-100 hover:border-rose-100 hover:shadow-xl hover:shadow-rose-100/50 transition-all duration-300 overflow-hidden h-full flex flex-col bg-white rounded-2xl">
+                    <CardHeader className="p-0 relative aspect-square overflow-hidden bg-stone-50">
+                      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="secondary" size="icon" className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white text-rose-500 shadow-sm">
+                          <Heart className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <Image
+                        src={product.images[0]?.src || '/placeholder.jpg'}
+                        alt={product.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      {product.tags?.includes('Best Seller') && (
+                        <div className="absolute top-3 left-3 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide border border-amber-200/50">
+                          Best Seller
+                        </div>
+                      )}
+                    </CardHeader>
+                    <CardContent className="p-5 flex-1 flex flex-col gap-2">
+                      <h3 className="font-serif text-lg font-medium text-stone-900 line-clamp-2 group-hover:text-rose-600 transition-colors">
+                        {product.title}
+                      </h3>
+                      <p className="text-sm text-stone-500 line-clamp-2 leading-relaxed">
+                        {product.description}
+                      </p>
+                      <div className="mt-auto pt-4 flex items-center justify-between">
+                        <span className="text-lg font-bold text-stone-900">
+                          {convertAndFormat(parseFloat(product.variants[0]?.price?.amount || "0"))}
+                        </span>
+                        <div className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                          <span>In Stock</span>
                         </div>
                       </div>
-                      
-                      <CardContent className="p-3 md:p-6 flex-grow flex flex-col">
-                        <div className="text-[8px] md:text-[10px] font-bold text-rose-600 mb-1 md:mb-2 uppercase tracking-widest truncate">{product.category}</div>
-                        <h3 className="font-serif font-bold text-sm md:text-lg text-stone-900 mb-1 md:mb-2 leading-tight group-hover:text-rose-600 transition-colors line-clamp-2">
-                          {product.title}
-                        </h3>
-                        <p className="text-stone-500 text-xs md:text-sm line-clamp-2 mb-2 md:mb-4 leading-relaxed flex-grow">
-                          {product.description}
-                        </p>
-                        
-                        <div className="flex items-end justify-between mt-auto pt-2 md:pt-4 border-t border-stone-50">
-                          <div className="flex flex-col">
-                            <span className="text-base md:text-xl font-bold text-stone-900">₹{product.price}</span>
-                            {product.compareAtPrice && Number(product.compareAtPrice) > Number(product.price) && (
-                              <span className="text-[10px] md:text-xs text-stone-400 line-through">₹{product.compareAtPrice}</span>
-                            )}
-                          </div>
-                          <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-900 group-hover:bg-stone-900 group-hover:text-white transition-colors duration-300 lg:hidden">
-                            <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 rotate-180" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                    </CardContent>
+                    <CardFooter className="p-4 pt-0">
+                      <Button 
+                        asChild 
+                        className="w-full bg-stone-900 hover:bg-stone-800 text-white rounded-xl h-11 shadow-lg shadow-stone-200 group-hover:translate-y-0 transition-all duration-300"
+                      >
+                        <Link href={`/dashboard/shop/${product.handle}`}>
+                          View Details
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
                 </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
+              ))
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
