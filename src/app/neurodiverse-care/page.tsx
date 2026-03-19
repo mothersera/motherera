@@ -313,9 +313,7 @@ export default function NeurodiverseCarePage() {
                Through belief, structured guidance, and community support, families move from instability to confidence. Every journey is different — and every journey is worthy.
              </p>
              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-               <Button size="lg" className="rounded-full h-12 px-8 text-base bg-stone-900 hover:bg-stone-800 shadow-lg hover:shadow-xl transition-all">
-                 Explore Support Programs
-               </Button>
+               
                <Link href="/community/neurodiverse-families">
                  <Button size="lg" variant="outline" className="rounded-full h-12 px-8 text-base border-stone-300 hover:bg-white hover:text-stone-900">
                    Join Our Community
