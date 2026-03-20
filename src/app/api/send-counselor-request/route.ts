@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: 'onboarding@resend.dev', // Must be this until custom domain is verified
+      from: 'Mother Era <support@motherera.com>', 
       to: ['support@motherera.com'],
       subject: 'New Counselor Session Request',
       html: `
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error }, { status: 500 });
     }
 
-    console.log("Resend response:", data);
+    console.log("Email sent successfully:", data);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error sending counselor request email:', error);
