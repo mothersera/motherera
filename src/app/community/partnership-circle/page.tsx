@@ -236,11 +236,15 @@ export default function PartnershipCirclePage() {
       });
 
       // 2. Send Email Notification
-      await fetch('/api/send-counselor-request', {
+      const res = await fetch('/api/send-counselor-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, preferredTime: time, concern })
       });
+
+      if (!res.ok) {
+        console.error("Failed to send email notification", await res.text());
+      }
 
       // 3. Show Success UI
       setCounselorRequestSent(true);

@@ -5,8 +5,12 @@ import { Resend } from 'resend';
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function POST(request: Request) {
+  console.log("=== API HIT: /api/send-counselor-request ===");
+  console.log("API KEY exists:", !!process.env.RESEND_API_KEY);
+
   try {
     const body = await request.json();
+    console.log("Request body:", body);
     const { name, email, preferredTime, concern } = body;
 
     // Validate fields
@@ -33,9 +37,9 @@ export async function POST(request: Request) {
     }
 
     // Send email using Resend
-    const data = await resend.emails.send({
-      from: 'Mother Era <onboarding@resend.dev>', // In production use: no-reply@yourdomain.com
-      to: 'support@motherera.com',
+    const { data, error } = await resend.emails.send({
+      from: 'onboarding@resend.dev', // Must be this until custom domain is verified
+      to: ['support@motherera.com'],
       subject: 'New Counselor Session Request',
       html: `
         <h2>New Counselor Session Request</h2>
@@ -48,6 +52,12 @@ export async function POST(request: Request) {
       `
     });
 
+    if (error) {
+      console.error("Resend error:", error);
+      return NextResponse.json({ error }, { status: 500 });
+    }
+
+    console.log("Resend response:", data);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error sending counselor request email:', error);
