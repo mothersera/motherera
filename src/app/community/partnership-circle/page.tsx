@@ -34,6 +34,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 // Animation variants
 const fadeIn = {
@@ -212,14 +214,45 @@ export default function PartnershipCirclePage() {
     setWeeklyCheckInStep(WEEKLY_CHECKIN_PROMPTS.length + 1);
   };
 
-  const handleCounselorRequest = (e: React.FormEvent) => {
+  const handleCounselorRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, send to API
-    setCounselorRequestSent(true);
-    setTimeout(() => {
-      setShowCounselorForm(false);
-      setCounselorRequestSent(false);
-    }, 3000);
+    
+    const form = e.target as HTMLFormElement;
+    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+    const time = (form.elements.namedItem('time') as HTMLSelectElement).value;
+    const concern = (form.elements.namedItem('concern') as HTMLSelectElement).value;
+
+    try {
+      // 1. Save to Firestore
+      await addDoc(collection(db, "counselor_requests"), {
+        name,
+        email,
+        preferredTime: time,
+        concern,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        userId: session?.user?.id || "anonymous"
+      });
+
+      // 2. Send Email Notification
+      await fetch('/api/send-counselor-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, preferredTime: time, concern })
+      });
+
+      // 3. Show Success UI
+      setCounselorRequestSent(true);
+      setTimeout(() => {
+        setShowCounselorForm(false);
+        setCounselorRequestSent(false);
+      }, 4000);
+
+    } catch (error) {
+      console.error("Error submitting counselor request:", error);
+      alert("There was an issue submitting your request. Please try again or contact support directly.");
+    }
   };
 
   const handleOpenCommunity = () => {
