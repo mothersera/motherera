@@ -51,6 +51,11 @@ export default function Navbar() {
               <Link href={session.user.role === 'expert' ? '/expert/dashboard' : '/dashboard'} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Dashboard
               </Link>
+              {session.user.email === "support@motherera.com" && (
+                <Link href="/dashboard/admin/counselor-requests" className="text-sm font-medium text-rose-600 hover:text-rose-700 transition-colors">
+                  Admin
+                </Link>
+              )}
               <Link href="/dashboard/profile" className="flex items-center gap-2 group">
             <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 group-hover:bg-primary/20 transition-colors">
               {session.user.image ? (
@@ -127,6 +132,11 @@ export default function Navbar() {
                 <Link href={session.user.role === 'expert' ? '/expert/dashboard' : '/dashboard'} className="text-base font-medium text-muted-foreground hover:text-foreground" onClick={() => setIsMenuOpen(false)}>
                   Dashboard
                 </Link>
+                {session.user.email === "support@motherera.com" && (
+                  <Link href="/dashboard/admin/counselor-requests" className="text-base font-medium text-rose-600 hover:text-rose-700" onClick={() => setIsMenuOpen(false)}>
+                    Admin Dashboard
+                  </Link>
+                )}
                 <div className="pt-4 border-t border-border">
                   <p className="mb-2 text-sm text-muted-foreground">Signed in as {session.user.name}</p>
                   <Button variant="outline" className="w-full" onClick={() => signOut()}>
