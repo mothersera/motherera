@@ -225,22 +225,36 @@ export default function FiveMinuteResetPage() {
         // Cancel previous
         window.speechSynthesis.cancel();
         
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.volume = 1.0; // Voice always full volume
-        utterance.rate = 0.9; // Slightly slower for calm effect
-        utterance.pitch = 1.0;
-        
-        // Try to select a good voice
-        const voices = window.speechSynthesis.getVoices();
-        // Prefer "Google US English" or "Samantha" or "Microsoft Zira"
-        const preferredVoice = voices.find(v => 
-          v.name.includes("Google US English") || 
-          v.name.includes("Samantha") || 
-          v.name.includes("Zira")
-        );
-        if (preferredVoice) utterance.voice = preferredVoice;
+        // SpeechSynthesis requires Voices to be loaded. It's an async process in some browsers.
+        const speak = () => {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.volume = 1.0; // Voice always full volume
+          utterance.rate = 0.9; // Slightly slower for calm effect
+          utterance.pitch = 1.0;
+          
+          // Try to select a good voice
+          const voices = window.speechSynthesis.getVoices();
+          // Prefer "Google US English" or "Samantha" or "Microsoft Zira"
+          const preferredVoice = voices.find(v => 
+            v.name.includes("Google US English") || 
+            v.name.includes("Samantha") || 
+            v.name.includes("Zira")
+          );
+          if (preferredVoice) utterance.voice = preferredVoice;
 
-        window.speechSynthesis.speak(utterance);
+          window.speechSynthesis.speak(utterance);
+        };
+
+        // If voices are already loaded
+        if (window.speechSynthesis.getVoices().length > 0) {
+          speak();
+        } else {
+          // Wait for voices to load (mainly for Chrome)
+          window.speechSynthesis.onvoiceschanged = () => {
+            speak();
+            window.speechSynthesis.onvoiceschanged = null; // Clean up
+          };
+        }
       }
     }
   }, [transcriptIndex, isActive, isVoiceEnabled, activeActivity]);
@@ -255,12 +269,17 @@ export default function FiveMinuteResetPage() {
         // This is a direct user interaction, so we can play audio
         audioRef.current.play().catch(e => {
             console.error("Play failed:", e);
-            // If play fails on user click, we might need to recreate the audio context or instance
-            // But usually this means the file isn't loaded or supported
         });
       } else {
         audioRef.current.pause();
       }
+    }
+    
+    // Initialize speech synthesis on user interaction to unlock it for future use (especially on iOS/Safari)
+    if (newActiveState && typeof window !== 'undefined') {
+        const utterance = new SpeechSynthesisUtterance(""); // Silent utterance
+        utterance.volume = 0;
+        window.speechSynthesis.speak(utterance);
     }
     
     trackEvent(newActiveState ? 'reset_resumed' : 'reset_paused', { timeLeft });
