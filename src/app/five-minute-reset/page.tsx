@@ -240,8 +240,10 @@ export default function FiveMinuteResetPage() {
     utterance.rate = 0.9;
     utterance.pitch = 1;
 
-    // Use loaded voices
-    const preferredVoice = voices.find(v => 
+    // Use loaded voices, fallback if empty
+    const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+    
+    const preferredVoice = availableVoices.find(v => 
       v.name.includes("Google") || 
       v.name.includes("Samantha") || 
       v.name.includes("Zira")
@@ -299,8 +301,28 @@ export default function FiveMinuteResetPage() {
         // Force speech engine to activate INSIDE user click for the FIRST segment
         const firstSegment = TRANSCRIPTS[activeActivity]?.[0];
         if (firstSegment?.text && typeof window !== 'undefined') {
-            console.log("Speaking index (click): 0");
-            speak(firstSegment.text);
+            console.log("Speaking index (click): 0", firstSegment.text);
+            
+            // Do NOT cancel here, it aborts the click context in some browsers
+            // Just create and play
+            const utterance = new SpeechSynthesisUtterance(firstSegment.text);
+            utterance.volume = 1;
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+        
+            const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+            const preferredVoice = availableVoices.find(v => 
+              v.name.includes("Google") || 
+              v.name.includes("Samantha") || 
+              v.name.includes("Zira")
+            );
+        
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+            }
+        
+            window.speechSynthesis.speak(utterance);
+            
             lastSpokenIndex.current = 0;
             setTranscriptIndex(0);
         }
