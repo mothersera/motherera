@@ -265,6 +265,7 @@ export default function FiveMinuteResetPage() {
     }
 
     if (isActive && isVoiceEnabled) {
+      if (transcriptIndex === 0) return; // IMPORTANT: Skip first index, handled by click event
       if (transcriptIndex === lastSpokenIndex.current) return;
       
       const currentSegments = TRANSCRIPTS[activeActivity];
@@ -272,7 +273,7 @@ export default function FiveMinuteResetPage() {
         const text = currentSegments[transcriptIndex].text;
         
         lastSpokenIndex.current = transcriptIndex;
-        console.log("Speaking index:", transcriptIndex);
+        console.log("Speaking index (useEffect):", transcriptIndex);
         speak(text);
       }
     }
@@ -294,7 +295,16 @@ export default function FiveMinuteResetPage() {
       }
     }
     
-    if (!newActiveState && typeof window !== 'undefined') {
+    if (newActiveState && isVoiceEnabled) {
+        // Force speech engine to activate INSIDE user click for the FIRST segment
+        const firstSegment = TRANSCRIPTS[activeActivity]?.[0];
+        if (firstSegment?.text && typeof window !== 'undefined') {
+            console.log("Speaking index (click): 0");
+            speak(firstSegment.text);
+            lastSpokenIndex.current = 0;
+            setTranscriptIndex(0);
+        }
+    } else if (!newActiveState && typeof window !== 'undefined') {
       window.speechSynthesis.cancel();
     }
     
@@ -383,11 +393,26 @@ export default function FiveMinuteResetPage() {
             <ArrowLeft className="w-5 h-5 mr-2" /> Back
           </Button>
         </Link>
-        <div className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/40 backdrop-blur-md border border-white/40 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-          <span className="text-xs font-bold uppercase tracking-widest text-stone-600">Sanctuary Mode</span>
+        <div className="hidden md:flex items-center gap-4">
+          {/* Debug Button - Temporary */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              const u = new SpeechSynthesisUtterance("Test voice working");
+              window.speechSynthesis.speak(u);
+              console.log(window.speechSynthesis);
+            }}
+            className="text-xs bg-white/40"
+          >
+            Test Voice
+          </Button>
+          <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/40 backdrop-blur-md border border-white/40 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-widest text-stone-600">Sanctuary Mode</span>
+          </div>
         </div>
-        <div className="w-20"></div> {/* Spacer */}
+        <div className="w-20 hidden md:block"></div> {/* Spacer */}
       </div>
 
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-16 items-center relative z-10">
