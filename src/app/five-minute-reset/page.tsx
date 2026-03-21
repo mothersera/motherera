@@ -235,25 +235,31 @@ export default function FiveMinuteResetPage() {
       window.speechSynthesis.resume();
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.volume = 1;
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    // Use loaded voices, fallback if empty
-    const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+    // Wrap in timeout to ensure cancel has finished processing
+    setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.volume = 1;
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
     
-    const preferredVoice = availableVoices.find(v => 
-      v.name.includes("Google") || 
-      v.name.includes("Samantha") || 
-      v.name.includes("Zira")
-    );
-
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    }
-
-    window.speechSynthesis.speak(utterance);
+        // Try to find a good voice, otherwise just use whatever the browser defaults to
+        const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+        
+        if (availableVoices && availableVoices.length > 0) {
+            const preferredVoice = availableVoices.find(v => 
+              v.name.includes("Google") || 
+              v.name.includes("Samantha") || 
+              v.name.includes("Zira") ||
+              v.lang.startsWith("en-")
+            );
+        
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+            }
+        }
+    
+        window.speechSynthesis.speak(utterance);
+    }, 50);
   };
 
   // Handle TTS
@@ -303,25 +309,8 @@ export default function FiveMinuteResetPage() {
         if (firstSegment?.text && typeof window !== 'undefined') {
             console.log("Speaking index (click): 0", firstSegment.text);
             
-            // Do NOT cancel here, it aborts the click context in some browsers
-            // Just create and play
-            const utterance = new SpeechSynthesisUtterance(firstSegment.text);
-            utterance.volume = 1;
-            utterance.rate = 0.9;
-            utterance.pitch = 1;
-        
-            const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
-            const preferredVoice = availableVoices.find(v => 
-              v.name.includes("Google") || 
-              v.name.includes("Samantha") || 
-              v.name.includes("Zira")
-            );
-        
-            if (preferredVoice) {
-              utterance.voice = preferredVoice;
-            }
-        
-            window.speechSynthesis.speak(utterance);
+            // Speak using the helper which now handles cancel properly with a slight delay
+            speak(firstSegment.text);
             
             lastSpokenIndex.current = 0;
             setTranscriptIndex(0);
