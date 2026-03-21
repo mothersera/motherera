@@ -27,7 +27,7 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex md:items-center md:space-x-6">
-          <Link href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/aboutus" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             About
           </Link>
           <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
