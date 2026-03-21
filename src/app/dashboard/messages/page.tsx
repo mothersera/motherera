@@ -131,6 +131,25 @@ function MessagesContent() {
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load cached conversations on mount for instant load
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("motherera_conversations");
+      if (cached) {
+        setConversations(JSON.parse(cached));
+      }
+    } catch (e) {
+      console.error("Failed to parse cached conversations", e);
+    }
+  }, []);
+
+  // Save conversations to cache when they update
+  useEffect(() => {
+    if (conversations.length > 0) {
+      localStorage.setItem("motherera_conversations", JSON.stringify(conversations));
+    }
+  }, [conversations]);
+
   // 1. Check plan
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.subscriptionPlan === 'basic') {
@@ -156,6 +175,15 @@ function MessagesContent() {
     
     return () => unsubscribe();
   }, [session?.user?.id]); // Removed selectedConversation dependency
+
+  // Preload last chat if none selected and not on mobile (to avoid sliding over list on mobile)
+  useEffect(() => {
+    // Only auto-select on desktop screens to preserve mobile UX
+    const isDesktop = window.innerWidth >= 768;
+    if (isDesktop && conversations.length > 0 && !selectedConversation && !targetUserId && !searchParams.get('chat')) {
+      setSelectedConversation(conversations[0]);
+    }
+  }, [conversations, selectedConversation, targetUserId, searchParams]);
 
   // 3. Handle direct message link from profile or URL params
   useEffect(() => {
@@ -232,8 +260,20 @@ function MessagesContent() {
     // Mark as read
     markAsRead(selectedConversation.id, session.user.id);
 
-    const unsubscribe = subscribeToMessages(selectedConversation.id, (msgs) => {
-      setMessages(msgs);
+    const unsubscribe = subscribeToMessages(selectedConversation.id, (newMessages, isInitial) => {
+      if (isInitial) {
+        setMessages(newMessages);
+      } else {
+        setMessages(prev => {
+          // Deduplicate based on message ID
+          const existingIds = new Set(prev.map(m => m.id));
+          const uniqueNewMessages = newMessages.filter(m => !existingIds.has(m.id));
+          
+          if (uniqueNewMessages.length === 0) return prev;
+          
+          return [...prev, ...uniqueNewMessages];
+        });
+      }
     });
     
     return () => unsubscribe();
@@ -351,8 +391,41 @@ function MessagesContent() {
 
   if (loading || status === 'loading') {
     return (
-      <div className="h-[calc(100vh-100px)] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
+      <div className="container mx-auto px-0 md:px-4 py-0 md:py-8 h-[calc(100vh-64px)] md:h-[calc(100vh-100px)]">
+        <div className="flex md:grid md:grid-cols-3 gap-0 md:gap-6 h-full relative overflow-hidden md:overflow-visible">
+          {/* Skeleton Conversation List */}
+          <Card className="w-full md:col-span-1 h-full overflow-hidden flex flex-col rounded-none md:rounded-3xl border-0 md:border md:border-stone-200 shadow-none md:shadow-sm">
+            <div className="p-6 border-b border-stone-100 bg-white/80">
+              <div className="h-8 bg-stone-200 rounded w-1/2 mb-4 animate-pulse"></div>
+              <div className="h-10 bg-stone-100 rounded-full w-full animate-pulse"></div>
+            </div>
+            <div className="flex-1 overflow-y-auto bg-white p-4 space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-stone-200 shrink-0 animate-pulse"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-stone-200 rounded w-3/4 animate-pulse"></div>
+                    <div className="h-3 bg-stone-100 rounded w-1/2 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+          
+          {/* Skeleton Chat Window */}
+          <Card className="hidden md:flex md:col-span-2 h-full flex-col overflow-hidden rounded-3xl border border-stone-200 shadow-sm bg-stone-50/50">
+            <div className="p-4 border-b border-stone-100 flex items-center gap-3 bg-white/90">
+              <div className="w-11 h-11 rounded-full bg-stone-200 shrink-0 animate-pulse"></div>
+              <div className="space-y-2 flex-1">
+                <div className="h-4 bg-stone-200 rounded w-1/4 animate-pulse"></div>
+                <div className="h-3 bg-stone-100 rounded w-16 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="flex-1 p-6 flex items-center justify-center">
+               <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }

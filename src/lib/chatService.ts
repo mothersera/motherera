@@ -336,18 +336,38 @@ export function subscribeToConversations(userId: string, callback: (conversation
 
 /**
  * Subscribes to real-time messages for a specific conversation.
+ * Uses limit to lazy load messages and docChanges to optimize state updates.
  */
-export function subscribeToMessages(conversationId: string, callback: (messages: Message[]) => void) {
+export function subscribeToMessages(conversationId: string, callback: (newMessages: Message[], isInitial: boolean) => void) {
   const q = query(
     collection(db, "conversations", conversationId, "messages"),
-    orderBy("createdAt", "asc")
+    orderBy("createdAt", "desc"),
+    limit(30)
   );
 
+  let isInitial = true;
+
   return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Message));
-    callback(messages);
+    if (isInitial) {
+      // First load: send all documents reversed (so oldest first)
+      const messages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Message)).reverse();
+      callback(messages, true);
+      isInitial = false;
+    } else {
+      // Subsequent loads: only send added documents
+      const newMessages = snapshot.docChanges()
+        .filter(change => change.type === "added")
+        .map(change => ({
+          id: change.doc.id,
+          ...change.doc.data()
+        } as Message)).reverse();
+        
+      if (newMessages.length > 0) {
+        callback(newMessages, false);
+      }
+    }
   });
 }

@@ -235,31 +235,29 @@ export default function FiveMinuteResetPage() {
       window.speechSynthesis.resume();
     }
 
-    // Wrap in timeout to ensure cancel has finished processing
-    setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.volume = 1;
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
+    // Do NOT use setTimeout here, it breaks Safari/iOS user interaction context
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.volume = 1;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    // Try to find a good voice, otherwise just use whatever the browser defaults to
+    const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
     
-        // Try to find a good voice, otherwise just use whatever the browser defaults to
-        const availableVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
-        
-        if (availableVoices && availableVoices.length > 0) {
-            const preferredVoice = availableVoices.find(v => 
-              v.name.includes("Google") || 
-              v.name.includes("Samantha") || 
-              v.name.includes("Zira") ||
-              v.lang.startsWith("en-")
-            );
-        
-            if (preferredVoice) {
-              utterance.voice = preferredVoice;
-            }
+    if (availableVoices && availableVoices.length > 0) {
+        const preferredVoice = availableVoices.find(v => 
+          v.name.includes("Google") || 
+          v.name.includes("Samantha") || 
+          v.name.includes("Zira") ||
+          v.lang.startsWith("en-")
+        );
+    
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
         }
-    
-        window.speechSynthesis.speak(utterance);
-    }, 50);
+    }
+
+    window.speechSynthesis.speak(utterance);
   };
 
   // Handle TTS
