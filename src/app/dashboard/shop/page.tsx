@@ -13,26 +13,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { CurrencySelector } from "@/components/shop/CurrencySelector";
 
-const CATEGORIES = ['All', 'Baby Care', 'Feeding', 'Sleep', 'Hygiene & Safety', 'Mother Wellness'];
-
 export default function ShopPage() {
   const { data: session } = useSession();
   const { convertAndFormat } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const userStage = session?.user?.motherhoodStage || 'general';
 
   useEffect(() => {
     loadProducts();
-  }, [activeCategory]);
+  }, []);
 
   const loadProducts = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchProducts(activeCategory === 'All' ? undefined : activeCategory, userStage);
+      const data = await fetchProducts(undefined, userStage);
       setProducts(data);
     } catch (error) {
       console.error("Failed to load products", error);
@@ -90,25 +87,8 @@ export default function ShopPage() {
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
-          <div className="flex gap-2 overflow-x-auto pb-4 md:pb-0 w-full md:w-auto no-scrollbar mask-gradient">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap ${
-                  activeCategory === cat 
-                    ? "bg-stone-900 text-white shadow-lg shadow-stone-200 scale-105" 
-                    : "bg-white text-stone-600 border border-stone-200 hover:bg-stone-50 hover:border-stone-300"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-          
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="flex flex-col md:flex-row justify-end items-center gap-6 mb-8">
           <CurrencySelector />
         </div>
 
