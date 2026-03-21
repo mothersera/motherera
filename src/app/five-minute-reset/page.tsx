@@ -78,8 +78,26 @@ export default function FiveMinuteResetPage() {
   const [transcriptIndex, setTranscriptIndex] = useState(0);
   const [volume, setVolume] = useState(0.5);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastSpokenIndex = useRef<number>(-1);
+
+  // Load Voices Properly
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      if (v.length > 0) {
+        setVoices(v);
+        console.log("Voices loaded:", v.length);
+      }
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
 
   // Mock Analytics - Replace with real implementation (GA4, Segment, etc.)
   const trackEvent = (eventName: string, data?: any) => {
@@ -206,6 +224,36 @@ export default function FiveMinuteResetPage() {
     setTranscriptIndex(index);
   }, [timeLeft, activeActivity]);
 
+  const speak = (text: string) => {
+    if (!isVoiceEnabled || typeof window === 'undefined') return;
+
+    // STOP any existing speech (IMPORTANT)
+    window.speechSynthesis.cancel();
+
+    // Handle Mobile Safari paused state
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.volume = 1;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    // Use loaded voices
+    const preferredVoice = voices.find(v => 
+      v.name.includes("Google") || 
+      v.name.includes("Samantha") || 
+      v.name.includes("Zira")
+    );
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   // Handle TTS
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -217,47 +265,18 @@ export default function FiveMinuteResetPage() {
     }
 
     if (isActive && isVoiceEnabled) {
-      // Get current text
+      if (transcriptIndex === lastSpokenIndex.current) return;
+      
       const currentSegments = TRANSCRIPTS[activeActivity];
       if (transcriptIndex < currentSegments.length) {
         const text = currentSegments[transcriptIndex].text;
         
-        // Cancel previous
-        window.speechSynthesis.cancel();
-        
-        // SpeechSynthesis requires Voices to be loaded. It's an async process in some browsers.
-        const speak = () => {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.volume = 1.0; // Voice always full volume
-          utterance.rate = 0.9; // Slightly slower for calm effect
-          utterance.pitch = 1.0;
-          
-          // Try to select a good voice
-          const voices = window.speechSynthesis.getVoices();
-          // Prefer "Google US English" or "Samantha" or "Microsoft Zira"
-          const preferredVoice = voices.find(v => 
-            v.name.includes("Google US English") || 
-            v.name.includes("Samantha") || 
-            v.name.includes("Zira")
-          );
-          if (preferredVoice) utterance.voice = preferredVoice;
-
-          window.speechSynthesis.speak(utterance);
-        };
-
-        // If voices are already loaded
-        if (window.speechSynthesis.getVoices().length > 0) {
-          speak();
-        } else {
-          // Wait for voices to load (mainly for Chrome)
-          window.speechSynthesis.onvoiceschanged = () => {
-            speak();
-            window.speechSynthesis.onvoiceschanged = null; // Clean up
-          };
-        }
+        lastSpokenIndex.current = transcriptIndex;
+        console.log("Speaking index:", transcriptIndex);
+        speak(text);
       }
     }
-  }, [transcriptIndex, isActive, isVoiceEnabled, activeActivity]);
+  }, [transcriptIndex, isActive, isVoiceEnabled, activeActivity, voices]);
 
   const toggleTimer = () => {
     const newActiveState = !isActive;
@@ -275,11 +294,8 @@ export default function FiveMinuteResetPage() {
       }
     }
     
-    // Initialize speech synthesis on user interaction to unlock it for future use (especially on iOS/Safari)
-    if (newActiveState && typeof window !== 'undefined') {
-        const utterance = new SpeechSynthesisUtterance(""); // Silent utterance
-        utterance.volume = 0;
-        window.speechSynthesis.speak(utterance);
+    if (!newActiveState && typeof window !== 'undefined') {
+      window.speechSynthesis.cancel();
     }
     
     trackEvent(newActiveState ? 'reset_resumed' : 'reset_paused', { timeLeft });
@@ -287,10 +303,13 @@ export default function FiveMinuteResetPage() {
 
   const resetTimer = () => {
     setIsActive(false);
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+    
     const activity = ACTIVITIES.find(a => a.id === activeActivity);
     setTimeLeft(activity?.duration || 300);
     setIsFinished(false);
     setTranscriptIndex(0);
+    lastSpokenIndex.current = -1;
     trackEvent('reset_restarted', { activity: activeActivity });
     
     if (audioRef.current) {
@@ -301,6 +320,8 @@ export default function FiveMinuteResetPage() {
   };
 
   const changeActivity = (id: ActivityType) => {
+    if (typeof window !== 'undefined') window.speechSynthesis.cancel();
+    
     setActiveActivity(id);
     localStorage.setItem('motherera_reset_activity', id);
     const activity = ACTIVITIES.find(a => a.id === id);
@@ -309,6 +330,7 @@ export default function FiveMinuteResetPage() {
     setIsActive(false); 
     setIsFinished(false);
     setTranscriptIndex(0);
+    lastSpokenIndex.current = -1;
     trackEvent('reset_started', { activity: id });
 
     if (audioRef.current) {
