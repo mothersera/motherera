@@ -65,18 +65,23 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
   const model = isPremium ? "gpt-4o" : "gpt-4o-mini";
   const maxTokens = 150;
   const temperature = isPremium ? 0.8 : 0.6;
-  const input = [
+  const messages = [
     { role: "system", content: "You are a premium AI counselor.\n\nRules:\n\n* Be emotionally supportive\n* Start responses naturally (not the same sentence every time)\n* Vary your tone\n* Sometimes show empathy, sometimes be direct\n* Never repeat the same opening line\n* Sound human, not scripted\n* Max 5 lines per response\n* No long paragraphs\n* Use bullet points when needed\n* Keep it short, calm, human\n* Avoid numbered lists like 1,2,3\n* Speak like a real person, not an article" },
-    ...(Array.isArray(history) ? history.slice(-6) : []),
+    ...(Array.isArray(history) ? history.slice(-6).map(m => ({ role: m.role, content: m.content })) : []),
     { role: "user", content: prompt }
   ];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const res = await fetch("https://api.openai.com/v1/responses", {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model, input, temperature, max_output_tokens: maxTokens }),
+      body: JSON.stringify({ 
+        model, 
+        messages, 
+        temperature, 
+        max_tokens: maxTokens 
+      }),
       signal: controller.signal,
     });
     clearTimeout(timer);
@@ -87,7 +92,7 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
     }
     const data = await res.json();
     console.log("OpenAI response:", data);
-    const reply = data?.output?.[0]?.content?.[0]?.text || "Something went wrong. Please try again.";
+    const reply = data?.choices?.[0]?.message?.content || "Something went wrong. Please try again.";
     return reply;
   } catch {
     throw new Error("Request to OpenAI failed or timed out");
