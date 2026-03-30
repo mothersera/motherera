@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Send, MessageSquare, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatMessage = { role: "user" | "assistant"; content: string; loading?: boolean };
 
 export default function SupportPage() {
   const { data: session } = useSession();
@@ -22,69 +22,79 @@ export default function SupportPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
-  const formatAIResponse = (text: string) => {
+  const cleanText = (text: string) => {
     return text
-      .replace(/\*\*(.*?)\*\*/g, "$1")
-      .replace(/\d+\.\s/g, "\n• ")
+      .replace(/\*\*/g, "")
       .replace(/\n/g, "\n\n");
   };
 
-  useEffect(() => {
-  }, []);
+  async function typeMessage(fullText: string) {
+    let current = "";
+    const cleaned = cleanText(fullText);
+    for (let i = 0; i < cleaned.length; i++) {
+      current += cleaned[i];
+      setMessages(prev => {
+        const updated = [...prev];
+        if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
+          updated[updated.length - 1] = { ...updated[updated.length - 1], content: current, loading: false };
+        }
+        return updated;
+      });
+      await new Promise(res => setTimeout(res, 10));
+    }
+  }
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const fetchMessages = async () => {};
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isLoading) return;
+
+    const userMsg = newMessage.trim();
+    setNewMessage("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
 
     setIsLoading(true);
     const isPremium =
       session?.user?.subscriptionPlan === "premium" || session?.user?.subscriptionPlan === "specialized";
-    const outgoing = { role: "user", content: newMessage.trim() } as ChatMessage;
-    setMessages(prev => [...prev, outgoing, { role: "assistant", content: "MotherEra AI is typing..." }]);
+    
+    setMessages(prev => [
+      ...prev,
+      { role: "user", content: userMsg },
+      { role: "assistant", content: "Typing...", loading: true }
+    ]);
+
     try {
       const res = await fetch("/api/mother-era-counselor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage.trim(), userId: session?.user?.id, isPremium, history: messages }),
+        body: JSON.stringify({ message: userMsg, userId: session?.user?.id, isPremium, history: messages }),
       });
+      
       if (res.ok) {
         const data = await res.json();
         const reply = String(data?.reply || "Something went wrong. Please try again.");
-        if (typeof data?.remaining === "number") {
-          setRemainingCount(data.remaining);
-        }
-        setMessages(prev => {
-          const updated = [...prev];
-          const idx = updated.findIndex(m => m.role === "assistant" && m.content === "MotherEra AI is typing...");
-          if (idx !== -1) {
-            updated[idx] = { role: "assistant", content: reply };
-          } else {
-            updated.push({ role: "assistant", content: reply });
-          }
-          return updated;
-        });
-        setNewMessage("");
+        if (typeof data?.remaining === "number") setRemainingCount(data.remaining);
+
+        await typeMessage(reply);
       } else {
         const err = await res.json().catch(() => ({} as any));
         if (err?.error === "LIMIT_REACHED") {
           setLimitReached(true);
-          setMessages(prev => prev.filter(m => !(m.role === "assistant" && m.content === "MotherEra AI is typing...")));
+          setMessages(prev => prev.filter(m => !m.loading));
         } else {
           setMessages(prev => {
-            const updated = prev.filter(m => !(m.role === "assistant" && m.content === "Thinking..."));
+            const updated = prev.filter(m => !m.loading);
             return [...updated, { role: "assistant", content: "Something went wrong. Please try again." }];
           });
         }
       }
-    } catch {
+    } catch (error) {
+      console.error("Chat error:", error);
       setMessages(prev => {
-        const updated = prev.filter(m => !(m.role === "assistant" && m.content === "Thinking..."));
+        const updated = prev.filter(m => !m.loading);
         return [...updated, { role: "assistant", content: "Something went wrong. Please try again." }];
       });
     } finally {
@@ -147,38 +157,42 @@ export default function SupportPage() {
                   </div>
                   <h3 className="text-lg font-bold text-stone-900 mb-2">Start a New Conversation</h3>
                   <p className="text-stone-500 text-sm">
-                    Hi {session?.user?.name?.split(' ')[0] || 'there'}! Ask anything about pregnancy, nutrition, postpartum recovery, and emotional well-being.
+                    Ask me anything about motherhood, parenting, or emotional support 💛
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col space-y-4">
                   {messages.map((msg, idx) => (
-                    <div key={idx} className="flex flex-col gap-4">
+                    <motion.div 
+                      key={idx} 
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                    >
                       {msg.role === "user" ? (
-                        <div className="flex flex-col items-end gap-1">
-                          <div className="flex items-end gap-2 max-w-[70%]">
-                            <div className="p-4 rounded-2xl rounded-br-none text-sm leading-relaxed shadow-sm bg-red-500 text-white">
-                              {msg.content}
-                            </div>
-                          </div>
-                          <span className="text-[10px] text-stone-400 mr-1">Sent</span>
+                        <div className="bg-red-500 text-white px-4 py-2 rounded-2xl max-w-[70%] self-end shadow-md">
+                          {msg.content}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="flex items-end gap-3 max-w-[70%]">
-                            <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center text-rose-600 border border-rose-200">
-                              <Bot className="w-4 h-4" />
-                            </div>
-                            <div className="bg-gray-100 text-gray-800 p-4 rounded-2xl text-sm shadow-sm leading-relaxed whitespace-pre-line max-w-full">
-                              {formatAIResponse(msg.content).split("\n").map((line, i) => (
-                                <p key={i} className="mb-2">{line}</p>
-                              ))}
-                            </div>
+                        <div className="flex items-start gap-3 max-w-[70%] self-start">
+                          <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center text-rose-600 border border-rose-200">
+                            <Bot className="w-4 h-4" />
                           </div>
-                          <span className="text-[10px] text-stone-400 ml-12">Reply</span>
+                          <div className={`bg-gray-100 text-gray-800 px-4 py-3 rounded-2xl shadow-sm whitespace-pre-line ${msg.loading ? "animate-pulse" : ""}`}>
+                            {msg.loading ? (
+                              msg.content
+                            ) : (
+                              msg.content.split("\n").map((line, i) => (
+                                <p key={i} className={line.trim() ? "mb-2" : "h-2"}>
+                                  {line}
+                                </p>
+                              ))
+                            )}
+                          </div>
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
@@ -193,7 +207,7 @@ export default function SupportPage() {
             </div>
           </CardContent>
 
-          <CardFooter className="p-4 bg-white border-t border-stone-100">
+          <CardFooter className="sticky bottom-0 bg-white p-3 border-t flex flex-col gap-2">
             {limitReached ? (
               <div className="w-full">
                 <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 text-center">
@@ -208,30 +222,9 @@ export default function SupportPage() {
                 </div>
               </div>
             ) : (
-            <form onSubmit={handleSendMessage} className="flex w-full gap-3 items-end">
-              <div className="relative flex-1">
-                <textarea
-                  ref={textareaRef}
-                  placeholder="Type your message here..."
-                  value={newMessage}
-                  onChange={(e) => {
-                    setNewMessage(e.target.value);
-                    if (textareaRef.current) {
-                      textareaRef.current.style.height = "auto";
-                      textareaRef.current.style.height = `${Math.min(160, textareaRef.current.scrollHeight)}px`;
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage(e);
-                    }
-                  }}
-                  disabled={isLoading}
-                  className="min-h-[48px] max-h-40 w-full bg-stone-50 border border-stone-200 focus-visible:ring-rose-500 rounded-xl p-3 text-sm resize-none"
-                />
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {["How can I improve sleep?", "What should I eat today?", "I feel overwhelmed—any tips?", "How do I build a routine?"].map((s) => (
+              <div className="w-full space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {messages.length === 0 && ["How can I improve sleep?", "What should I eat today?", "I feel overwhelmed—any tips?", "How do I build a routine?"].map((s) => (
                     <Button
                       key={s}
                       type="button"
@@ -244,20 +237,34 @@ export default function SupportPage() {
                     </Button>
                   ))}
                 </div>
+                <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
+                  <input
+                    placeholder="Type your message here..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(e);
+                      }
+                    }}
+                    disabled={isLoading}
+                    className="flex-1 px-4 py-2 rounded-full border focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading || !newMessage.trim()} 
+                    className="bg-red-500 text-white px-6 py-2 rounded-full hover:scale-105 transition h-10"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </form>
                 {typeof remainingCount === "number" && (
-                  <div className="mt-2 text-[11px] text-stone-500">
+                  <div className="text-[11px] text-stone-500 text-center">
                     Free messages remaining today: {remainingCount}
                   </div>
                 )}
               </div>
-              <Button 
-                type="submit" 
-                disabled={isLoading || !newMessage.trim()} 
-                className="h-12 w-12 rounded-xl bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 flex-shrink-0"
-              >
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              </Button>
-            </form>
             )}
           </CardFooter>
         </Card>
