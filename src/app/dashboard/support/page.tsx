@@ -42,7 +42,7 @@ export default function SupportPage() {
       const res = await fetch("/api/mother-era-counselor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage.trim(), userId: session?.user?.id, isPremium }),
+        body: JSON.stringify({ message: newMessage.trim(), userId: session?.user?.id, isPremium, history: messages }),
       });
       if (res.ok) {
         const data = await res.json();
