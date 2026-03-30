@@ -11,30 +11,53 @@ async function getToday() {
 }
 
 async function checkAndIncrementUsage(userId: string, limit: number) {
-  const date = await getToday();
-  const id = `${userId}_${date}`;
-  const ref = doc(collection(db, "ai_usage"), id);
-  const snap = await getDoc(ref);
-  const nowMs = Date.now();
-  if (snap.exists()) {
-    const data = snap.data() as any;
-    const count = data.count || 0;
-    const lastMs = data.lastRequestMs || 0;
-    if (nowMs - lastMs < 1000) {
-      return { allowed: false, rateLimited: true, remaining: Math.max(0, limit - count) };
+  try {
+    const date = await getToday();
+    const id = `${userId}_${date}`;
+    const ref = doc(collection(db, "ai_usage"), id);
+    
+    console.log("Checking usage for:", userId);
+    const snap = await getDoc(ref);
+    const nowMs = Date.now();
+
+    if (snap.exists()) {
+      const data = snap.data() as any;
+      const count = data.count || 0;
+      const lastMs = data.lastRequestMs || 0;
+      
+      console.log("Current count:", count);
+
+      if (nowMs - lastMs < 1000) {
+        return { allowed: false, rateLimited: true, remaining: Math.max(0, limit - count) };
+      }
+      if (count >= limit) {
+        return { allowed: false, rateLimited: false, remaining: 0 };
+      }
+      await updateDoc(ref, { 
+        count: count + 1, 
+        lastRequestMs: nowMs, 
+        updatedAt: serverTimestamp() 
+      });
+      return { allowed: true, rateLimited: false, remaining: Math.max(0, limit - (count + 1)) };
+    } else {
+      await setDoc(ref, { 
+        userId, 
+        date, 
+        count: 1, 
+        lastRequestMs: nowMs, 
+        createdAt: serverTimestamp(), 
+        updatedAt: serverTimestamp() 
+      });
+      return { allowed: true, rateLimited: false, remaining: Math.max(0, limit - 1) };
     }
-    if (count >= limit) {
-      return { allowed: false, rateLimited: false, remaining: 0 };
-    }
-    await updateDoc(ref, { count: count + 1, lastRequestMs: nowMs, updatedAt: serverTimestamp() });
-    return { allowed: true, rateLimited: false, remaining: Math.max(0, limit - (count + 1)) };
-  } else {
-    await setDoc(ref, { userId, date, count: 1, lastRequestMs: nowMs, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-    return { allowed: true, rateLimited: false, remaining: Math.max(0, limit - 1) };
+  } catch (err) {
+    console.error("Usage check failed:", err);
+    return { allowed: true, rateLimited: false, remaining: limit }; // NEVER block user on error
   }
 }
 
 async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ role: "user" | "assistant"; content: string }>) {
+  console.log("Calling OpenAI...");
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return "I’m here to help with calm, motherhood-focused guidance. It looks like the AI service is not configured. Please try again shortly.";
@@ -117,8 +140,8 @@ export async function POST(request: Request) {
     const payload: any = { reply: finalReply };
     if (!isPremium) payload.remaining = usage.remaining;
     return NextResponse.json(payload);
-  } catch (e: any) {
-    const msg = typeof e?.message === "string" ? e.message : "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+  } catch (err: any) {
+    console.error("API ERROR:", err);
+    return NextResponse.json({ error: "SERVER_ERROR" }, { status: 500 });
   }
 }

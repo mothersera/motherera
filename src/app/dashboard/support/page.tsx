@@ -85,9 +85,16 @@ export default function SupportPage() {
         await typeMessage(reply);
       } else {
         const err = await res.json().catch(() => ({} as any));
-        if (err?.error === "LIMIT_REACHED") {
+        const errorCode = err?.error;
+
+        if (errorCode === "LIMIT_REACHED") {
           setLimitReached(true);
           setMessages(prev => prev.filter(m => !m.loading));
+        } else if (errorCode === "SERVER_ERROR") {
+          setMessages(prev => {
+            const updated = prev.filter(m => !m.loading);
+            return [...updated, { role: "assistant", content: "We’re having a small issue. Try again in a moment." }];
+          });
         } else {
           setMessages(prev => {
             const updated = prev.filter(m => !m.loading);
@@ -99,7 +106,7 @@ export default function SupportPage() {
       console.error("Chat error:", error);
       setMessages(prev => {
         const updated = prev.filter(m => !m.loading);
-        return [...updated, { role: "assistant", content: "Something went wrong. Please try again." }];
+        return [...updated, { role: "assistant", content: "We’re having a small issue. Try again in a moment." }];
       });
     } finally {
       setIsLoading(false);
