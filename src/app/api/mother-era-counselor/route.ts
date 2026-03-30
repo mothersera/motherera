@@ -39,30 +39,35 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
   if (!apiKey) {
     return "I’m here to help with calm, motherhood-focused guidance. It looks like the AI service is not configured. Please try again shortly.";
   }
-  const systemPrompt =
-    "You are MotherEra’s AI Counselor.\n\nYour role:\n• Provide calm, emotionally supportive guidance to mothers\n• Speak like a caring, wise human—not a robot\n• Be warm, validating, and reassuring\n• Give practical next steps\n\nRules:\n• Keep responses clear and not overly long\n• Avoid sounding clinical or robotic\n• Never judge or shame\n• If situation is serious, gently suggest professional help\n\nTone:\n• Soft\n• Gentle\n• Supportive\n• Emotionally intelligent";
   const model = isPremium ? "gpt-4o" : "gpt-4o-mini";
   const maxTokens = isPremium ? 800 : 300;
   const temperature = isPremium ? 0.8 : 0.6;
-  const messages = [{ role: "system", content: systemPrompt } as any].concat((history || []).slice(-6)).concat([{ role: "user", content: prompt }]);
+  const input = [
+    { role: "system", content: "You are MotherEra’s AI Counselor. Provide calm, emotionally supportive, motherhood-focused guidance." },
+    ...(Array.isArray(history) ? history.slice(-6) : []),
+    { role: "user", content: prompt }
+  ];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model, temperature, max_tokens: maxTokens, messages }),
+      body: JSON.stringify({ model, input, temperature, max_output_tokens: maxTokens }),
       signal: controller.signal,
     });
     clearTimeout(timer);
     if (!res.ok) {
-      return "Something went wrong. Please try again.";
+      const errText = await res.text();
+      console.log("OpenAI error:", errText);
+      throw new Error(errText || "OpenAI API error");
     }
     const data = await res.json();
-    const reply = data?.choices?.[0]?.message?.content || "Something went wrong. Please try again.";
+    console.log("OpenAI response:", data);
+    const reply = data?.output?.[0]?.content?.[0]?.text || "Something went wrong. Please try again.";
     return reply;
   } catch {
-    return "Something went wrong. Please try again.";
+    throw new Error("Request to OpenAI failed or timed out");
   }
 }
 
@@ -94,7 +99,8 @@ export async function POST(request: Request) {
     const payload: any = { reply: finalReply };
     if (!isPremium) payload.remaining = usage.remaining;
     return NextResponse.json(payload);
-  } catch (e) {
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+  } catch (e: any) {
+    const msg = typeof e?.message === "string" ? e.message : "Unknown error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
