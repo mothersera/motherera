@@ -53,6 +53,10 @@ export default function SupportPage() {
     if (!newMessage.trim() || isLoading) return;
 
     const userMsg = newMessage.trim();
+    
+    // Prevent duplicate responses
+    if (messages.length > 0 && messages[messages.length - 1].content === userMsg) return;
+
     setNewMessage("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
 

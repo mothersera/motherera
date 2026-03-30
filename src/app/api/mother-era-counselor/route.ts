@@ -43,7 +43,7 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
   const maxTokens = 150;
   const temperature = isPremium ? 0.8 : 0.6;
   const input = [
-    { role: "system", content: "You are a premium AI counselor.\n\nSTRICT RULES:\n\n* Max 5 lines per response\n* No long paragraphs\n* Use bullet points when needed\n* Keep it short, calm, human\n* Avoid numbered lists like 1,2,3\n* Speak like a real person, not an article" },
+    { role: "system", content: "You are a premium AI counselor.\n\nRules:\n\n* Be emotionally supportive\n* Start responses naturally (not the same sentence every time)\n* Vary your tone\n* Sometimes show empathy, sometimes be direct\n* Never repeat the same opening line\n* Sound human, not scripted\n* Max 5 lines per response\n* No long paragraphs\n* Use bullet points when needed\n* Keep it short, calm, human\n* Avoid numbered lists like 1,2,3\n* Speak like a real person, not an article" },
     ...(Array.isArray(history) ? history.slice(-6) : []),
     { role: "user", content: prompt }
   ];
@@ -102,7 +102,17 @@ export async function POST(request: Request) {
     }
     const formatted = formatAIResponse(cleaned);
     const maxLen = isPremium ? 2000 : 1000;
-    let finalReply = `I understand why you're asking this 💛\n\n${formatted}`;
+    
+    const openings = [
+      "I understand how you might be feeling 💛",
+      "That’s a really valid concern",
+      "I’m glad you asked this",
+      "This is something many people wonder about",
+      ""
+    ];
+    const randomOpening = openings[Math.floor(Math.random() * openings.length)];
+    let finalReply = randomOpening ? `${randomOpening}\n\n${formatted}` : formatted;
+
     if (finalReply.length > maxLen) finalReply = finalReply.slice(0, maxLen);
     const payload: any = { reply: finalReply };
     if (!isPremium) payload.remaining = usage.remaining;
