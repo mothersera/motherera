@@ -40,10 +40,10 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
     return "I’m here to help with calm, motherhood-focused guidance. It looks like the AI service is not configured. Please try again shortly.";
   }
   const model = isPremium ? "gpt-4o" : "gpt-4o-mini";
-  const maxTokens = isPremium ? 400 : 200;
+  const maxTokens = 150;
   const temperature = isPremium ? 0.8 : 0.6;
   const input = [
-    { role: "system", content: "You are a premium AI counselor for mothers and families. Your tone must be calm, emotionally supportive, and human-like.\n\nRules:\n* Never give long walls of text\n* Keep responses short and readable\n* Use spacing between lines\n* Use bullet points when helpful\n* Sound like a real caring human, not a textbook\n* Avoid robotic or overly medical language\n* Be warm, reassuring, and clear" },
+    { role: "system", content: "You are a premium AI counselor.\n\nSTRICT RULES:\n\n* Max 5 lines per response\n* No long paragraphs\n* Use bullet points when needed\n* Keep it short, calm, human\n* Avoid numbered lists like 1,2,3\n* Speak like a real person, not an article" },
     ...(Array.isArray(history) ? history.slice(-6) : []),
     { role: "user", content: prompt }
   ];
@@ -94,18 +94,16 @@ export async function POST(request: Request) {
 
     const aiReply = await callOpenAI(message, isPremium, history);
     const cleaned = aiReply.trim();
-    function formatReply(text: string) {
-      const intro = "You're not alone in thinking about this ❤️";
-      const lead = "Here are a few gentle ways to approach it:";
-      const s = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 5);
-      const bullets = s.map(t => `• ${t.trim()}`);
-      const tail = "If you'd like, I can guide you step by step.";
-      const parts = [intro, "", lead, "", bullets.join("\n"), "", tail];
-      return parts.join("\n");
+    function formatAIResponse(text: string) {
+      const noBold = text.replace(/\*\*(.*?)\*\*/g, "$1");
+      const bullets = noBold.replace(/\d+\.\s/g, "\n• ");
+      const spaced = bullets.replace(/\n/g, "\n\n");
+      return spaced;
     }
-    const formatted = formatReply(cleaned);
+    const formatted = formatAIResponse(cleaned);
     const maxLen = isPremium ? 2000 : 1000;
-    const finalReply = formatted.length > maxLen ? formatted.slice(0, maxLen) : formatted;
+    let finalReply = `I understand why you're asking this 💛\n\n${formatted}`;
+    if (finalReply.length > maxLen) finalReply = finalReply.slice(0, maxLen);
     const payload: any = { reply: finalReply };
     if (!isPremium) payload.remaining = usage.remaining;
     return NextResponse.json(payload);

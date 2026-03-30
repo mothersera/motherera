@@ -19,6 +19,13 @@ export default function SupportPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const formatAIResponse = (text: string) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\d+\.\s/g, "\n• ")
+      .replace(/\n/g, "\n\n");
+  };
+
   useEffect(() => {
   }, []);
 
@@ -150,8 +157,10 @@ export default function SupportPage() {
                             <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center text-rose-600 border border-rose-200">
                               <Bot className="w-4 h-4" />
                             </div>
-                            <div className="bg-gray-100 text-gray-800 p-4 rounded-2xl rounded-bl-none text-sm shadow-sm leading-relaxed whitespace-pre-line">
-                              {msg.content}
+                            <div className="bg-gray-100 text-gray-800 p-4 rounded-2xl text-sm shadow-sm leading-relaxed whitespace-pre-line max-w-full">
+                              {formatAIResponse(msg.content).split("\n").map((line, i) => (
+                                <p key={i} className="mb-2">{line}</p>
+                              ))}
                             </div>
                           </div>
                           <span className="text-[10px] text-stone-400 ml-12">Reply</span>
