@@ -5,35 +5,20 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Send, MessageSquare, Bot, User, Phone, Video } from "lucide-react";
+import { Loader2, Send, MessageSquare, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface Message {
-  _id: string;
-  message: string;
-  status: 'open' | 'replied' | 'closed';
-  createdAt: string;
-  userName: string;
-  adminReply?: {
-    text: string;
-    repliedAt: string;
-    repliedBy: string;
-  };
-}
+type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export default function SupportPage() {
   const { data: session } = useSession();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
+  const [limitReached, setLimitReached] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchMessages();
-    // Poll for new messages every 10 seconds
-    const interval = setInterval(fetchMessages, 10000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -42,40 +27,54 @@ export default function SupportPage() {
     }
   }, [messages]);
 
-  const fetchMessages = async () => {
-    try {
-      const res = await fetch("/api/support/messages");
-      if (res.ok) {
-        const data = await res.json();
-        // Only update if data changed to prevent flickering if we were using animations improperly
-        // For now, simpler is better
-        setMessages(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch messages", error);
-    } finally {
-      setIsFetching(false);
-    }
-  };
+  const fetchMessages = async () => {};
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
     setIsLoading(true);
+    const isPremium =
+      session?.user?.subscriptionPlan === "premium" || session?.user?.subscriptionPlan === "specialized";
+    const outgoing = { role: "user", content: newMessage.trim() } as ChatMessage;
+    setMessages(prev => [...prev, outgoing, { role: "assistant", content: "Thinking..." }]);
     try {
-      const res = await fetch("/api/support/messages", {
+      const res = await fetch("/api/mother-era-counselor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage }),
+        body: JSON.stringify({ message: newMessage.trim(), userId: session?.user?.id, isPremium }),
       });
-
       if (res.ok) {
+        const data = await res.json();
+        const reply = String(data?.reply || "Something went wrong. Please try again.");
+        setMessages(prev => {
+          const updated = [...prev];
+          const idx = updated.findIndex(m => m.role === "assistant" && m.content === "Thinking...");
+          if (idx !== -1) {
+            updated[idx] = { role: "assistant", content: reply };
+          } else {
+            updated.push({ role: "assistant", content: reply });
+          }
+          return updated;
+        });
         setNewMessage("");
-        fetchMessages();
+      } else {
+        const err = await res.json().catch(() => ({} as any));
+        if (err?.error === "LIMIT_REACHED") {
+          setLimitReached(true);
+          setMessages(prev => prev.filter(m => !(m.role === "assistant" && m.content === "Thinking...")));
+        } else {
+          setMessages(prev => {
+            const updated = prev.filter(m => !(m.role === "assistant" && m.content === "Thinking..."));
+            return [...updated, { role: "assistant", content: "Something went wrong. Please try again." }];
+          });
+        }
       }
-    } catch (error) {
-      console.error("Failed to send message", error);
+    } catch {
+      setMessages(prev => {
+        const updated = prev.filter(m => !(m.role === "assistant" && m.content === "Thinking..."));
+        return [...updated, { role: "assistant", content: "Something went wrong. Please try again." }];
+      });
     } finally {
       setIsLoading(false);
     }
@@ -89,11 +88,11 @@ export default function SupportPage() {
           <div>
             <div className="flex items-center gap-2 text-rose-600 font-medium mb-1">
               <MessageSquare className="w-5 h-5" />
-              <span className="text-sm uppercase tracking-wider">Expert Support</span>
+              <span className="text-sm uppercase tracking-wider">AI Counselor</span>
             </div>
             <h1 className="text-3xl font-bold text-stone-900">Live Chat</h1>
             <p className="text-stone-500 mt-1">
-              Connect directly with our care specialists. We typically reply within 1 hour.
+              Compassionate, motherhood-focused guidance. Free users get 10 messages/day.
             </p>
           </div>
         </div>
@@ -109,7 +108,7 @@ export default function SupportPage() {
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
               <div>
-                <CardTitle className="text-base font-bold text-stone-900">MotherEra Care Team</CardTitle>
+                <CardTitle className="text-base font-bold text-stone-900">MotherEra AI Counselor</CardTitle>
                 <CardDescription className="text-xs text-green-600 font-medium flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   Online & Ready to Help
@@ -123,66 +122,40 @@ export default function SupportPage() {
               ref={scrollRef} 
               className="h-full overflow-y-auto p-6 space-y-6"
             >
-              {isFetching ? (
-                <div className="flex flex-col justify-center items-center h-full gap-3 text-stone-400">
-                  <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
-                  <p className="text-sm">Loading your conversation...</p>
-                </div>
-              ) : messages.length === 0 ? (
+              {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto opacity-70">
                   <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-4">
                     <MessageSquare className="w-8 h-8 text-rose-400" />
                   </div>
                   <h3 className="text-lg font-bold text-stone-900 mb-2">Start a New Conversation</h3>
                   <p className="text-stone-500 text-sm">
-                    Hi {session?.user?.name?.split(' ')[0] || 'there'}! Ask us anything about your pregnancy, nutrition, or postpartum recovery.
+                    Hi {session?.user?.name?.split(' ')[0] || 'there'}! Ask anything about pregnancy, nutrition, postpartum recovery, and emotional well-being.
                   </p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-6">
-                  {/* Intro Message */}
-                  <div className="flex justify-center">
-                    <span className="text-xs font-medium text-stone-400 bg-stone-100 px-3 py-1 rounded-full">
-                      Chat started {new Date(messages[0].createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  {messages.map((msg) => (
-                    <div key={msg._id} className="flex flex-col gap-4">
-                      {/* User Message */}
-                      <div className="flex flex-col items-end gap-1">
-                        <div className="flex items-end gap-2 max-w-[85%] md:max-w-[70%]">
-                           <div className={`px-5 py-3 rounded-2xl rounded-br-none text-sm leading-relaxed shadow-sm ${
-                             'bg-rose-600 text-white'
-                           }`}>
-                             {msg.message}
-                           </div>
-                           {/* Optional: User Avatar could go here */}
+                  {messages.map((msg, idx) => (
+                    <div key={idx} className="flex flex-col gap-4">
+                      {msg.role === "user" ? (
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-end gap-2 max-w-[85%] md:max-w-[70%]">
+                            <div className="px-5 py-3 rounded-2xl rounded-br-none text-sm leading-relaxed shadow-sm bg-rose-600 text-white">
+                              {msg.content}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-stone-400 mr-1">Sent</span>
                         </div>
-                        <span className="text-[10px] text-stone-400 mr-1">
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {msg.status === 'open' && " • Sent"}
-                          {msg.status === 'replied' && " • Replied"}
-                        </span>
-                      </div>
-
-                      {/* Admin Reply */}
-                      {msg.adminReply && (
+                      ) : (
                         <div className="flex flex-col items-start gap-1">
                           <div className="flex items-end gap-3 max-w-[85%] md:max-w-[70%]">
-                             <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center text-rose-600 border border-rose-200">
-                                <Bot className="w-4 h-4" />
-                             </div>
-                             <div className="bg-white border border-stone-200 px-5 py-3 rounded-2xl rounded-bl-none text-sm text-stone-800 shadow-sm leading-relaxed">
-                               <p className="font-bold text-xs text-rose-600 mb-1">
-                                 {msg.adminReply.repliedBy || 'Care Specialist'}
-                               </p>
-                               {msg.adminReply.text}
-                             </div>
+                            <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center text-rose-600 border border-rose-200">
+                              <Bot className="w-4 h-4" />
+                            </div>
+                            <div className="bg-white border border-stone-200 px-5 py-3 rounded-2xl rounded-bl-none text-sm text-stone-800 shadow-sm leading-relaxed">
+                              {msg.content}
+                            </div>
                           </div>
-                          <span className="text-[10px] text-stone-400 ml-12">
-                             {new Date(msg.adminReply.repliedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
+                          <span className="text-[10px] text-stone-400 ml-12">Reply</span>
                         </div>
                       )}
                     </div>
@@ -193,6 +166,20 @@ export default function SupportPage() {
           </CardContent>
 
           <CardFooter className="p-4 bg-white border-t border-stone-100">
+            {limitReached ? (
+              <div className="w-full">
+                <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 text-center">
+                  <p className="text-sm text-stone-800">
+                    You’ve reached your free daily limit. Upgrade to Premium for unlimited AI support and deeper personalized guidance.
+                  </p>
+                  <div className="mt-3 flex justify-center">
+                    <Button className="rounded-full" onClick={() => (window.location.href = "/pricing")}>
+                      Upgrade Now
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
             <form onSubmit={handleSendMessage} className="flex w-full gap-3 items-center">
               <div className="relative flex-1">
                 <Input 
@@ -211,6 +198,7 @@ export default function SupportPage() {
                 {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </Button>
             </form>
+            )}
           </CardFooter>
         </Card>
       </div>
