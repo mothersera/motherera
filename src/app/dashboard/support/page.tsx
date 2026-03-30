@@ -18,6 +18,9 @@ export default function SupportPage() {
   const [limitReached, setLimitReached] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [remainingCount, setRemainingCount] = useState<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const formatAIResponse = (text: string) => {
     return text
@@ -53,6 +56,9 @@ export default function SupportPage() {
       if (res.ok) {
         const data = await res.json();
         const reply = String(data?.reply || "Something went wrong. Please try again.");
+        if (typeof data?.remaining === "number") {
+          setRemainingCount(data.remaining);
+        }
         setMessages(prev => {
           const updated = [...prev];
           const idx = updated.findIndex(m => m.role === "assistant" && m.content === "MotherEra AI is typing...");
@@ -127,6 +133,12 @@ export default function SupportPage() {
             <div 
               ref={scrollRef} 
               className="h-full overflow-y-auto p-6 space-y-6"
+              onScroll={() => {
+                if (!scrollRef.current) return;
+                const el = scrollRef.current;
+                const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 50;
+                setShowScrollBtn(!nearBottom);
+              }}
             >
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto opacity-70">
@@ -171,6 +183,13 @@ export default function SupportPage() {
                 </div>
               )}
               <div ref={messagesEndRef} />
+              {showScrollBtn && (
+                <div className="sticky bottom-4 flex justify-end pr-2">
+                  <Button variant="outline" size="sm" className="rounded-full bg-white/70 backdrop-blur-sm" onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })}>
+                    Scroll to latest
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
 
@@ -189,15 +208,47 @@ export default function SupportPage() {
                 </div>
               </div>
             ) : (
-            <form onSubmit={handleSendMessage} className="flex w-full gap-3 items-center">
+            <form onSubmit={handleSendMessage} className="flex w-full gap-3 items-end">
               <div className="relative flex-1">
-                <Input 
-                  placeholder="Type your message here..." 
-                  value={newMessage} 
-                  onChange={(e) => setNewMessage(e.target.value)}
+                <textarea
+                  ref={textareaRef}
+                  placeholder="Type your message here..."
+                  value={newMessage}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = "auto";
+                      textareaRef.current.style.height = `${Math.min(160, textareaRef.current.scrollHeight)}px`;
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(e);
+                    }
+                  }}
                   disabled={isLoading}
-                  className="pr-12 py-6 bg-stone-50 border-stone-200 focus-visible:ring-rose-500 rounded-xl"
+                  className="min-h-[48px] max-h-40 w-full bg-stone-50 border border-stone-200 focus-visible:ring-rose-500 rounded-xl p-3 text-sm resize-none"
                 />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {["How can I improve sleep?", "What should I eat today?", "I feel overwhelmed—any tips?", "How do I build a routine?"].map((s) => (
+                    <Button
+                      key={s}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full bg-white/70"
+                      onClick={() => setNewMessage(s)}
+                    >
+                      {s}
+                    </Button>
+                  ))}
+                </div>
+                {typeof remainingCount === "number" && (
+                  <div className="mt-2 text-[11px] text-stone-500">
+                    Free messages remaining today: {remainingCount}
+                  </div>
+                )}
               </div>
               <Button 
                 type="submit" 
