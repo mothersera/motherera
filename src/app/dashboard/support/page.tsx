@@ -17,14 +17,13 @@ export default function SupportPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
   }, []);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const fetchMessages = async () => {};
@@ -37,7 +36,7 @@ export default function SupportPage() {
     const isPremium =
       session?.user?.subscriptionPlan === "premium" || session?.user?.subscriptionPlan === "specialized";
     const outgoing = { role: "user", content: newMessage.trim() } as ChatMessage;
-    setMessages(prev => [...prev, outgoing, { role: "assistant", content: "Thinking..." }]);
+    setMessages(prev => [...prev, outgoing, { role: "assistant", content: "MotherEra AI is typing..." }]);
     try {
       const res = await fetch("/api/mother-era-counselor", {
         method: "POST",
@@ -49,7 +48,7 @@ export default function SupportPage() {
         const reply = String(data?.reply || "Something went wrong. Please try again.");
         setMessages(prev => {
           const updated = [...prev];
-          const idx = updated.findIndex(m => m.role === "assistant" && m.content === "Thinking...");
+          const idx = updated.findIndex(m => m.role === "assistant" && m.content === "MotherEra AI is typing...");
           if (idx !== -1) {
             updated[idx] = { role: "assistant", content: reply };
           } else {
@@ -62,7 +61,7 @@ export default function SupportPage() {
         const err = await res.json().catch(() => ({} as any));
         if (err?.error === "LIMIT_REACHED") {
           setLimitReached(true);
-          setMessages(prev => prev.filter(m => !(m.role === "assistant" && m.content === "Thinking...")));
+          setMessages(prev => prev.filter(m => !(m.role === "assistant" && m.content === "MotherEra AI is typing...")));
         } else {
           setMessages(prev => {
             const updated = prev.filter(m => !(m.role === "assistant" && m.content === "Thinking..."));
@@ -133,13 +132,13 @@ export default function SupportPage() {
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col space-y-4">
                   {messages.map((msg, idx) => (
                     <div key={idx} className="flex flex-col gap-4">
                       {msg.role === "user" ? (
                         <div className="flex flex-col items-end gap-1">
-                          <div className="flex items-end gap-2 max-w-[85%] md:max-w-[70%]">
-                            <div className="px-5 py-3 rounded-2xl rounded-br-none text-sm leading-relaxed shadow-sm bg-rose-600 text-white">
+                          <div className="flex items-end gap-2 max-w-[70%]">
+                            <div className="p-4 rounded-2xl rounded-br-none text-sm leading-relaxed shadow-sm bg-red-500 text-white">
                               {msg.content}
                             </div>
                           </div>
@@ -147,11 +146,11 @@ export default function SupportPage() {
                         </div>
                       ) : (
                         <div className="flex flex-col items-start gap-1">
-                          <div className="flex items-end gap-3 max-w-[85%] md:max-w-[70%]">
+                          <div className="flex items-end gap-3 max-w-[70%]">
                             <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center text-rose-600 border border-rose-200">
                               <Bot className="w-4 h-4" />
                             </div>
-                            <div className="bg-white border border-stone-200 px-5 py-3 rounded-2xl rounded-bl-none text-sm text-stone-800 shadow-sm leading-relaxed">
+                            <div className="bg-gray-100 text-gray-800 p-4 rounded-2xl rounded-bl-none text-sm shadow-sm leading-relaxed whitespace-pre-line">
                               {msg.content}
                             </div>
                           </div>
@@ -162,6 +161,7 @@ export default function SupportPage() {
                   ))}
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
           </CardContent>
 

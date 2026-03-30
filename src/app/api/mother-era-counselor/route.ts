@@ -40,10 +40,10 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
     return "I’m here to help with calm, motherhood-focused guidance. It looks like the AI service is not configured. Please try again shortly.";
   }
   const model = isPremium ? "gpt-4o" : "gpt-4o-mini";
-  const maxTokens = isPremium ? 800 : 300;
+  const maxTokens = isPremium ? 400 : 200;
   const temperature = isPremium ? 0.8 : 0.6;
   const input = [
-    { role: "system", content: "You are MotherEra’s AI Counselor. Provide calm, emotionally supportive, motherhood-focused guidance." },
+    { role: "system", content: "You are a premium AI counselor for mothers and families. Your tone must be calm, emotionally supportive, and human-like.\n\nRules:\n* Never give long walls of text\n* Keep responses short and readable\n* Use spacing between lines\n* Use bullet points when helpful\n* Sound like a real caring human, not a textbook\n* Avoid robotic or overly medical language\n* Be warm, reassuring, and clear" },
     ...(Array.isArray(history) ? history.slice(-6) : []),
     { role: "user", content: prompt }
   ];
@@ -94,8 +94,18 @@ export async function POST(request: Request) {
 
     const aiReply = await callOpenAI(message, isPremium, history);
     const cleaned = aiReply.trim();
+    function formatReply(text: string) {
+      const intro = "You're not alone in thinking about this ❤️";
+      const lead = "Here are a few gentle ways to approach it:";
+      const s = text.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 5);
+      const bullets = s.map(t => `• ${t.trim()}`);
+      const tail = "If you'd like, I can guide you step by step.";
+      const parts = [intro, "", lead, "", bullets.join("\n"), "", tail];
+      return parts.join("\n");
+    }
+    const formatted = formatReply(cleaned);
     const maxLen = isPremium ? 2000 : 1000;
-    const finalReply = cleaned.length > maxLen ? cleaned.slice(0, maxLen) : cleaned;
+    const finalReply = formatted.length > maxLen ? formatted.slice(0, maxLen) : formatted;
     const payload: any = { reply: finalReply };
     if (!isPremium) payload.remaining = usage.remaining;
     return NextResponse.json(payload);
