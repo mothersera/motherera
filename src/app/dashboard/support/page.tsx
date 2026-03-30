@@ -67,7 +67,7 @@ export default function SupportPage() {
     setMessages(prev => [
       ...prev,
       { role: "user", content: userMsg },
-      { role: "assistant", content: "Typing...", loading: true }
+      { role: "assistant", content: "MotherEra Companion is typing...", loading: true }
     ]);
 
     try {
@@ -141,7 +141,7 @@ export default function SupportPage() {
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
               <div>
-                <CardTitle className="text-base font-bold text-stone-900">MotherEra AI Counselor</CardTitle>
+                <CardTitle className="text-base font-bold text-stone-900">MotherEra Companion</CardTitle>
                 <CardDescription className="text-xs text-green-600 font-medium flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   Online & Ready to Help
