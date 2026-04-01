@@ -139,8 +139,16 @@ export default function SupportPage() {
           <CardHeader className="bg-white border-b border-stone-100 px-6 py-4 flex flex-row items-center justify-between space-y-0">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
-                   <Bot className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-stone-200 shrink-0">
+                  <img 
+                    src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" 
+                    alt="AI Companion" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/ai-avatar.jpg";
+                      // If the local fallback fails, we could revert to a Bot icon, but for now we'll rely on the fallback.
+                    }}
+                  />
                 </div>
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
@@ -191,8 +199,15 @@ export default function SupportPage() {
                         </div>
                       ) : (
                         <div className="flex items-start gap-3 max-w-[70%] self-start">
-                          <div className="w-8 h-8 rounded-full bg-rose-100 flex-shrink-0 flex items-center justify-center text-rose-600 border border-rose-200">
-                            <Bot className="w-4 h-4" />
+                          <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm border border-stone-200 shrink-0">
+                            <img 
+                              src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" 
+                              alt="AI Companion" 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/ai-avatar.jpg";
+                              }}
+                            />
                           </div>
                           <div className={`bg-gray-100 text-gray-800 px-4 py-3 rounded-2xl shadow-sm whitespace-pre-line ${msg.loading ? "animate-pulse" : ""}`}>
                             {msg.loading ? (
