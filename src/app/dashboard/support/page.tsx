@@ -82,7 +82,11 @@ export default function SupportPage() {
         const reply = String(data?.reply || "Something went wrong. Please try again.");
         if (typeof data?.remaining === "number") setRemainingCount(data.remaining);
 
-        await typeMessage(reply);
+        // Add a small artificial delay (500-1200ms) to make it feel more human
+        const typingDelay = Math.floor(Math.random() * (1200 - 500 + 1)) + 500;
+        setTimeout(async () => {
+          await typeMessage(reply);
+        }, typingDelay);
       } else {
         const err = await res.json().catch(() => ({} as any));
         const errorCode = err?.error;
