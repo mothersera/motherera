@@ -1,6 +1,19 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, updateDoc, collection, serverTimestamp } from "firebase/firestore";
+import dbConnect from "@/lib/db";
+import WebsiteContent from "@/models/WebsiteContent";
+
+type HistoryItem = { role: "user" | "assistant"; content: string };
+type RagSource = { title: string; url: string };
+type CallResult = { reply: string; sources?: RagSource[]; usedRag?: boolean; isShortCircuit?: boolean };
+
+const RAG_INDEX_NAME = "website_content_embedding_index";
+const RAG_VECTOR_PATH = "embedding";
+const RAG_CACHE_TTL_MS = 10 * 60 * 1000;
+
+const ragCache = new Map<string, { expiresAt: number; sources: RagSource[]; context: string }>();
+const embeddingCache = new Map<string, { expiresAt: number; embedding: number[] }>();
 
 async function getToday() {
   const d = new Date();
@@ -56,7 +69,98 @@ async function checkAndIncrementUsage(userId: string, limit: number) {
   }
 }
 
-async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ role: "user" | "assistant"; content: string }>) {
+async function getEmbedding(text: string, apiKey: string) {
+  const key = text.toLowerCase().trim();
+  const cached = embeddingCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached.embedding;
+
+  const res = await fetch("https://api.openai.com/v1/embeddings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "text-embedding-3-small",
+      input: text,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(errText || "OpenAI embeddings error");
+  }
+
+  const data = await res.json();
+  const embedding = data?.data?.[0]?.embedding;
+  if (!Array.isArray(embedding)) {
+    throw new Error("Invalid embeddings response");
+  }
+
+  embeddingCache.set(key, { expiresAt: Date.now() + RAG_CACHE_TTL_MS, embedding });
+  return embedding;
+}
+
+function extractTextForContext(raw: string, maxChars: number) {
+  const normalized = raw.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxChars) return normalized;
+  return normalized.slice(0, maxChars);
+}
+
+async function retrieveWebsiteContext(query: string, apiKey: string) {
+  const key = query.toLowerCase().trim();
+  const cached = ragCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) return cached;
+
+  await dbConnect();
+  const queryVector = await getEmbedding(query, apiKey);
+
+  let docs: Array<{ title: string; url: string; content: string; score?: number }> = [];
+  try {
+    docs = await WebsiteContent.aggregate([
+      {
+        $vectorSearch: {
+          index: RAG_INDEX_NAME,
+          path: RAG_VECTOR_PATH,
+          queryVector,
+          numCandidates: 100,
+          limit: 5,
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          url: 1,
+          content: 1,
+          score: { $meta: "vectorSearchScore" },
+        },
+      },
+    ]);
+  } catch (e) {
+    console.error("RAG vector search failed:", e);
+    docs = [];
+  }
+
+  const sources: RagSource[] = docs
+    .filter(d => typeof d?.title === "string" && typeof d?.url === "string")
+    .slice(0, 5)
+    .map(d => ({ title: d.title, url: d.url }));
+
+  const context = docs
+    .slice(0, 5)
+    .map(d => `Title: ${d.title}\nURL: ${d.url}\nContent: ${extractTextForContext(d.content || "", 800)}`)
+    .join("\n\n---\n\n");
+
+  const result = { expiresAt: Date.now() + RAG_CACHE_TTL_MS, sources, context };
+  ragCache.set(key, result);
+  return result;
+}
+
+function limitToLines(text: string, maxLines: number) {
+  const lines = text.split("\n").map(l => l.trimEnd());
+  const pruned = lines.filter((l, idx) => !(idx > 0 && l === "" && lines[idx - 1] === ""));
+  return pruned.slice(0, maxLines).join("\n").trim();
+}
+
+async function callOpenAI(prompt: string, isPremium: boolean, history: HistoryItem[]): Promise<CallResult> {
   // 1. INTENT DETECTION LOGIC
   const lowerPrompt = prompt.toLowerCase().trim();
   const words = lowerPrompt.split(/\s+/);
@@ -74,11 +178,11 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
       "Hi! I'm here for you. What's on your mind?",
       "Hello 💛 How can I support you right now?"
     ];
-    return greetingReplies[Math.floor(Math.random() * greetingReplies.length)];
+    return { reply: greetingReplies[Math.floor(Math.random() * greetingReplies.length)], isShortCircuit: true };
   }
 
   if (isGratitude) {
-    return "You're always welcome 💛 I'm here whenever you need me.";
+    return { reply: "You're always welcome 💛 I'm here whenever you need me.", isShortCircuit: true };
   }
 
   if (wordCount < 5 && !lowerPrompt.includes("?")) {
@@ -88,15 +192,22 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: Array<{ r
       "I'm listening 💛",
       "That's completely understandable. Want to share more?"
     ];
-    return casualReplies[Math.floor(Math.random() * casualReplies.length)];
+    return { reply: casualReplies[Math.floor(Math.random() * casualReplies.length)], isShortCircuit: true };
   }
 
   // 2. SERIOUS INTENT -> Send to OpenAI
   console.log("Calling OpenAI for serious intent...");
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return "I’m here to help with calm, motherhood-focused guidance. It looks like the AI service is not configured. Please try again shortly.";
+    return {
+      reply:
+        "I’m here to help with calm, motherhood-focused guidance. It looks like the AI service is not configured. Please try again shortly.",
+      isShortCircuit: true,
+    };
   }
+
+  const { sources, context } = await retrieveWebsiteContext(prompt, apiKey);
+
   const model = isPremium ? "gpt-4o" : "gpt-4o-mini";
   const maxTokens = isPremium ? 250 : 150;
   const temperature = isPremium ? 0.7 : 0.6;
@@ -114,10 +225,20 @@ Rules:
 - Be natural, human-like, and conversational
 - Keep responses clean, structured, and easy to read (max 6-8 lines)
 - Avoid robotic or repetitive phrases
-- Give practical, clear advice when needed`
+- Give practical, clear advice when needed
+
+Knowledge:
+- Use the provided MotherEra website context when relevant.
+- Do not invent or guess URLs.`
     },
     ...(Array.isArray(history) ? history.slice(-6).map(m => ({ role: m.role, content: m.content })) : []),
-    { role: "user", content: prompt }
+    {
+      role: "user",
+      content:
+        `MotherEra website context (use this when helpful):\n\n${context || "No relevant internal page context found."}\n\n` +
+        `User message:\n${prompt}\n\n` +
+        `Reply with a short answer (2–4 lines). Do not include URLs.`,
+    },
   ];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
@@ -150,7 +271,11 @@ Rules:
     reply = reply.replace(/\d+\.\s/g, "\n• "); // convert numbered lists to bullets
     reply = reply.replace(/\n{3,}/g, "\n\n"); // ensure max double spacing
     
-    return reply.trim();
+    reply = reply.trim();
+    const maxLines = isPremium ? 10 : 8;
+    reply = limitToLines(reply, maxLines);
+
+    return { reply, sources, usedRag: sources.length > 0 };
   } catch {
     throw new Error("Request to OpenAI failed or timed out");
   }
@@ -177,40 +302,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "LIMIT_REACHED" }, { status: 403 });
     }
 
-    const aiReply = await callOpenAI(message, isPremium, history);
+    const result = await callOpenAI(message, isPremium, history);
     
     // Format the response and add variation if it was generated by AI
     // (We skip adding the random opening if the response was a short hardcoded greeting/casual reply)
-    let finalReply = aiReply;
-    const isHardcodedReply = aiReply.includes("How are you feeling today?") || 
-                            aiReply.includes("What's on your mind?") || 
-                            aiReply.includes("How can I support you right now?") ||
-                            aiReply.includes("You're always welcome") ||
-                            aiReply.includes("Tell me a bit more about that") ||
-                            aiReply.includes("I'm listening") ||
-                            aiReply.includes("Want to share more?");
+    let finalReply = result.reply;
+    const isHardcodedReply =
+      result.isShortCircuit === true ||
+      result.reply.includes("How are you feeling today?") ||
+      result.reply.includes("What's on your mind?") ||
+      result.reply.includes("How can I support you right now?") ||
+      result.reply.includes("You're always welcome") ||
+      result.reply.includes("Tell me a bit more about that") ||
+      result.reply.includes("I'm listening") ||
+      result.reply.includes("Want to share more?");
                             
-    if (!isHardcodedReply) {
-      function formatAIResponse(text: string) {
-        // Cleaning is now done in callOpenAI, just return as is
-        return text;
-      }
-      const formatted = formatAIResponse(aiReply);
+    if (result.usedRag && result.sources && result.sources.length > 0) {
+      const overview = limitToLines(result.reply, isPremium ? 8 : 6);
+      finalReply =
+        `Here’s a quick overview: ${overview}\n\n👉 Learn more:\n` +
+        result.sources.slice(0, 5).map(s => `${s.title} – ${s.url}`).join("\n");
+    } else if (!isHardcodedReply) {
       const maxLen = isPremium ? 2000 : 1000;
-      
       const openings = [
         "I understand how you might be feeling 💛",
-        "That’s a really valid concern",
         "I’m glad you asked this",
-        "This is something many people wonder about",
-        ""
+        "",
       ];
-      // Only add opening 50% of the time for even more natural flow
-      const shouldAddOpening = Math.random() > 0.5;
+      const shouldAddOpening = Math.random() > 0.6;
       const randomOpening = shouldAddOpening ? openings[Math.floor(Math.random() * openings.length)] : "";
-      
-      finalReply = randomOpening ? `${randomOpening}\n\n${formatted}` : formatted;
-
+      finalReply = randomOpening ? `${randomOpening}\n\n${result.reply}` : result.reply;
       if (finalReply.length > maxLen) finalReply = finalReply.slice(0, maxLen);
     }
     
