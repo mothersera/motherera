@@ -139,14 +139,14 @@ export default function SupportPage() {
           <CardHeader className="bg-white border-b border-stone-100 px-6 py-4 flex flex-row items-center justify-between space-y-0">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-stone-200 shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-stone-200 shrink-0 bg-white flex items-center justify-center">
                   <img 
-                    src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" 
-                    alt="AI Companion" 
-                    className="w-full h-full object-cover"
+                    src="/logo.svg" 
+                    alt="MotherEra Logo" 
+                    className="w-full h-full object-contain p-1"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/ai-avatar.jpg";
-                      // If the local fallback fails, we could revert to a Bot icon, but for now we'll rely on the fallback.
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = '<span class="text-[12px] font-bold text-rose-600">ME</span>';
                     }}
                   />
                 </div>
@@ -185,7 +185,9 @@ export default function SupportPage() {
                 </div>
               ) : (
                 <div className="flex flex-col space-y-4">
-                  {messages.map((msg, idx) => (
+                  {messages.map((msg, idx) => {
+                    const isConsecutive = idx > 0 && messages[idx - 1].role === msg.role;
+                    return (
                     <motion.div 
                       key={idx} 
                       initial={{ opacity: 0, y: 5 }}
@@ -198,17 +200,22 @@ export default function SupportPage() {
                           {msg.content}
                         </div>
                       ) : (
-                        <div className="flex items-start gap-3 max-w-[70%] self-start">
-                          <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm border border-stone-200 shrink-0">
-                            <img 
-                              src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop" 
-                              alt="AI Companion" 
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/ai-avatar.jpg";
-                              }}
-                            />
-                          </div>
+                        <div className={`flex items-start gap-3 max-w-[70%] self-start ${isConsecutive ? 'mt-[-8px]' : ''}`}>
+                          {isConsecutive ? (
+                            <div className="w-8 h-8 shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm border border-stone-200 shrink-0 bg-white flex items-center justify-center">
+                              <img 
+                                src="/logo.svg" 
+                                alt="MotherEra Logo" 
+                                className="w-full h-full object-contain p-[3px]"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.parentElement!.innerHTML = '<span class="text-[10px] font-bold text-rose-600">ME</span>';
+                                }}
+                              />
+                            </div>
+                          )}
                           <div className={`bg-gray-100 text-gray-800 px-4 py-3 rounded-2xl shadow-sm whitespace-pre-line ${msg.loading ? "animate-pulse" : ""}`}>
                             {msg.loading ? (
                               msg.content
@@ -223,7 +230,7 @@ export default function SupportPage() {
                         </div>
                       )}
                     </motion.div>
-                  ))}
+                  )})}
                 </div>
               )}
               <div ref={messagesEndRef} />
