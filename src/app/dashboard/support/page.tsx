@@ -121,7 +121,7 @@ export default function SupportPage() {
           <div>
             <div className="flex items-center gap-2 text-rose-600 font-medium mb-1">
               <MessageSquare className="w-5 h-5" />
-              <span className="text-sm uppercase tracking-wider">AI Counselor</span>
+              <span className="text-sm uppercase tracking-wider">MotherEra Companion</span>
             </div>
             <h1 className="text-3xl font-bold text-stone-900">Live Chat</h1>
             <p className="text-stone-500 mt-1">
