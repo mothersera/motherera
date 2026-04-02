@@ -5,14 +5,15 @@ import dbConnect from "@/lib/db";
 import WebsiteContent from "@/models/WebsiteContent";
 
 type HistoryItem = { role: "user" | "assistant"; content: string };
-type RagSource = { title: string; url: string };
-type CallResult = { reply: string; sources?: RagSource[]; usedRag?: boolean; isShortCircuit?: boolean };
+type RagLink = { title: string; url: string; description: string; tag: string; icon: string };
+type CallResult = { reply: string; links?: RagLink[]; usedRag?: boolean; isShortCircuit?: boolean };
+type UsageDoc = { count?: number; lastRequestMs?: number };
 
 const RAG_INDEX_NAME = "website_content_embedding_index";
 const RAG_VECTOR_PATH = "embedding";
 const RAG_CACHE_TTL_MS = 10 * 60 * 1000;
 
-const ragCache = new Map<string, { expiresAt: number; sources: RagSource[]; context: string }>();
+const ragCache = new Map<string, { expiresAt: number; links: RagLink[]; context: string }>();
 const embeddingCache = new Map<string, { expiresAt: number; embedding: number[] }>();
 
 async function getToday() {
@@ -34,9 +35,9 @@ async function checkAndIncrementUsage(userId: string, limit: number) {
     const nowMs = Date.now();
 
     if (snap.exists()) {
-      const data = snap.data() as any;
-      const count = data.count || 0;
-      const lastMs = data.lastRequestMs || 0;
+      const data = snap.data() as UsageDoc;
+      const count = data.count ?? 0;
+      const lastMs = data.lastRequestMs ?? 0;
       
       console.log("Current count:", count);
 
@@ -104,6 +105,94 @@ function extractTextForContext(raw: string, maxChars: number) {
   return normalized.slice(0, maxChars);
 }
 
+function normalizeUrl(raw: string) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) return "";
+  try {
+    const u = new URL(trimmed);
+    u.hash = "";
+    u.search = "";
+    const normalized = u.toString();
+    if (normalized.endsWith("/") && u.pathname !== "/") return normalized.slice(0, -1);
+    return normalized;
+  } catch {
+    const noHash = trimmed.split("#")[0];
+    const noQuery = noHash.split("?")[0];
+    if (noQuery.endsWith("/") && noQuery !== "/") return noQuery.slice(0, -1);
+    return noQuery;
+  }
+}
+
+function toTitleCase(text: string) {
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function deriveTitleFromUrl(url: string) {
+  try {
+    const u = new URL(url);
+    const parts = u.pathname.split("/").filter(Boolean);
+    const slug = (parts[parts.length - 1] || "").trim();
+    if (!slug) return "MotherEra Resource";
+    const decoded = decodeURIComponent(slug);
+    const cleaned = decoded
+      .replace(/[-_]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const lower = cleaned.toLowerCase();
+    if (lower.includes("pregnan")) return "Pregnancy Guide";
+    if (lower.includes("newborn")) return "Newborn Care Guide";
+    if (lower.includes("baby")) return "Baby Care Tips";
+    if (lower.includes("postpartum")) return "Postpartum Support";
+    if (lower.includes("sleep")) return "Baby Sleep Tips";
+    if (lower.includes("nutrition") || lower.includes("food") || lower.includes("diet")) return "Nutrition Guide";
+    return toTitleCase(cleaned);
+  } catch {
+    return "MotherEra Resource";
+  }
+}
+
+function cleanRagTitle(title: string, url: string) {
+  const raw = String(title || "").replace(/\s+/g, " ").trim();
+  const parts = raw.split("|").map(s => s.trim()).filter(Boolean);
+  const withoutBrand = parts.filter(p => !/mother\s*era/i.test(p));
+  const candidate = (withoutBrand.length > 0 ? withoutBrand.join(" — ") : raw).trim();
+  const lower = candidate.toLowerCase();
+  const isGeneric =
+    lower === "motherera" ||
+    lower === "mother era" ||
+    lower === "guided journey through motherhood" ||
+    lower === "mother era guided journey through motherhood" ||
+    lower === "home";
+  if (!candidate || candidate.length < 6 || isGeneric) return deriveTitleFromUrl(url);
+  return candidate;
+}
+
+function deriveDescriptionFromContent(content: string) {
+  const normalized = String(content || "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  const max = 180;
+  const min = 90;
+  const slice = normalized.slice(0, max);
+  const m = slice.slice(min).match(/[.!?]\s/);
+  if (m?.index != null) return slice.slice(0, min + m.index + 1).trim();
+  return slice.trim().replace(/[,:;]\s*$/, "");
+}
+
+function deriveTagAndIcon(title: string, url: string, description: string) {
+  const text = `${title} ${url} ${description}`.toLowerCase();
+  if (/(pregnan|trimester|prenatal|conception)/.test(text)) return { tag: "Pregnancy", icon: "🤰" };
+  if (/(breastfeed|lactation|pumping|milk)/.test(text)) return { tag: "Feeding", icon: "🍼" };
+  if (/(newborn|infant|baby|toddler)/.test(text)) return { tag: "Baby Care", icon: "👶" };
+  if (/(sleep|nap|bedtime)/.test(text)) return { tag: "Sleep", icon: "😴" };
+  if (/(nutrition|diet|meal|food|vitamin|protein)/.test(text)) return { tag: "Nutrition", icon: "🥗" };
+  if (/(postpartum|ppd|anxiety|stress|overwhelm|mental|burnout)/.test(text)) return { tag: "Wellbeing", icon: "💛" };
+  return { tag: "Motherhood", icon: "✨" };
+}
+
 async function retrieveWebsiteContext(query: string, apiKey: string) {
   const key = query.toLowerCase().trim();
   const cached = ragCache.get(key);
@@ -139,17 +228,30 @@ async function retrieveWebsiteContext(query: string, apiKey: string) {
     docs = [];
   }
 
-  const sources: RagSource[] = docs
-    .filter(d => typeof d?.title === "string" && typeof d?.url === "string")
-    .slice(0, 5)
-    .map(d => ({ title: d.title, url: d.url }));
+  const uniqueDocs: Array<{ title: string; url: string; content: string; score?: number }> = [];
+  const seen = new Set<string>();
+  for (const d of docs) {
+    if (typeof d?.url !== "string" || typeof d?.title !== "string") continue;
+    const normalized = normalizeUrl(d.url);
+    if (!normalized) continue;
+    if (seen.has(normalized)) continue;
+    seen.add(normalized);
+    uniqueDocs.push({ ...d, url: normalized });
+    if (uniqueDocs.length >= 5) break;
+  }
 
-  const context = docs
-    .slice(0, 5)
+  const links: RagLink[] = uniqueDocs.slice(0, 2).map(d => {
+    const title = cleanRagTitle(d.title, d.url);
+    const description = deriveDescriptionFromContent(d.content);
+    const { tag, icon } = deriveTagAndIcon(title, d.url, description);
+    return { title, url: d.url, description, tag, icon };
+  });
+
+  const context = uniqueDocs
     .map(d => `Title: ${d.title}\nURL: ${d.url}\nContent: ${extractTextForContext(d.content || "", 800)}`)
     .join("\n\n---\n\n");
 
-  const result = { expiresAt: Date.now() + RAG_CACHE_TTL_MS, sources, context };
+  const result = { expiresAt: Date.now() + RAG_CACHE_TTL_MS, links, context };
   ragCache.set(key, result);
   return result;
 }
@@ -206,7 +308,7 @@ async function callOpenAI(prompt: string, isPremium: boolean, history: HistoryIt
     };
   }
 
-  const { sources, context } = await retrieveWebsiteContext(prompt, apiKey);
+  const { links, context } = await retrieveWebsiteContext(prompt, apiKey);
 
   const model = isPremium ? "gpt-4o" : "gpt-4o-mini";
   const maxTokens = isPremium ? 250 : 150;
@@ -275,7 +377,7 @@ Knowledge:
     const maxLines = isPremium ? 10 : 8;
     reply = limitToLines(reply, maxLines);
 
-    return { reply, sources, usedRag: sources.length > 0 };
+    return { reply, links, usedRag: links.length > 0 };
   } catch {
     throw new Error("Request to OpenAI failed or timed out");
   }
@@ -317,7 +419,7 @@ export async function POST(request: Request) {
       result.reply.includes("I'm listening") ||
       result.reply.includes("Want to share more?");
                             
-    if (result.usedRag && result.sources && result.sources.length > 0) {
+    if (result.usedRag && result.links && result.links.length > 0) {
       const overview = limitToLines(result.reply, isPremium ? 8 : 6);
       finalReply = `Here’s a quick overview: ${overview}`;
     } else if (!isHardcodedReply) {
@@ -333,13 +435,13 @@ export async function POST(request: Request) {
       if (finalReply.length > maxLen) finalReply = finalReply.slice(0, maxLen);
     }
     
-    const payload: any = { reply: finalReply };
-    if (result.usedRag && result.sources && result.sources.length > 0) {
-      payload.links = result.sources.slice(0, 5).map(s => ({ title: s.title, url: s.url }));
+    const payload: { reply: string; links?: RagLink[]; remaining?: number } = { reply: finalReply };
+    if (result.usedRag && result.links && result.links.length > 0) {
+      payload.links = result.links;
     }
     if (!isPremium) payload.remaining = usage.remaining;
     return NextResponse.json(payload);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("API ERROR:", err);
     return NextResponse.json({ error: "SERVER_ERROR" }, { status: 500 });
   }

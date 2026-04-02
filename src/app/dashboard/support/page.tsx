@@ -4,11 +4,40 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Send, MessageSquare, Bot } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Send, MessageSquare, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 
-type ChatMessage = { role: "user" | "assistant"; content: string; loading?: boolean; links?: { title: string; url: string }[] };
+type ResourceLink = { title: string; url: string; description: string; tag: string; icon: string };
+type ChatMessage = { role: "user" | "assistant"; content: string; loading?: boolean; links?: ResourceLink[] };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
+function parseResourceLinks(raw: unknown): ResourceLink[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out: ResourceLink[] = [];
+  const seen = new Set<string>();
+
+  for (const item of raw) {
+    if (!isRecord(item)) continue;
+    const url = typeof item.url === "string" ? item.url.trim() : "";
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+
+    out.push({
+      url,
+      title: typeof item.title === "string" && item.title.trim() ? item.title.trim() : "MotherEra Resource",
+      description: typeof item.description === "string" ? item.description.trim() : "",
+      tag: typeof item.tag === "string" && item.tag.trim() ? item.tag.trim() : "Motherhood",
+      icon: typeof item.icon === "string" && item.icon.trim() ? item.icon.trim() : "✨",
+    });
+
+    if (out.length >= 2) break;
+  }
+
+  return out.length > 0 ? out : undefined;
+}
 
 export default function SupportPage() {
   const { data: session } = useSession();
@@ -28,7 +57,7 @@ export default function SupportPage() {
       .replace(/\n/g, "\n\n");
   };
 
-  async function typeMessage(fullText: string, links?: {title: string, url: string}[]) {
+  async function typeMessage(fullText: string, links?: ResourceLink[]) {
     let current = "";
     const cleaned = cleanText(fullText);
     for (let i = 0; i < cleaned.length; i++) {
@@ -78,10 +107,10 @@ export default function SupportPage() {
       });
       
       if (res.ok) {
-        const data = await res.json();
-        const reply = String(data?.reply || "Something went wrong. Please try again.");
-        const links = Array.isArray(data?.links) ? data.links : undefined;
-        if (typeof data?.remaining === "number") setRemainingCount(data.remaining);
+        const data: unknown = await res.json();
+        const reply = isRecord(data) ? String(data.reply || "Something went wrong. Please try again.") : "Something went wrong. Please try again.";
+        const links = isRecord(data) ? parseResourceLinks(data.links) : undefined;
+        if (isRecord(data) && typeof data.remaining === "number") setRemainingCount(data.remaining);
 
         // Add a small artificial delay (500-1200ms) to make it feel more human
         const typingDelay = Math.floor(Math.random() * (1200 - 500 + 1)) + 500;
@@ -89,8 +118,8 @@ export default function SupportPage() {
           await typeMessage(reply, links);
         }, typingDelay);
       } else {
-        const err = await res.json().catch(() => ({} as any));
-        const errorCode = err?.error;
+        const err: unknown = await res.json().catch(() => ({} as Record<string, unknown>));
+        const errorCode = isRecord(err) && typeof err.error === "string" ? err.error : undefined;
 
         if (errorCode === "LIMIT_REACHED") {
           setLimitReached(true);
@@ -232,31 +261,38 @@ export default function SupportPage() {
                             
                             {/* Interactive Link Cards */}
                             {msg.links && msg.links.length > 0 && (
-                              <div className="mt-1 flex flex-col gap-2 w-full max-w-sm">
-                                <div className="text-xs font-medium text-stone-500 mb-1 ml-1 flex items-center gap-1.5">
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                                  Recommended Resources
+                              <div className="mt-1 flex flex-col gap-3 w-full">
+                                <div className="text-xs font-medium text-stone-500 mb-1 ml-1">
+                                  👉 Explore more on MotherEra
                                 </div>
-                                {msg.links.map((link, i) => (
+                                {msg.links.slice(0, 2).map((link, i) => (
                                   <a 
                                     key={i} 
                                     href={link.url} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    className="block group"
+                                    className="block group cursor-pointer"
                                   >
-                                    <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-200 flex items-center justify-between">
-                                      <div className="flex-1 pr-3">
-                                        <h4 className="text-sm font-medium text-stone-800 group-hover:text-rose-600 transition-colors line-clamp-2 leading-snug">
+                                    <div className="bg-white border border-stone-200/80 rounded-[14px] p-4 shadow-[0_1px_2px_rgba(0,0,0,0.06)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:border-rose-200 transition-all duration-200 hover:-translate-y-0.5 flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-lg shrink-0">
+                                        {link.icon}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-semibold text-stone-900 group-hover:text-rose-600 transition-colors line-clamp-2 leading-snug">
                                           {link.title}
-                                        </h4>
-                                        <span className="text-[11px] text-stone-400 mt-1.5 inline-block">Read more on MotherEra</span>
+                                        </div>
+                                        {link.description ? (
+                                          <div className="text-xs text-stone-500 mt-0.5 line-clamp-2 leading-relaxed">
+                                            {link.description}
+                                          </div>
+                                        ) : null}
+                                        <div className="mt-2">
+                                          <span className="inline-flex items-center rounded-full bg-rose-50 text-rose-700 border border-rose-100 px-2 py-0.5 text-[11px] font-medium">
+                                            {link.tag}
+                                          </span>
+                                        </div>
                                       </div>
-                                      <div className="w-8 h-8 rounded-full bg-stone-50 group-hover:bg-rose-50 flex items-center justify-center shrink-0 transition-colors border border-stone-100 group-hover:border-rose-100">
-                                        <svg className="w-4 h-4 text-stone-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                      </div>
+                                      <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-rose-500 transition-colors shrink-0" />
                                     </div>
                                   </a>
                                 ))}
