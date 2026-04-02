@@ -7,18 +7,29 @@ function sleep(ms) {
 }
 
 function shouldSkipUrl(url) {
+  const u = String(url || "").toLowerCase();
   return (
-    url.includes("/dashboard") ||
-    url.includes("/api/") ||
-    url.includes("/login") ||
-    url.includes("/register") ||
-    url.includes("/checkout") ||
-    url.includes("/pricing?") ||
-    url.endsWith(".pdf") ||
-    url.endsWith(".png") ||
-    url.endsWith(".jpg") ||
-    url.endsWith(".jpeg") ||
-    url.endsWith(".webp")
+    u.includes("/_next/") ||
+    u.includes("/dashboard") ||
+    u.includes("/api/") ||
+    u.includes("/login") ||
+    u.includes("/register") ||
+    u.includes("/checkout") ||
+    u.includes("/pricing?") ||
+    u.endsWith(".pdf") ||
+    u.endsWith(".xml") ||
+    u.endsWith(".json") ||
+    u.endsWith(".ico") ||
+    u.endsWith(".svg") ||
+    u.endsWith(".png") ||
+    u.endsWith(".jpg") ||
+    u.endsWith(".jpeg") ||
+    u.endsWith(".webp") ||
+    u.endsWith(".woff") ||
+    u.endsWith(".woff2") ||
+    u.endsWith(".css") ||
+    u.endsWith(".js") ||
+    u.endsWith(".map")
   );
 }
 
