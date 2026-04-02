@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Send, MessageSquare, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type ChatMessage = { role: "user" | "assistant"; content: string; loading?: boolean };
+type ChatMessage = { role: "user" | "assistant"; content: string; loading?: boolean; links?: { title: string; url: string }[] };
 
 export default function SupportPage() {
   const { data: session } = useSession();
@@ -28,7 +28,7 @@ export default function SupportPage() {
       .replace(/\n/g, "\n\n");
   };
 
-  async function typeMessage(fullText: string) {
+  async function typeMessage(fullText: string, links?: {title: string, url: string}[]) {
     let current = "";
     const cleaned = cleanText(fullText);
     for (let i = 0; i < cleaned.length; i++) {
@@ -36,7 +36,7 @@ export default function SupportPage() {
       setMessages(prev => {
         const updated = [...prev];
         if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
-          updated[updated.length - 1] = { ...updated[updated.length - 1], content: current, loading: false };
+          updated[updated.length - 1] = { ...updated[updated.length - 1], content: current, loading: false, links };
         }
         return updated;
       });
@@ -80,12 +80,13 @@ export default function SupportPage() {
       if (res.ok) {
         const data = await res.json();
         const reply = String(data?.reply || "Something went wrong. Please try again.");
+        const links = Array.isArray(data?.links) ? data.links : undefined;
         if (typeof data?.remaining === "number") setRemainingCount(data.remaining);
 
         // Add a small artificial delay (500-1200ms) to make it feel more human
         const typingDelay = Math.floor(Math.random() * (1200 - 500 + 1)) + 500;
         setTimeout(async () => {
-          await typeMessage(reply);
+          await typeMessage(reply, links);
         }, typingDelay);
       } else {
         const err = await res.json().catch(() => ({} as any));
@@ -200,7 +201,7 @@ export default function SupportPage() {
                           {msg.content}
                         </div>
                       ) : (
-                        <div className={`flex items-start gap-3 max-w-[70%] self-start ${isConsecutive ? 'mt-[-8px]' : ''}`}>
+                        <div className={`flex items-start gap-3 max-w-[85%] sm:max-w-[75%] self-start ${isConsecutive ? 'mt-[-8px]' : ''}`}>
                           {isConsecutive ? (
                             <div className="w-8 h-8 shrink-0" />
                           ) : (
@@ -216,15 +217,50 @@ export default function SupportPage() {
                               />
                             </div>
                           )}
-                          <div className={`bg-gray-100 text-gray-800 px-4 py-3 rounded-2xl shadow-sm whitespace-pre-line ${msg.loading ? "animate-pulse" : ""}`}>
-                            {msg.loading ? (
-                              msg.content
-                            ) : (
-                              msg.content.split("\n").map((line, i) => (
-                                <p key={i} className={line.trim() ? "mb-2" : "h-2"}>
-                                  {line}
-                                </p>
-                              ))
+                          <div className="flex flex-col gap-2 w-full">
+                            <div className={`bg-gray-100 text-gray-800 px-4 py-3 rounded-2xl shadow-sm whitespace-pre-line inline-block self-start ${msg.loading ? "animate-pulse" : ""}`}>
+                              {msg.loading ? (
+                                msg.content
+                              ) : (
+                                msg.content.split("\n").map((line, i) => (
+                                  <p key={i} className={line.trim() ? "mb-2" : "h-2"}>
+                                    {line}
+                                  </p>
+                                ))
+                              )}
+                            </div>
+                            
+                            {/* Interactive Link Cards */}
+                            {msg.links && msg.links.length > 0 && (
+                              <div className="mt-1 flex flex-col gap-2 w-full max-w-sm">
+                                <div className="text-xs font-medium text-stone-500 mb-1 ml-1 flex items-center gap-1.5">
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                  Recommended Resources
+                                </div>
+                                {msg.links.map((link, i) => (
+                                  <a 
+                                    key={i} 
+                                    href={link.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="block group"
+                                  >
+                                    <div className="bg-white border border-stone-200 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-rose-200 transition-all duration-200 flex items-center justify-between">
+                                      <div className="flex-1 pr-3">
+                                        <h4 className="text-sm font-medium text-stone-800 group-hover:text-rose-600 transition-colors line-clamp-2 leading-snug">
+                                          {link.title}
+                                        </h4>
+                                        <span className="text-[11px] text-stone-400 mt-1.5 inline-block">Read more on MotherEra</span>
+                                      </div>
+                                      <div className="w-8 h-8 rounded-full bg-stone-50 group-hover:bg-rose-50 flex items-center justify-center shrink-0 transition-colors border border-stone-100 group-hover:border-rose-100">
+                                        <svg className="w-4 h-4 text-stone-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
                             )}
                           </div>
                         </div>

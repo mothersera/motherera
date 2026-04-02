@@ -319,9 +319,7 @@ export async function POST(request: Request) {
                             
     if (result.usedRag && result.sources && result.sources.length > 0) {
       const overview = limitToLines(result.reply, isPremium ? 8 : 6);
-      finalReply =
-        `Here’s a quick overview: ${overview}\n\n👉 Learn more:\n` +
-        result.sources.slice(0, 5).map(s => `${s.title} – ${s.url}`).join("\n");
+      finalReply = `Here’s a quick overview: ${overview}`;
     } else if (!isHardcodedReply) {
       const maxLen = isPremium ? 2000 : 1000;
       const openings = [
@@ -336,6 +334,9 @@ export async function POST(request: Request) {
     }
     
     const payload: any = { reply: finalReply };
+    if (result.usedRag && result.sources && result.sources.length > 0) {
+      payload.links = result.sources.slice(0, 5).map(s => ({ title: s.title, url: s.url }));
+    }
     if (!isPremium) payload.remaining = usage.remaining;
     return NextResponse.json(payload);
   } catch (err: any) {
