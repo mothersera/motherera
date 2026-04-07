@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion, Variants } from "framer-motion";
-import { Heart, Shield, Globe, Users, Sparkles, Stethoscope, ArrowRight } from "lucide-react";
+import { Heart, Shield, Globe, Sparkles, Stethoscope, ArrowRight } from "lucide-react";
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -33,6 +34,36 @@ const imageReveal: Variants = {
     transition: { duration: 1.2, ease: "easeOut" }
   }
 };
+
+type CommunityAvatar = { src: string; alt: string; fallback: string };
+
+const COMMUNITY_AVATARS: CommunityAvatar[] = [
+  { src: "/avatars/mom-a.webp", alt: "Community member A", fallback: "A" },
+  { src: "/avatars/mom-s.webp", alt: "Community member S", fallback: "S" },
+  { src: "/avatars/mom-r.webp", alt: "Community member R", fallback: "R" },
+];
+
+function AvatarCircle({ src, alt, fallback }: CommunityAvatar) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-stone-200 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center text-xs font-bold text-stone-700">
+      {failed ? (
+        <span>{fallback}</span>
+      ) : (
+        <Image
+          src={src}
+          alt={alt}
+          width={40}
+          height={40}
+          className="w-full h-full object-cover"
+          sizes="40px"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function AboutClient() {
   return (
@@ -177,13 +208,11 @@ export default function AboutClient() {
                >
                  <div className="flex items-center gap-4 mb-3">
                    <div className="flex -space-x-3">
-                     {[1,2,3,4].map((i) => (
-                       <div key={i} className="w-10 h-10 rounded-full bg-stone-200 border-2 border-white flex items-center justify-center text-xs font-bold text-stone-500 overflow-hidden">
-                         <Users className="w-5 h-5 text-stone-400" />
-                       </div>
+                     {COMMUNITY_AVATARS.map((a) => (
+                       <AvatarCircle key={a.src} {...a} />
                      ))}
                    </div>
-                   <div className="text-sm font-semibold text-stone-900">
+                   <div className="text-sm font-semibold text-stone-900 flex items-center">
                      Join 10,000+ Mothers
                    </div>
                  </div>
