@@ -8,11 +8,22 @@ export interface IUser extends mongoose.Document {
   role: 'mother' | 'expert' | 'admin';
   // Mother specific fields
   motherhoodStage?: 'pregnancy' | 'postpartum' | 'child_0_5' | 'toddler';
+  lifecycle?: {
+    expectedDueDate?: Date;
+    gestationalAgeWeeks?: number;
+    childBirthDates?: Date[];
+    wellnessObjectives?: string[];
+    stageId?: string;
+    stageLabel?: string;
+    confidence?: string;
+    derivedFrom?: string;
+    updatedAt?: Date;
+  };
   healthConditions?: string[];
   dietaryPreference?: 'veg' | 'non-veg' | 'vegan' | 'egg';
   activeDietPlan?: boolean;
   planStartDate?: Date;
-  weeklyPlan?: any;
+  weeklyPlan?: unknown;
   subscriptionPlan?: 'basic' | 'premium' | 'specialized';
   subscriptionStatus?: 'active' | 'inactive' | 'canceled';
   subscriptionSource?: string;
@@ -39,6 +50,17 @@ const UserSchema: Schema<IUser> = new Schema(
       type: String, 
       enum: ['pregnancy', 'postpartum', 'child_0_5', 'toddler'],
       required: function(this: IUser) { return this.role === 'mother'; }
+    },
+    lifecycle: {
+      expectedDueDate: { type: Date },
+      gestationalAgeWeeks: { type: Number },
+      childBirthDates: { type: [Date], default: [] },
+      wellnessObjectives: { type: [String], default: [] },
+      stageId: { type: String },
+      stageLabel: { type: String },
+      confidence: { type: String },
+      derivedFrom: { type: String },
+      updatedAt: { type: Date },
     },
     healthConditions: { type: [String], default: [] },
     dietaryPreference: { type: String, enum: ['veg', 'non-veg', 'vegan', 'egg', 'keto', 'vegetarian', 'non-vegetarian', 'eggetarian'] },

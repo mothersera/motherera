@@ -27,10 +27,29 @@ function ProfileContent() {
     email: '',
     motherhoodStage: 'pregnancy',
     dietaryPreference: 'veg',
-    image: ''
+    image: '',
+    expectedDueDate: '',
+    childBirthDate: '',
+    gestationalAgeWeeks: '',
+    wellnessObjectives: [] as string[]
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [lifecycleMeta, setLifecycleMeta] = useState({
+    stageLabel: '',
+    stageId: '',
+    confidence: '',
+    derivedFrom: ''
+  });
+
+  const toggleObjective = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      wellnessObjectives: prev.wellnessObjectives.includes(value)
+        ? prev.wellnessObjectives.filter(v => v !== value)
+        : [...prev.wellnessObjectives, value]
+    }));
+  };
 
   useEffect(() => {
     async function fetchProfile() {
@@ -39,12 +58,31 @@ function ProfileContent() {
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
+          const expectedDueDate = typeof data?.lifecycle?.expectedDueDate === "string" ? data.lifecycle.expectedDueDate.slice(0, 10) : "";
+          const childBirthDate =
+            Array.isArray(data?.lifecycle?.childBirthDates) && typeof data.lifecycle.childBirthDates?.[0] === "string"
+              ? data.lifecycle.childBirthDates[0].slice(0, 10)
+              : "";
+          const gestationalAgeWeeks = typeof data?.lifecycle?.gestationalAgeWeeks === "number" ? String(data.lifecycle.gestationalAgeWeeks) : "";
+          const wellnessObjectives = Array.isArray(data?.lifecycle?.wellnessObjectives)
+            ? data.lifecycle.wellnessObjectives.map((v: unknown) => String(v || "").trim()).filter(Boolean).slice(0, 12)
+            : [];
           setFormData({
             name: data.name || '',
             email: data.email || '',
             motherhoodStage: data.motherhoodStage || 'pregnancy',
             dietaryPreference: data.dietaryPreference || 'veg',
-            image: data.image || ''
+            image: data.image || '',
+            expectedDueDate,
+            childBirthDate,
+            gestationalAgeWeeks,
+            wellnessObjectives
+          });
+          setLifecycleMeta({
+            stageLabel: String(data?.lifecycle?.stageLabel || ""),
+            stageId: String(data?.lifecycle?.stageId || ""),
+            confidence: String(data?.lifecycle?.confidence || ""),
+            derivedFrom: String(data?.lifecycle?.derivedFrom || "")
           });
         } else {
           // If viewing self and fetch fails, fallback to session data
@@ -123,7 +161,13 @@ function ProfileContent() {
           name: formData.name,
           motherhoodStage: formData.motherhoodStage,
           dietaryPreference: formData.dietaryPreference,
-          image: formData.image
+          image: formData.image,
+          lifecycle: {
+            expectedDueDate: formData.expectedDueDate || undefined,
+            childBirthDate: formData.childBirthDate || undefined,
+            gestationalAgeWeeks: formData.gestationalAgeWeeks ? Number(formData.gestationalAgeWeeks) : undefined,
+            wellnessObjectives: formData.wellnessObjectives
+          }
         })
       });
 
@@ -149,9 +193,9 @@ function ProfileContent() {
         router.push('/dashboard');
       }, 1500);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setMessage({ type: 'error', text: err.message || 'Something went wrong. Please try again.' });
+      setMessage({ type: 'error', text: (err as Error).message || 'Something went wrong. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -301,7 +345,7 @@ function ProfileContent() {
                           </select>
                           <Baby className="absolute left-3 top-2.5 w-4 h-4 text-stone-500 pointer-events-none" />
                         </div>
-                        <p className="text-xs text-stone-500">We'll customize your dashboard based on this.</p>
+                        <p className="text-xs text-stone-500">We&apos;ll customize your dashboard based on this.</p>
                       </div>
 
                       <div className="space-y-2">
@@ -321,6 +365,88 @@ function ProfileContent() {
                           <Utensils className="absolute left-3 top-2.5 w-4 h-4 text-stone-500 pointer-events-none" />
                         </div>
                         <p className="text-xs text-stone-500">For personalized nutrition plans.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-stone-100" />
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-bold text-stone-900 uppercase tracking-wider">Lifecycle Mapping Engine</div>
+                        <div className="text-xs text-stone-500 mt-0.5">Smart stage detection with time-based progression.</div>
+                      </div>
+                      {(lifecycleMeta.stageLabel || lifecycleMeta.stageId) && (
+                        <div className="shrink-0">
+                          <span className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-gradient-to-r from-rose-50 to-purple-50 px-3 py-1 text-xs font-semibold text-stone-800 shadow-sm">
+                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                            {lifecycleMeta.stageLabel || lifecycleMeta.stageId}
+                          </span>
+                          {lifecycleMeta.confidence && (
+                            <div className="text-[11px] text-stone-400 mt-1 text-right">Confidence: {lifecycleMeta.confidence}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative overflow-hidden rounded-2xl border border-stone-200 bg-white/60 backdrop-blur-md shadow-sm">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(244,63,94,0.10),transparent_40%),radial-gradient(circle_at_80%_30%,rgba(168,85,247,0.10),transparent_45%),radial-gradient(circle_at_30%_80%,rgba(14,165,233,0.08),transparent_45%)]" />
+                      <div className="relative p-5 space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-stone-700">Expected due date</label>
+                            <Input
+                              value={formData.expectedDueDate}
+                              onChange={(e) => setFormData({ ...formData, expectedDueDate: e.target.value })}
+                              type="date"
+                              className="bg-white/70 border-stone-200 focus:border-rose-500 focus:ring-rose-500"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-stone-700">Gestational weeks</label>
+                            <Input
+                              value={formData.gestationalAgeWeeks}
+                              onChange={(e) => setFormData({ ...formData, gestationalAgeWeeks: e.target.value })}
+                              type="number"
+                              min={0}
+                              max={42}
+                              placeholder="e.g. 18"
+                              className="bg-white/70 border-stone-200 focus:border-rose-500 focus:ring-rose-500"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-medium text-stone-700">Child birth date</label>
+                            <Input
+                              value={formData.childBirthDate}
+                              onChange={(e) => setFormData({ ...formData, childBirthDate: e.target.value })}
+                              type="date"
+                              className="bg-white/70 border-stone-200 focus:border-rose-500 focus:ring-rose-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="text-xs font-medium text-stone-700">Wellness objectives</div>
+                          <div className="flex flex-wrap gap-2">
+                            {["Sleep", "Nutrition", "Mental Wellness", "Recovery", "Baby Care", "Routine", "Fitness", "Work-Life"].map((o) => (
+                              <button
+                                key={o}
+                                type="button"
+                                onClick={() => toggleObjective(o)}
+                                className={`px-3 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                                  formData.wellnessObjectives.includes(o)
+                                    ? "bg-rose-50 border-rose-200 text-rose-700"
+                                    : "bg-white/70 border-stone-200 text-stone-600 hover:border-stone-300"
+                                }`}
+                                disabled={isLoading}
+                              >
+                                {o}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="text-[11px] text-stone-500">This powers automatic stage transitions and personalization across modules.</div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -349,7 +475,7 @@ function ProfileContent() {
           {isViewingOther && (
             <Card className="border-none shadow-md">
                 <CardContent className="p-8 text-center text-stone-500">
-                    <p>You are viewing {formData.name}'s profile.</p>
+                    <p>You are viewing {formData.name}&apos;s profile.</p>
                 </CardContent>
             </Card>
           )}

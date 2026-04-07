@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { 
@@ -25,6 +25,9 @@ interface DashboardClientProps {
     name?: string | null;
     email?: string | null;
     motherhoodStage?: string | null;
+    lifecycleStageId?: string | null;
+    lifecycleStageLabel?: string | null;
+    lifecycleConfidence?: string | null;
     subscriptionPlan?: string | null;
     subscriptionStatus?: string | null;
     dietaryPreference?: string | null;
@@ -83,6 +86,7 @@ export default function DashboardClient({ user }: DashboardClientProps) {
   const { update } = useSession();
   const firstName = user.name?.split(' ')[0] || 'Mom';
   const stage = user.motherhoodStage?.replace(/_/g, ' ') || 'Welcome';
+  const lifecycleLabel = user.lifecycleStageLabel || '';
   
   // Journey Stages
   const JOURNEY_STAGES = [
@@ -96,29 +100,72 @@ export default function DashboardClient({ user }: DashboardClientProps) {
     ? JOURNEY_STAGES.findIndex(s => stage.toLowerCase().includes(s.id)) 
     : 0);
 
-  const [profileCompletion, setProfileCompletion] = useState(0);
-
-  useEffect(() => {
-    // Calculate profile completion
+  const profileCompletion = useMemo(() => {
     let completed = 0;
-    let total = 4; // Name, Email, Stage, Dietary Preference
-    
-    // Check fields
+    const total = 4;
     if (user.name && user.name !== 'Mother') completed++;
     if (user.email) completed++;
     if (user.motherhoodStage) completed++;
     if (user.dietaryPreference) completed++;
-    
-    // Calculate percentage
-    setProfileCompletion(Math.round((completed / total) * 100));
-    
+    return Math.round((completed / total) * 100);
   }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/lifecycle", { method: "GET" });
+        if (!cancelled && res.ok) {
+          await update();
+        }
+      } catch {
+        return;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [update]);
 
   const [meals, setMeals] = useState<MealItem[]>([]);
   const [nextMeal, setNextMeal] = useState<string>("Lunch");
-  const [dailyQuote, setDailyQuote] = useState(QUOTES[0]);
-  const [waterCount, setWaterCount] = useState(0);
-  const [mood, setMood] = useState<string | null>(null);
+  const dailyQuote = useMemo(() => {
+    const todayDate = new Date();
+    const startOfYear = new Date(todayDate.getFullYear(), 0, 0);
+    const diff = todayDate.getTime() - startOfYear.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    const quoteIndex = dayOfYear % QUOTES.length;
+    return QUOTES[quoteIndex];
+  }, []);
+  const [waterCount, setWaterCount] = useState(() => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const wellnessKey = `motherera_wellness_${today}_${user.email || 'guest'}`;
+      const storedWellness = localStorage.getItem(wellnessKey);
+      if (!storedWellness) return 0;
+      const parsed: unknown = JSON.parse(storedWellness);
+      const water = typeof parsed === "object" && parsed && "water" in parsed ? (parsed as { water?: unknown }).water : 0;
+      return typeof water === "number" ? water : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  const [mood, setMood] = useState<string | null>(() => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const wellnessKey = `motherera_wellness_${today}_${user.email || 'guest'}`;
+      const storedWellness = localStorage.getItem(wellnessKey);
+      if (!storedWellness) return null;
+      const parsed: unknown = JSON.parse(storedWellness);
+      const currentMood =
+        typeof parsed === "object" && parsed && "currentMood" in parsed ? (parsed as { currentMood?: unknown }).currentMood : null;
+      return typeof currentMood === "string" ? currentMood : null;
+    } catch {
+      return null;
+    }
+  });
 
   const isPremium = user.subscriptionStatus === 'active' && user.subscriptionPlan === 'premium';
   const isSpecialized = user.subscriptionStatus === 'active' && user.subscriptionPlan === 'specialized';
@@ -170,25 +217,16 @@ export default function DashboardClient({ user }: DashboardClientProps) {
       // Ideally show a toast here: "You're now on the Premium plan 🎉"
     }
 
-    // Daily Wisdom Logic
-    const todayDate = new Date();
-    const startOfYear = new Date(todayDate.getFullYear(), 0, 0);
-    const diff = todayDate.getTime() - startOfYear.getTime();
-    const oneDay = 1000 * 60 * 60 * 24;
-    const dayOfYear = Math.floor(diff / oneDay);
-    const quoteIndex = dayOfYear % QUOTES.length;
-    setDailyQuote(QUOTES[quoteIndex]);
-
-    // Load wellness data
-    const today = todayDate.toISOString().split('T')[0];
-    const wellnessKey = `motherera_wellness_${today}_${user.email || 'guest'}`;
-    const storedWellness = localStorage.getItem(wellnessKey);
-    if (storedWellness) {
-      const { water, currentMood } = JSON.parse(storedWellness);
-      setWaterCount(water || 0);
-      setMood(currentMood || null);
-    }
   }, [user.email]);
+
+  function calculateNextMeal(currentMeals: MealItem[]) {
+    const next = currentMeals.find(m => m.status === 'pending');
+    if (next) {
+      setNextMeal(next.meal);
+    } else {
+      setNextMeal("All meals completed for today 🎉");
+    }
+  }
 
   useEffect(() => {
     const fetchDailyNutrition = async () => {
@@ -198,31 +236,39 @@ export default function DashboardClient({ user }: DashboardClientProps) {
           const data = await res.json();
           if (data.meals) {
             // Map API meals to dashboard format
-            const apiMeals = data.meals.map((m: any, index: number) => ({
-              id: m.meal.toLowerCase().replace(/\s/g, ''),
-              meal: m.meal,
-              food: m.food,
-              status: 'pending',
-              time: index === 0 ? "8:00 AM" : index === 1 ? "11:00 AM" : index === 2 ? "1:00 PM" : index === 3 ? "4:00 PM" : "8:00 PM"
-            }));
-            
-            // Check local storage for completion status
-            const today = new Date().toISOString().split('T')[0];
-            const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
-            const stored = localStorage.getItem(storageKey);
-            
-            if (stored) {
-              const storedMeals = JSON.parse(stored);
-              // Merge status from storage with fresh data from API
-              const mergedMeals = apiMeals.map((apiMeal: any, i: number) => ({
-                ...apiMeal,
-                status: storedMeals[i]?.status || 'pending'
-              }));
-              setMeals(mergedMeals);
-              calculateNextMeal(mergedMeals);
-            } else {
-              setMeals(apiMeals);
-              calculateNextMeal(apiMeals);
+            const mealsRaw: unknown = data.meals;
+            const apiMeals = (Array.isArray(mealsRaw) ? mealsRaw : []).map((m, index: number) => {
+              const obj = typeof m === "object" && m ? (m as Record<string, unknown>) : {};
+              const meal = String(obj.meal || "");
+              const food = String(obj.food || "");
+              return {
+                id: meal.toLowerCase().replace(/\s/g, ''),
+                meal,
+                food,
+                status: 'pending' as const,
+                time: index === 0 ? "8:00 AM" : index === 1 ? "11:00 AM" : index === 2 ? "1:00 PM" : index === 3 ? "4:00 PM" : "8:00 PM"
+              };
+            });
+
+            if (apiMeals.length > 0) {
+              const today = new Date().toISOString().split('T')[0];
+              const storageKey = `motherera_nutrition_plan_${today}_${user.email || 'guest'}`;
+              const stored = localStorage.getItem(storageKey);
+              
+              if (stored) {
+                const storedMeals: unknown = JSON.parse(stored);
+                const mergedMeals = apiMeals.map((apiMeal, i: number) => {
+                  const s = Array.isArray(storedMeals) ? storedMeals[i] : null;
+                  const statusValue = typeof s === "object" && s && "status" in s ? (s as { status?: unknown }).status : undefined;
+                  const status = statusValue === "completed" ? "completed" : "pending";
+                  return { ...apiMeal, status } as MealItem;
+                });
+                setMeals(mergedMeals);
+                calculateNextMeal(mergedMeals);
+              } else {
+                setMeals(apiMeals as MealItem[]);
+                calculateNextMeal(apiMeals as MealItem[]);
+              }
             }
           } else {
              // Fallback if no meals returned (shouldn't happen with updated API)
@@ -248,15 +294,6 @@ export default function DashboardClient({ user }: DashboardClientProps) {
       water: newWater, 
       currentMood: newMood !== undefined ? newMood : mood 
     }));
-  };
-
-  const calculateNextMeal = (currentMeals: MealItem[]) => {
-    const next = currentMeals.find(m => m.status === 'pending');
-    if (next) {
-      setNextMeal(next.meal);
-    } else {
-      setNextMeal("All meals completed for today 🎉");
-    }
   };
 
   const markAsDone = (index: number) => {
@@ -301,9 +338,20 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                   {firstName}
                 </span>
               </h1>
-              <p className="text-stone-500 mt-4 text-lg font-light tracking-wide">
-                Your journey: <span className="capitalize font-medium text-stone-900 border-b-2 border-rose-200 pb-0.5">{stage}</span>
-              </p>
+              <div className="text-stone-500 mt-4 text-lg font-light tracking-wide flex flex-wrap items-center gap-3">
+                <div>
+                  Your journey:{" "}
+                  <span className="capitalize font-medium text-stone-900 border-b-2 border-rose-200 pb-0.5">
+                    {stage}
+                  </span>
+                </div>
+                {lifecycleLabel && (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white/70 backdrop-blur-sm px-3 py-1 text-xs font-semibold text-stone-800 shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    {lifecycleLabel}
+                  </span>
+                )}
+              </div>
 
               {/* Journey Timeline */}
               <div className="mt-6">
@@ -460,7 +508,7 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                 <CardHeader className="border-b border-stone-100/50 bg-white/40 p-8">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="font-serif text-2xl text-stone-900 mb-1">Today's Nutrition</CardTitle>
+                      <CardTitle className="font-serif text-2xl text-stone-900 mb-1">Today&apos;s Nutrition</CardTitle>
                       <p className="text-sm text-stone-500">Your personalized meal plan for today</p>
                     </div>
                     <Link href={isSubscribed ? "/dashboard/nutrition-plan/full" : "/dashboard/nutrition-plan"}>
@@ -572,7 +620,7 @@ export default function DashboardClient({ user }: DashboardClientProps) {
                     <span className="text-xs uppercase tracking-widest font-bold">Daily Wisdom</span>
                   </div>
                   <blockquote className="text-xl italic font-light leading-relaxed mb-6 font-serif text-stone-100">
-                    "{dailyQuote.text}"
+                    &ldquo;{dailyQuote.text}&rdquo;
                   </blockquote>
                   <p className="text-xs text-stone-400 uppercase tracking-widest font-medium border-t border-stone-800 pt-4 inline-block pr-8">— {dailyQuote.author}</p>
                 </div>

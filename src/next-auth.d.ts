@@ -9,6 +9,9 @@ declare module "next-auth" {
       id: string;
       role: string;
       motherhoodStage?: string;
+      lifecycleStageId?: string;
+      lifecycleStageLabel?: string;
+      lifecycleConfidence?: string;
       subscriptionPlan?: string;
       subscriptionStatus?: string;
       dietaryPreference?: string;
@@ -18,6 +21,9 @@ declare module "next-auth" {
   interface User extends DefaultUser {
     role: string;
     motherhoodStage?: string;
+    lifecycleStageId?: string;
+    lifecycleStageLabel?: string;
+    lifecycleConfidence?: string;
     subscriptionPlan?: string;
     subscriptionStatus?: string;
     dietaryPreference?: string;
@@ -29,6 +35,9 @@ declare module "next-auth/jwt" {
     id: string;
     role: string;
     motherhoodStage?: string;
+    lifecycleStageId?: string;
+    lifecycleStageLabel?: string;
+    lifecycleConfidence?: string;
     subscriptionPlan?: string;
     subscriptionStatus?: string;
     dietaryPreference?: string;

@@ -5,6 +5,7 @@ import AppleProvider from 'next-auth/providers/apple';
 import dbConnect from '@/lib/db';
 import UserModel from '@/models/User';
 import bcrypt from 'bcryptjs';
+import { evaluateLifecycle } from '@/lib/lifecycle';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -45,13 +46,44 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials');
         }
 
+        const evaluation = evaluateLifecycle({
+          expectedDueDate: user.lifecycle?.expectedDueDate || null,
+          gestationalAgeWeeks: user.lifecycle?.gestationalAgeWeeks || null,
+          childBirthDates: user.lifecycle?.childBirthDates || null,
+          wellnessObjectives: user.lifecycle?.wellnessObjectives || null,
+        });
+
+        const lifecycleNeedsUpdate =
+          user.lifecycle?.stageId !== evaluation.stageId ||
+          user.lifecycle?.stageLabel !== evaluation.label ||
+          user.lifecycle?.confidence !== evaluation.confidence ||
+          user.lifecycle?.derivedFrom !== evaluation.derivedFrom ||
+          user.motherhoodStage !== evaluation.motherhoodStage;
+
+        if (lifecycleNeedsUpdate) {
+          await UserModel.findByIdAndUpdate(user._id, {
+            motherhoodStage: evaluation.motherhoodStage,
+            lifecycle: {
+              ...(user.lifecycle || {}),
+              stageId: evaluation.stageId,
+              stageLabel: evaluation.label,
+              confidence: evaluation.confidence,
+              derivedFrom: evaluation.derivedFrom,
+              updatedAt: new Date(),
+            },
+          });
+        }
+
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
           role: user.role,
           image: user.image,
-          motherhoodStage: user.motherhoodStage,
+          motherhoodStage: evaluation.motherhoodStage,
+          lifecycleStageId: evaluation.stageId,
+          lifecycleStageLabel: evaluation.label,
+          lifecycleConfidence: evaluation.confidence,
           subscriptionPlan: user.subscriptionPlan,
           subscriptionStatus: user.subscriptionStatus,
           dietaryPreference: user.dietaryPreference
@@ -67,8 +99,39 @@ export const authOptions: NextAuthOptions = {
           await dbConnect();
           const dbUser = await UserModel.findById(token.id);
           if (dbUser) {
+            const evaluation = evaluateLifecycle({
+              expectedDueDate: dbUser.lifecycle?.expectedDueDate || null,
+              gestationalAgeWeeks: dbUser.lifecycle?.gestationalAgeWeeks || null,
+              childBirthDates: dbUser.lifecycle?.childBirthDates || null,
+              wellnessObjectives: dbUser.lifecycle?.wellnessObjectives || null,
+            });
+
+            const lifecycleNeedsUpdate =
+              dbUser.lifecycle?.stageId !== evaluation.stageId ||
+              dbUser.lifecycle?.stageLabel !== evaluation.label ||
+              dbUser.lifecycle?.confidence !== evaluation.confidence ||
+              dbUser.lifecycle?.derivedFrom !== evaluation.derivedFrom ||
+              dbUser.motherhoodStage !== evaluation.motherhoodStage;
+
+            if (lifecycleNeedsUpdate) {
+              await UserModel.findByIdAndUpdate(dbUser._id, {
+                motherhoodStage: evaluation.motherhoodStage,
+                lifecycle: {
+                  ...(dbUser.lifecycle || {}),
+                  stageId: evaluation.stageId,
+                  stageLabel: evaluation.label,
+                  confidence: evaluation.confidence,
+                  derivedFrom: evaluation.derivedFrom,
+                  updatedAt: new Date(),
+                },
+              });
+            }
+
             token.name = dbUser.name;
-            token.motherhoodStage = dbUser.motherhoodStage;
+            token.motherhoodStage = evaluation.motherhoodStage;
+            token.lifecycleStageId = evaluation.stageId;
+            token.lifecycleStageLabel = evaluation.label;
+            token.lifecycleConfidence = evaluation.confidence;
             token.dietaryPreference = dbUser.dietaryPreference;
             token.subscriptionPlan = dbUser.subscriptionPlan;
             token.subscriptionStatus = dbUser.subscriptionStatus;
@@ -101,9 +164,40 @@ export const authOptions: NextAuthOptions = {
           }
 
           if (dbUser) {
+            const evaluation = evaluateLifecycle({
+              expectedDueDate: dbUser.lifecycle?.expectedDueDate || null,
+              gestationalAgeWeeks: dbUser.lifecycle?.gestationalAgeWeeks || null,
+              childBirthDates: dbUser.lifecycle?.childBirthDates || null,
+              wellnessObjectives: dbUser.lifecycle?.wellnessObjectives || null,
+            });
+
+            const lifecycleNeedsUpdate =
+              dbUser.lifecycle?.stageId !== evaluation.stageId ||
+              dbUser.lifecycle?.stageLabel !== evaluation.label ||
+              dbUser.lifecycle?.confidence !== evaluation.confidence ||
+              dbUser.lifecycle?.derivedFrom !== evaluation.derivedFrom ||
+              dbUser.motherhoodStage !== evaluation.motherhoodStage;
+
+            if (lifecycleNeedsUpdate) {
+              await UserModel.findByIdAndUpdate(dbUser._id, {
+                motherhoodStage: evaluation.motherhoodStage,
+                lifecycle: {
+                  ...(dbUser.lifecycle || {}),
+                  stageId: evaluation.stageId,
+                  stageLabel: evaluation.label,
+                  confidence: evaluation.confidence,
+                  derivedFrom: evaluation.derivedFrom,
+                  updatedAt: new Date(),
+                },
+              });
+            }
+
             token.id = dbUser._id.toString();
             token.role = dbUser.role;
-            token.motherhoodStage = dbUser.motherhoodStage;
+            token.motherhoodStage = evaluation.motherhoodStage;
+            token.lifecycleStageId = evaluation.stageId;
+            token.lifecycleStageLabel = evaluation.label;
+            token.lifecycleConfidence = evaluation.confidence;
             token.subscriptionPlan = dbUser.subscriptionPlan;
             token.subscriptionStatus = dbUser.subscriptionStatus;
             token.dietaryPreference = dbUser.dietaryPreference;
@@ -113,9 +207,12 @@ export const authOptions: NextAuthOptions = {
           token.role = user.role;
           token.id = user.id;
           token.motherhoodStage = user.motherhoodStage;
+          token.lifecycleStageId = user.lifecycleStageId;
+          token.lifecycleStageLabel = user.lifecycleStageLabel;
+          token.lifecycleConfidence = user.lifecycleConfidence;
           token.subscriptionPlan = user.subscriptionPlan;
           token.subscriptionStatus = user.subscriptionStatus;
-          token.dietaryPreference = (user as any).dietaryPreference;
+          token.dietaryPreference = user.dietaryPreference;
         }
       }
       return token;
@@ -125,6 +222,9 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string;
         session.user.id = token.id as string;
         session.user.motherhoodStage = token.motherhoodStage as string;
+        session.user.lifecycleStageId = token.lifecycleStageId as string;
+        session.user.lifecycleStageLabel = token.lifecycleStageLabel as string;
+        session.user.lifecycleConfidence = token.lifecycleConfidence as string;
         session.user.subscriptionPlan = token.subscriptionPlan as string;
         session.user.subscriptionStatus = token.subscriptionStatus as string;
         session.user.dietaryPreference = token.dietaryPreference as string;

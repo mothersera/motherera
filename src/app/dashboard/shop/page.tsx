@@ -12,19 +12,39 @@ import { fetchProducts, Product } from "@/lib/shopify";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCurrency } from "@/components/providers/CurrencyProvider";
 import { CurrencySelector } from "@/components/shop/CurrencySelector";
+import { lifecycleStageForCommerce } from "@/lib/lifecycle";
 
 export default function ShopPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const { convertAndFormat } = useCurrency();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const userStage = session?.user?.motherhoodStage || 'general';
+  const userStage =
+    (session?.user?.lifecycleStageId ? lifecycleStageForCommerce(session.user.lifecycleStageId) : session?.user?.motherhoodStage) ||
+    'general';
 
   useEffect(() => {
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/lifecycle", { method: "GET" });
+        if (!cancelled && res.ok) {
+          await update();
+        }
+      } catch {
+        return;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [update]);
 
   const loadProducts = async () => {
     setIsLoading(true);
