@@ -73,9 +73,9 @@ async function writeAvatar(buffer, outPath) {
   fs.mkdirSync(outDir, { recursive: true });
 
   const prompts = [
-    "A natural portrait photo of a young Indian woman (age 24–30) smiling softly, candid lifestyle photography, soft natural window light, realistic skin texture, minimal makeup, simple modest clothing, subtle blurred home background, head and shoulders framing, authentic motherhood warmth, high realism, no studio backdrop, no glamour styling, no heavy retouching",
-    "A realistic candid head-and-shoulders portrait of a South Asian woman (age 26–33) with a calm warm smile, soft natural light, slight background blur in a cozy home environment, minimal makeup, simple modest clothing, natural hair, authentic human imperfections, lifestyle photography feel, high realism, no model pose, no studio lighting",
-    "A natural lifestyle portrait of a young Indian woman (age 22–28) smiling gently, warm ambient daylight, realistic skin and texture, minimal makeup, modest casual clothing, subtle blurred indoor home background, head and shoulders framing, candid and human, high realism, not a stock photo, not overly perfect",
+    "A natural portrait photo of a young South Asian woman (age 24–30) smiling softly, candid lifestyle photography, soft natural window light, realistic skin texture, minimal makeup, simple modest clothing, subtle blurred home background, head and shoulders framing, authentic motherhood warmth, high realism, no studio backdrop, no glamour styling, no heavy retouching",
+    "A realistic candid head-and-shoulders portrait of a young Black woman (age 26–33) with a calm warm smile, soft natural daylight, slight background blur in a cozy home environment, realistic skin texture, minimal makeup, simple modest clothing, natural hair, authentic human imperfections, lifestyle photography feel, high realism, no model pose, no studio lighting",
+    "A natural lifestyle head-and-shoulders portrait of a young East Asian woman (age 22–30) smiling gently, warm ambient daylight, realistic skin texture, minimal makeup, modest casual clothing, subtle blurred indoor home background, candid and human, high realism, not a stock photo, not overly perfect",
   ];
 
   const outputs = ["mom-a.webp", "mom-s.webp", "mom-r.webp"].map((f) => path.join(outDir, f));
