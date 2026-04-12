@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import UserModel from '@/models/User';
 import mongoose from 'mongoose';
+import { ADMIN_EMAIL, normalizeEmail } from '@/lib/access';
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
   await dbConnect();
 
   try {
-    let userId = session.user.id;
+    const userId = session.user.id;
     let user;
 
     // 1. Try to find user by ID (only if valid ObjectId)
@@ -37,6 +38,12 @@ export async function GET(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const userEmail = normalizeEmail(user.email);
+    const isAdminUser = userEmail === ADMIN_EMAIL;
+    if (!isAdminUser) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Simulate successful subscription

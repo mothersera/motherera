@@ -124,6 +124,11 @@ export default function SupportPage() {
         if (errorCode === "LIMIT_REACHED") {
           setLimitReached(true);
           setMessages(prev => prev.filter(m => !m.loading));
+        } else if (errorCode === "UPGRADE_REQUIRED") {
+          setMessages(prev => {
+            const updated = prev.filter(m => !m.loading);
+            return [...updated, { role: "assistant", content: "Upgrade to access this feature." }];
+          });
         } else if (errorCode === "SERVER_ERROR") {
           setMessages(prev => {
             const updated = prev.filter(m => !m.loading);

@@ -1,13 +1,28 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from "@/lib/auth";
+import dbConnect from "@/lib/db";
+import UserModel from "@/models/User";
+import mongoose from "mongoose";
+import { ADMIN_EMAIL, normalizeEmail } from "@/lib/access";
 
 export async function GET(request: Request) {
   try {
-    // 1. Authenticate Admin
-    const session: any = await getServerSession(authOptions);
-    
-    if (!session || session.user?.email !== 'support@motherera.com') {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    await dbConnect();
+    let user: any = null;
+    const sessionUserId = session.user.id;
+    if (sessionUserId && mongoose.Types.ObjectId.isValid(sessionUserId)) {
+      user = await UserModel.findById(sessionUserId);
+    }
+    if (!user && session.user.email) {
+      user = await UserModel.findOne({ email: normalizeEmail(session.user.email) });
+    }
+    if (!user || normalizeEmail(user.email) !== ADMIN_EMAIL) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -63,8 +78,8 @@ export async function GET(request: Request) {
     }));
 
     return NextResponse.json({ success: true, orders });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching admin orders:", error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
   }
 }

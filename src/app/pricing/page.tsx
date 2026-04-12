@@ -6,12 +6,25 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { ADMIN_EMAIL, normalizeEmail } from "@/lib/access";
 
 export default function PricingPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const isAdminUser = normalizeEmail(session?.user?.email) === ADMIN_EMAIL;
 
   const handleSubscribe = async (planName: string) => {
+    if (!isAdminUser) {
+      if (!session?.user) {
+        router.push("/login");
+        return;
+      }
+      router.push("/dashboard/subscription");
+      return;
+    }
+
     const plan = planName.toLowerCase();
     setLoadingPlan(plan);
     try {
@@ -53,8 +66,8 @@ export default function PricingPage() {
     },
     {
       name: "Premium",
-      price: "", // TEMPORARY: Hidden for testing
-      period: "",
+      price: "₹499",
+      period: "/month",
       description: "Personalized care and expert access",
       features: [
         "Everything in Basic",
@@ -63,15 +76,15 @@ export default function PricingPage() {
         "Priority chat support",
         "Exclusive workshops"
       ],
-      buttonText: "Activate Free Test",
+      buttonText: isAdminUser ? "Activate Free Test" : "Upgrade to Premium",
       buttonVariant: "default" as const,
-      href: "/api/test/subscribe?plan=premium", // TEMPORARY: Direct subscribe for testing
+      href: "/dashboard/subscription",
       highlight: true
     },
     {
       name: "Specialized",
-      price: "", // TEMPORARY: Hidden for testing
-      period: "",
+      price: "₹1499",
+      period: "/month",
       description: "Intensive support for specific needs",
       features: [
         "Everything in Premium",
@@ -80,18 +93,20 @@ export default function PricingPage() {
         "24/7 dedicated care manager",
         "Postpartum recovery program"
       ],
-      buttonText: "Activate Free Test",
+      buttonText: isAdminUser ? "Activate Free Test" : "Upgrade to Specialized",
       buttonVariant: "default" as const,
-      href: "/api/test/subscribe?plan=specialized", // TEMPORARY: Direct subscribe for testing
+      href: "/dashboard/subscription",
     }
   ];
 
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="text-center mb-16">
-        <div className="inline-block bg-amber-100 text-amber-800 text-sm font-bold px-4 py-2 rounded-full mb-6 border border-amber-200">
-          🚧 TEST MODE ACTIVE: All Plans are FREE 🚧
-        </div>
+        {isAdminUser && (
+          <div className="inline-block bg-amber-100 text-amber-800 text-sm font-bold px-4 py-2 rounded-full mb-6 border border-amber-200">
+            🚧 TEST MODE ACTIVE: All Plans are FREE 🚧
+          </div>
+        )}
         <h1 className="text-4xl font-bold tracking-tight text-stone-900 mb-4">
           Invest in Your Health Journey
         </h1>
@@ -109,14 +124,8 @@ export default function PricingPage() {
             </CardHeader>
             <CardContent className="flex-1">
               <div className="mb-6">
-                {plan.price ? (
-                  <>
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    {plan.period && <span className="text-stone-500">{plan.period}</span>}
-                  </>
-                ) : (
-                   <span className="text-2xl font-bold text-emerald-600">Free for Testing</span>
-                )}
+                <span className="text-4xl font-bold">{plan.price}</span>
+                {plan.period && <span className="text-stone-500">{plan.period}</span>}
               </div>
               <ul className="space-y-3">
                 {plan.features.map((feature) => (

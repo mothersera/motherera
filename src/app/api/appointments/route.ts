@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import Appointment from '@/models/Appointment';
 import UserModel from '@/models/User';
+import { canAccessPremium, isAdminEmail } from '@/lib/access';
 
 export async function POST(req: Request) {
   try {
@@ -23,6 +24,14 @@ export async function POST(req: Request) {
     }
 
     await dbConnect();
+
+    const dbUser = await UserModel.findById(session.user.id);
+    if (!dbUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const isAdmin = isAdminEmail(dbUser.email);
+    const isExpertUser = dbUser.role === 'expert';
+    if (!isAdmin && !isExpertUser && !canAccessPremium(dbUser)) {
+      return NextResponse.json({ error: 'UPGRADE_REQUIRED', message: 'Upgrade to access this feature' }, { status: 403 });
+    }
 
     // Verify expert exists
     const expert = await UserModel.findById(expertId);
@@ -57,6 +66,14 @@ export async function GET() {
       }
   
       await dbConnect();
+
+      const dbUser = await UserModel.findById(session.user.id);
+      if (!dbUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const isAdmin = isAdminEmail(dbUser.email);
+      const isExpertUser = dbUser.role === 'expert';
+      if (!isAdmin && !isExpertUser && !canAccessPremium(dbUser)) {
+        return NextResponse.json({ error: 'UPGRADE_REQUIRED', message: 'Upgrade to access this feature' }, { status: 403 });
+      }
 
       // If user is expert, show appointments where they are the expert
       // If user is mother, show appointments where they are the user

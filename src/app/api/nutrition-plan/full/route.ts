@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import UserModel from '@/models/User';
 import { generateWeeklyPlan, DIET_TYPES } from '@/lib/diet-plans';
+import { canAccessPremium, normalizeEmail, ADMIN_EMAIL } from '@/lib/access';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -21,8 +22,8 @@ export async function GET() {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const isPremium = user.subscriptionStatus === 'active' && 
-    (user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized');
+  const isAdminUser = normalizeEmail(user.email) === ADMIN_EMAIL;
+  const isPremium = isAdminUser || canAccessPremium(user);
 
   if (!isPremium) {
     return NextResponse.json({ error: 'Premium subscription required' }, { status: 403 });
@@ -62,8 +63,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  const isPremium = user.subscriptionStatus === 'active' && 
-    (user.subscriptionPlan === 'premium' || user.subscriptionPlan === 'specialized');
+  const isAdminUser = normalizeEmail(user.email) === ADMIN_EMAIL;
+  const isPremium = isAdminUser || canAccessPremium(user);
 
   if (!isPremium) {
     return NextResponse.json({ error: 'Premium subscription required' }, { status: 403 });

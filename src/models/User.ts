@@ -25,7 +25,7 @@ export interface IUser extends mongoose.Document {
   planStartDate?: Date;
   weeklyPlan?: unknown;
   subscriptionPlan?: 'basic' | 'premium' | 'specialized';
-  subscriptionStatus?: 'active' | 'inactive' | 'canceled';
+  subscriptionStatus?: 'active' | 'inactive' | 'expired' | 'canceled';
   subscriptionSource?: string;
   subscribedAt?: Date;
   // Expert specific fields
@@ -71,7 +71,7 @@ const UserSchema: Schema<IUser> = new Schema(
     weeklyPlan: { type: Object }, // Stores the 7-day plan structure
 
     subscriptionPlan: { type: String, enum: ['basic', 'premium', 'specialized'], default: 'basic' },
-    subscriptionStatus: { type: String, enum: ['active', 'inactive', 'canceled'], default: 'active' }, // simplified for now
+    subscriptionStatus: { type: String, enum: ['active', 'inactive', 'expired', 'canceled'], default: 'active' },
     subscriptionSource: { type: String },
     subscribedAt: { type: Date },
 
