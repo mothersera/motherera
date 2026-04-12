@@ -47,11 +47,16 @@ export async function GET(req: Request) {
     }
 
     // Simulate successful subscription
+    const currentDate = new Date();
+    const nextMonth = new Date(currentDate);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
     await UserModel.findByIdAndUpdate(user._id, {
       subscriptionPlan: plan,
       subscriptionStatus: 'active',
       subscriptionSource: 'test',
-      subscribedAt: new Date()
+      subscribedAt: currentDate,
+      subscriptionStartDate: currentDate,
+      subscriptionEndDate: nextMonth
     });
 
     return NextResponse.json({ 

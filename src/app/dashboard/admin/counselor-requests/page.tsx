@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Search, Trash2, CheckCircle2, MessageCircle, AlertCircle, ShoppingBag } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ADMIN_EMAIL, normalizeEmail } from "@/lib/access";
 
 interface CounselorRequest {
   id: string;
@@ -66,6 +67,16 @@ interface ShopifyOrder {
   }[];
 }
 
+type SubscriptionUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  subscriptionPlan: "basic" | "premium" | "specialized";
+  subscriptionStatus: "active" | "inactive" | "expired" | "canceled";
+  subscriptionStartDate: string | null;
+  subscriptionEndDate: string | null;
+};
+
 export default function AdminDashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -79,20 +90,25 @@ export default function AdminDashboardPage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [orderSearchQuery, setOrderSearchQuery] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+  const [subscriptionUsers, setSubscriptionUsers] = useState<SubscriptionUserRow[]>([]);
+  const [subsLoading, setSubsLoading] = useState(true);
+  const [subsQuery, setSubsQuery] = useState("");
+  const [subsFilter, setSubsFilter] = useState<"all" | "premium" | "specialized">("all");
+  const [subsMessage, setSubsMessage] = useState<string | null>(null);
 
   // Admin Protection
   useEffect(() => {
     if (status === "loading") return;
     
     // Check if user is logged in and is the admin
-    if (!session || session.user?.email !== "support@motherera.com") {
+    if (!session || normalizeEmail(session.user?.email) !== ADMIN_EMAIL) {
       router.push("/dashboard");
     }
   }, [session, status, router]);
 
   // Fetch real-time data
   useEffect(() => {
-    if (session?.user?.email !== "support@motherera.com") return;
+    if (normalizeEmail(session?.user?.email) !== ADMIN_EMAIL) return;
 
     const q = query(
       collection(db, "counselor_requests"),
@@ -116,7 +132,7 @@ export default function AdminDashboardPage() {
 
   // Fetch Orders Data
   useEffect(() => {
-    if (session?.user?.email !== "support@motherera.com") return;
+    if (normalizeEmail(session?.user?.email) !== ADMIN_EMAIL) return;
 
     const fetchOrders = async () => {
       try {
@@ -134,6 +150,39 @@ export default function AdminDashboardPage() {
     };
 
     fetchOrders();
+  }, [session]);
+
+  useEffect(() => {
+    if (normalizeEmail(session?.user?.email) !== ADMIN_EMAIL) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        setSubsLoading(true);
+        const res = await fetch("/api/admin/users", { method: "GET" });
+        if (!res.ok) throw new Error("Failed");
+        const data: unknown = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        const rows: SubscriptionUserRow[] = list
+          .map((u: any) => ({
+            id: String(u.id || ""),
+            name: String(u.name || ""),
+            email: String(u.email || ""),
+            subscriptionPlan: (u.subscriptionPlan || "basic") as any,
+            subscriptionStatus: (u.subscriptionStatus || "inactive") as any,
+            subscriptionStartDate: u.subscriptionStartDate ? String(u.subscriptionStartDate) : null,
+            subscriptionEndDate: u.subscriptionEndDate ? String(u.subscriptionEndDate) : null,
+          }))
+          .filter((u: SubscriptionUserRow) => Boolean(u.id) && Boolean(u.email));
+        if (!cancelled) setSubscriptionUsers(rows);
+      } catch {
+        if (!cancelled) setSubscriptionUsers([]);
+      } finally {
+        if (!cancelled) setSubsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [session]);
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
@@ -214,7 +263,64 @@ export default function AdminDashboardPage() {
     }
   };
 
-  if (status === "loading" || (status === "authenticated" && session.user?.email !== "support@motherera.com")) {
+  const filteredSubs = subscriptionUsers
+    .filter((u) => {
+      if (subsFilter === "premium") return u.subscriptionPlan === "premium";
+      if (subsFilter === "specialized") return u.subscriptionPlan === "specialized";
+      return true;
+    })
+    .filter((u) => {
+      const q = subsQuery.trim().toLowerCase();
+      if (!q) return true;
+      return u.email.toLowerCase().includes(q) || u.name.toLowerCase().includes(q);
+    });
+
+  const badgeForPlan = (plan: SubscriptionUserRow["subscriptionPlan"]) => {
+    if (plan === "premium") return "bg-emerald-100 text-emerald-800 border-emerald-200";
+    if (plan === "specialized") return "bg-purple-100 text-purple-800 border-purple-200";
+    return "bg-stone-100 text-stone-700 border-stone-200";
+  };
+
+  const badgeForStatus = (s: SubscriptionUserRow["subscriptionStatus"]) => {
+    if (s === "active") return "bg-green-100 text-green-800 border-green-200";
+    if (s === "expired") return "bg-amber-100 text-amber-800 border-amber-200";
+    return "bg-stone-100 text-stone-600 border-stone-200";
+  };
+
+  const formatDate = (raw: string | null) => {
+    if (!raw) return "—";
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString();
+  };
+
+  const removeSubscription = async (userId: string) => {
+    setSubsMessage(null);
+    const ok = window.confirm("Are you sure you want to remove this user's subscription?");
+    if (!ok) return;
+    try {
+      const res = await fetch("/api/admin/remove-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setSubscriptionUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId
+            ? { ...u, subscriptionPlan: "basic", subscriptionStatus: "inactive", subscriptionEndDate: null, subscriptionStartDate: null }
+            : u
+        )
+      );
+      setSubsMessage("Subscription updated.");
+      setTimeout(() => setSubsMessage(null), 2500);
+    } catch {
+      setSubsMessage("Failed to update subscription.");
+      setTimeout(() => setSubsMessage(null), 2500);
+    }
+  };
+
+  if (status === "loading" || (status === "authenticated" && normalizeEmail(session.user?.email) !== ADMIN_EMAIL)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
         <Loader2 className="w-8 h-8 animate-spin text-rose-500" />
@@ -230,7 +336,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <Tabs defaultValue="counselor" className="w-full">
-        <TabsList className="mb-8 grid w-full max-w-md grid-cols-2 bg-stone-100/50 p-1 rounded-xl">
+        <TabsList className="mb-8 grid w-full max-w-xl grid-cols-3 bg-stone-100/50 p-1 rounded-xl">
           <TabsTrigger value="counselor" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <MessageCircle className="w-4 h-4 mr-2" />
             Counselor Requests
@@ -238,6 +344,10 @@ export default function AdminDashboardPage() {
           <TabsTrigger value="orders" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <ShoppingBag className="w-4 h-4 mr-2" />
             Shop Orders
+          </TabsTrigger>
+          <TabsTrigger value="subscriptions" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            User Subscriptions
           </TabsTrigger>
         </TabsList>
 
@@ -455,6 +565,91 @@ export default function AdminDashboardPage() {
                             {getOrderStatusBadge(order.financialStatus)}
                             {getOrderStatusBadge(order.fulfillmentStatus)}
                           </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="subscriptions">
+          <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-stone-100 flex flex-col md:flex-row gap-4 justify-between items-center bg-stone-50/50">
+              <div className="relative w-full md:w-96">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={subsQuery}
+                  onChange={(e) => setSubsQuery(e.target.value)}
+                  className="pl-9 bg-white"
+                />
+              </div>
+
+              <div className="w-full md:w-56 flex flex-col gap-2">
+                <Select value={subsFilter} onValueChange={(v) => setSubsFilter(v as any)}>
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="premium">Premium Only</SelectItem>
+                    <SelectItem value="specialized">Specialized Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {subsMessage && (
+              <div className="px-4 py-3 border-b border-stone-100 text-sm text-stone-700 bg-white">
+                {subsMessage}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              {subsLoading ? (
+                <div className="p-12 flex justify-center">
+                  <Loader2 className="w-6 h-6 animate-spin text-stone-400" />
+                </div>
+              ) : filteredSubs.length === 0 ? (
+                <div className="p-12 text-center text-stone-500 flex flex-col items-center">
+                  <AlertCircle className="w-12 h-12 text-stone-300 mb-3" />
+                  <p>No users found.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader className="bg-stone-50">
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Expiry</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSubs.map((u) => (
+                      <TableRow key={u.id} className="hover:bg-stone-50/50">
+                        <TableCell className="font-medium text-stone-900">{u.name || "—"}</TableCell>
+                        <TableCell className="text-stone-600">{u.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={badgeForPlan(u.subscriptionPlan)}>
+                            {u.subscriptionPlan}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={badgeForStatus(u.subscriptionStatus)}>
+                            {u.subscriptionStatus}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-stone-600">{formatDate(u.subscriptionEndDate)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm" onClick={() => removeSubscription(u.id)} className="rounded-full">
+                            Remove Subscription
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

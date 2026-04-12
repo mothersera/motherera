@@ -7,6 +7,7 @@ export type AccessUser = {
   email?: string | null;
   subscriptionPlan?: SubscriptionPlan | null;
   subscriptionStatus?: SubscriptionStatus | null;
+  subscriptionEndDate?: Date | string | null;
 };
 
 export function normalizeEmail(email?: string | null) {
@@ -18,7 +19,11 @@ export function isAdminEmail(email?: string | null) {
 }
 
 export function isActiveSubscription(user: AccessUser) {
-  return user.subscriptionStatus === "active";
+  if (user.subscriptionStatus !== "active") return false;
+  if (!user.subscriptionEndDate) return true;
+  const d = user.subscriptionEndDate instanceof Date ? user.subscriptionEndDate : new Date(String(user.subscriptionEndDate));
+  if (Number.isNaN(d.getTime())) return true;
+  return d.getTime() >= Date.now();
 }
 
 export function canAccessPremium(user: AccessUser) {
@@ -32,4 +37,3 @@ export function canAccessSpecialized(user: AccessUser) {
   if (!isActiveSubscription(user)) return false;
   return user.subscriptionPlan === "specialized";
 }
-

@@ -7,7 +7,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, serverTimestamp } from "fir
 import dbConnect from "@/lib/db";
 import WebsiteContent from "@/models/WebsiteContent";
 import UserModel from "@/models/User";
-import { ADMIN_EMAIL, canAccessPremium, normalizeEmail } from "@/lib/access";
+import { ADMIN_EMAIL, canAccessPremium, isActiveSubscription, normalizeEmail } from "@/lib/access";
 
 type HistoryItem = { role: "user" | "assistant"; content: string };
 type RagLink = { title: string; url: string; description: string; tag: string; icon: string };
@@ -418,7 +418,7 @@ export async function POST(request: Request) {
 
     const userEmail = normalizeEmail(user.email);
     const isAdminUser = userEmail === ADMIN_EMAIL;
-    if (!isAdminUser && user.subscriptionStatus !== "active") {
+    if (!isAdminUser && !isActiveSubscription(user)) {
       return NextResponse.json({ error: "UPGRADE_REQUIRED", message: "Upgrade to access this feature" }, { status: 403 });
     }
 

@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
     // 3. Update User Profile
     user.subscriptionPlan = payment.plan;
     user.subscriptionStatus = 'active';
+    user.subscriptionStartDate = currentDate;
+    user.subscriptionEndDate = nextMonth;
     await user.save();
 
     return NextResponse.json({ success: true, message: "Payment verified and subscription updated" });

@@ -28,6 +28,8 @@ export interface IUser extends mongoose.Document {
   subscriptionStatus?: 'active' | 'inactive' | 'expired' | 'canceled';
   subscriptionSource?: string;
   subscribedAt?: Date;
+  subscriptionStartDate?: Date;
+  subscriptionEndDate?: Date;
   // Expert specific fields
   specialization?: string;
   experience?: number;
@@ -74,6 +76,8 @@ const UserSchema: Schema<IUser> = new Schema(
     subscriptionStatus: { type: String, enum: ['active', 'inactive', 'expired', 'canceled'], default: 'active' },
     subscriptionSource: { type: String },
     subscribedAt: { type: Date },
+    subscriptionStartDate: { type: Date },
+    subscriptionEndDate: { type: Date },
 
     // Expert fields
     specialization: { type: String },
