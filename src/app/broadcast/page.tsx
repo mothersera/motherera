@@ -18,6 +18,7 @@ import "@stream-io/video-react-sdk/dist/css/styles.css";
 import { Loader2, Users, Send, Video, AlertCircle, Heart, Smile } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ADMIN_EMAIL, normalizeEmail } from "@/lib/access";
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY!;
 const callId = "motherera-live-broadcast";
@@ -51,16 +52,18 @@ function BroadcastHeader({ isAdmin, onEndStream }: { isAdmin: boolean; onEndStre
       </div>
       
       <div className="flex items-center gap-3 pointer-events-auto">
-        {isAdmin && (
-           <Button 
-             variant="destructive" 
-             size="sm" 
-             className="bg-rose-600 hover:bg-rose-700 text-white border-none shadow-lg shadow-rose-900/20 rounded-full h-8 text-xs font-medium px-4"
-             onClick={onEndStream}
-           >
-             End Stream
-           </Button>
-        )}
+        <Button
+          variant={isAdmin ? "destructive" : "outline"}
+          size="sm"
+          className={
+            isAdmin
+              ? "bg-rose-600 hover:bg-rose-700 text-white border-none shadow-lg shadow-rose-900/20 rounded-full h-8 text-xs font-medium px-4"
+              : "bg-white/10 hover:bg-white/15 text-white border-white/20 shadow-lg rounded-full h-8 text-xs font-medium px-4"
+          }
+          onClick={onEndStream}
+        >
+          {isAdmin ? "End Live" : "Leave Live"}
+        </Button>
       </div>
     </div>
   );
@@ -257,10 +260,12 @@ export default function BroadcastPage() {
   const [call, setCall] = useState<Call | null>(null);
   const [isJoined, setIsJoined] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // @ts-ignore - Role check
-  const isAdmin = session?.user?.email === "support@motherera.com";
+  const isAdmin = normalizeEmail(session?.user?.email) === ADMIN_EMAIL;
+  const clientRef = useRef<StreamVideoClient | null>(null);
+  const callRef = useRef<Call | null>(null);
 
   // Check auth
   useEffect(() => {
@@ -297,10 +302,12 @@ export default function BroadcastPage() {
 
         const streamClient = new StreamVideoClient({ apiKey, user, token });
         setClient(streamClient);
+        clientRef.current = streamClient;
         
         // Pre-create call instance but don't join yet
         const streamCall = streamClient.call(callType, callId);
         setCall(streamCall);
+        callRef.current = streamCall;
         
         // Auto-join for non-admins
         if (!isAdmin) {
@@ -320,11 +327,19 @@ export default function BroadcastPage() {
     initClient();
 
     return () => {
-      if (client) {
-        // client.disconnectUser(); // Removed as it might not be available or needed
-        setClient(null);
-        setCall(null);
-        setIsJoined(false);
+      const activeCall = callRef.current;
+      const activeClient = clientRef.current as any;
+      try {
+        activeCall?.leave().catch(() => null);
+      } catch {
+        return;
+      }
+      try {
+        if (activeClient && typeof activeClient.disconnectUser === "function") {
+          activeClient.disconnectUser().catch(() => null);
+        }
+      } catch {
+        return;
       }
     };
   }, [session, status, isAdmin]); // Only run once session is ready
@@ -334,13 +349,39 @@ export default function BroadcastPage() {
     if (!call) return;
 
     const unsubscribe = call.on('call.ended', () => {
-      router.push("/");
+      router.push("/dashboard");
     });
 
     return () => {
       unsubscribe();
     };
   }, [call, router]);
+
+  useEffect(() => {
+    if (!call) return;
+    const handleUnload = () => {
+      try {
+        call.leave().catch(() => null);
+      } catch {
+        return;
+      }
+      const activeClient = clientRef.current as any;
+      try {
+        if (activeClient && typeof activeClient.disconnectUser === "function") {
+          activeClient.disconnectUser().catch(() => null);
+        }
+      } catch {
+        return;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+    };
+  }, [call]);
 
   const handleStartBroadcast = async () => {
     if (!call) return;
@@ -359,14 +400,38 @@ export default function BroadcastPage() {
 
   const handleEndStream = async () => {
     if (!call) return;
-    
+    if (isLeaving) return;
     if (isAdmin) {
-      await call.endCall();
+      const ok = window.confirm("Are you sure you want to end the live?");
+      if (!ok) return;
     }
     
-    await call.leave();
-    setIsJoined(false);
-    router.push("/");
+    setIsLeaving(true);
+    try {
+      if (isAdmin) {
+        await call.endCall();
+      }
+      await call.leave();
+    } catch {
+      return;
+    } finally {
+      try {
+        const activeClient = clientRef.current as any;
+        if (activeClient && typeof activeClient.disconnectUser === "function") {
+          await activeClient.disconnectUser();
+        }
+      } catch {
+        return;
+      } finally {
+        setIsJoined(false);
+        setClient(null);
+        setCall(null);
+        clientRef.current = null;
+        callRef.current = null;
+        setIsLeaving(false);
+        router.push("/dashboard");
+      }
+    }
   };
 
   if (status === "loading") {
