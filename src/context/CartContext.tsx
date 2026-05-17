@@ -33,7 +33,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Initialize cart from local storage
   useEffect(() => {
     const initializeCart = async () => {
-      const storedCartId = localStorage.getItem("shopify_cart_id");
+      const storeDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "default";
+      const cartKey = `shopify_cart_id:${storeDomain}`;
+      const storedCartId = localStorage.getItem(cartKey);
       
       if (storedCartId) {
         const existingCart = await getCart(storedCartId);
@@ -45,7 +47,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       // Create new cart if none exists or fetch failed
       const newCart = await createCart();
-      localStorage.setItem("shopify_cart_id", newCart.id);
+      localStorage.removeItem("shopify_cart_id");
+      localStorage.setItem(cartKey, newCart.id);
       setCart(newCart);
     };
 
@@ -61,9 +64,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       let currentCartId = cart?.id;
 
       if (!currentCartId) {
+        const storeDomain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN || "default";
+        const cartKey = `shopify_cart_id:${storeDomain}`;
         const newCart = await createCart();
         currentCartId = newCart.id;
-        localStorage.setItem("shopify_cart_id", newCart.id);
+        localStorage.removeItem("shopify_cart_id");
+        localStorage.setItem(cartKey, newCart.id);
       }
 
       const updatedCart = await shopifyAddToCart(currentCartId, variantId, quantity);
